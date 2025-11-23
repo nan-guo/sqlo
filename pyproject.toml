@@ -5,7 +5,7 @@ description = "A modern, type-safe, and extensible SQL query builder for Python.
 license = {text = "MIT"}
 readme = "README.md"
 
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 dependencies = []
 
 [project.urls]
