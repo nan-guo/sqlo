@@ -17,7 +17,7 @@ sys.path.insert(0, os.path.abspath('../src'))
 
 # -- Project information -----------------------------------------------------
 
-project = 'sqlo'
+project = 'dm-core-sql-toolkit'
 copyright = '2025, Craft Core'
 author = 'Shengjie YU'
 

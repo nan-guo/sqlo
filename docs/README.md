@@ -1,6 +1,6 @@
 # Documentation Index
 
-sqlo documentation navigation.
+dm-core-sql-toolkit documentation navigation.
 
 ## 📚 Documentation Structure
 
@@ -60,4 +60,4 @@ sqlo documentation navigation.
 
 ---
 
-**Version**: 1.0.0 | **Last Updated**: 2023-11-23 | **Get started** → [Getting Started](getting-started.md)
+**Get started** → [Getting Started](getting-started.md)

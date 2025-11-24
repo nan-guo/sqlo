@@ -13,8 +13,12 @@ The `Condition` class represents a single SQL condition.
 ```python
 from sqlo import Condition
 
-# Create a condition
+# Create a condition (Standard)
 c = Condition("age", ">=", 18)
+# Represents: `age` >= ?
+
+# Create a condition (Compact)
+c = Condition("age>=", 18)
 # Represents: `age` >= ?
 ```
 

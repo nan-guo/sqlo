@@ -1,18 +1,32 @@
-from io import StringIO
-from typing import Any, Dict, List, Tuple, Union
 
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
+
+from ..expressions import Raw
 from .base import Query
+
+if TYPE_CHECKING:
+    from .select import SelectQuery
 
 
 class InsertQuery(Query):
-    __slots__ = ("_table", "_values", "_ignore", "_on_duplicate", "_dialect")
+    __slots__ = (
+        "_table",
+        "_values",
+        "_ignore",
+        "_on_duplicate",
+        "_from_select",
+        "_select_columns",
+        "_dialect",
+    )
 
     def __init__(self, table: str, dialect=None):
         super().__init__(dialect)
         self._table = table
         self._values: List[Dict[str, Any]] = []
         self._ignore = False
-        self._on_duplicate = None
+        self._on_duplicate: Optional[Dict[str, Any]] = None
+        self._from_select: Optional["SelectQuery"] = None
+        self._select_columns: Optional[List[str]] = None
 
     def values(
         self, values: Union[Dict[str, Any], List[Dict[str, Any]]]
@@ -31,43 +45,85 @@ class InsertQuery(Query):
         self._on_duplicate = values
         return self
 
+    def from_select(
+        self, columns: List[str], select_query: "SelectQuery"
+    ) -> "InsertQuery":
+        """Insert data from a SELECT query."""
+        self._select_columns = columns
+        self._from_select = select_query
+        return self
+
     def build(self) -> Tuple[str, Tuple[Any, ...]]:
-        if not self._values:
-            raise ValueError("No values to insert")
-
-        buf = StringIO()
-        columns = list(self._values[0].keys())
-
-        # Build placeholders
+        parts: List[str] = []
+        params: List[Any] = []
         ph = self._dialect.parameter_placeholder()
-        placeholders = ", ".join([ph] * len(columns))
-        row_placeholder = f"({placeholders})"
-
-        params = []
-        for row in self._values:
-            for col in columns:
-                params.append(row.get(col))
 
         # Command
-        buf.write("INSERT IGNORE" if self._ignore else "INSERT")
-        buf.write(" INTO ")
-        buf.write(self._dialect.quote(self._table))
-        buf.write(" (")
-        buf.write(", ".join(map(self._dialect.quote, columns)))
-        buf.write(") VALUES ")
-        buf.write(", ".join([row_placeholder] * len(self._values)))
+        parts.append("INSERT IGNORE" if self._ignore else "INSERT")
+        parts.append(" INTO ")
+        parts.append(self._dialect.quote(self._table))
+
+        # Handle INSERT ... SELECT
+        if self._from_select:
+            if not self._select_columns:
+                raise ValueError("Columns must be specified for INSERT ... SELECT")
+            parts.append(" (")
+            parts.append(", ".join(map(self._dialect.quote, self._select_columns)))
+            parts.append(") ")
+
+            # Build SELECT query
+            select_sql, select_params = self._from_select.build()
+            parts.append(select_sql)
+            params.extend(select_params)
+        else:
+            # Handle INSERT ... VALUES
+            if not self._values:
+                raise ValueError("No values to insert")
+
+            columns = list(self._values[0].keys())
+
+            # Build placeholders
+            placeholders = ", ".join([ph] * len(columns))
+            row_placeholder = f"({placeholders})"
+
+            for row in self._values:
+                for col in columns:
+                    params.append(row.get(col))
+
+            parts.append(" (")
+            parts.append(", ".join(map(self._dialect.quote, columns)))
+            parts.append(") VALUES ")
+            parts.append(", ".join([row_placeholder] * len(self._values)))
 
         # ON DUPLICATE KEY UPDATE
         if self._on_duplicate:
-            buf.write(" ON DUPLICATE KEY UPDATE ")
+            parts.append(" ON DUPLICATE KEY UPDATE ")
             first = True
             for col, val in self._on_duplicate.items():
                 if not first:
-                    buf.write(", ")
+                    parts.append(", ")
                 first = False
-                buf.write(self._dialect.quote(col))
-                buf.write(" = ")
-                buf.write(ph)
-                params.append(val)
+                parts.append(self._dialect.quote(col))
+                parts.append(" = ")
 
-        return buf.getvalue(), tuple(params)
+                # Handle Raw expressions
+                if isinstance(val, Raw):
+                    parts.append(val.sql)
+                    params.extend(val.params)
+                # Handle string expressions (like "login_count + 1" or "VALUES(name)")
+                elif isinstance(val, str) and (
+                    "VALUES(" in val.upper()
+                    or "+" in val
+                    or "-" in val
+                    or "*" in val
+                    or "/" in val
+                    or "NOW()" in val.upper()
+                ):
+                    # Treat as raw SQL expression
+                    parts.append(val)
+                # Handle regular values
+                else:
+                    parts.append(ph)
+                    params.append(val)
+
+        return "".join(parts), tuple(params)

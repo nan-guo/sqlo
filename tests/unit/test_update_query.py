@@ -1,14 +1,3 @@
-"""
-Tests for UPDATE queries.
-
-Coverage:
-- Basic UPDATE
-- UPDATE with WHERE clauses
-- UPDATE with LIMIT
-- UPDATE with ORDER BY
-- Error handling
-"""
-
 import pytest
 
 from sqlo import Condition, Q, Raw
@@ -24,7 +13,11 @@ def test_update_basic():
 
 def test_update_multiple_columns():
     """UPDATE multiple columns"""
-    q = Q.update("users").set({"active": True, "verified": False}).where("id", 1)
+    q = (
+        Q.update("users")
+        .set({"active": True, "verified": False})
+        .where("id", 1)
+    )
     sql, params = q.build()
     assert "SET `active` = ?, `verified` = ?" in sql
     assert params == (True, False, 1)
@@ -48,8 +41,10 @@ def test_update_with_limit_and_order():
 
 def test_update_where_raw():
     """UPDATE with Raw WHERE clause"""
-    query = Q.update("users").set({"status": "active"}).where(
-        Raw("DATE(created_at) = CURDATE()", [])
+    query = (
+        Q.update("users")
+        .set({"status": "active"})
+        .where(Raw("DATE(created_at) = CURDATE()", []))
     )
     sql, params = query.build()
     assert "WHERE DATE(created_at) = CURDATE()" in sql

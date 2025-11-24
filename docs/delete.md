@@ -1,6 +1,6 @@
 # DELETE Queries
 
-Complete guide to DELETE query building with sqlo.
+Complete guide to DELETE query building with dm-core-sql-toolkit.
 
 ## Basic DELETE
 

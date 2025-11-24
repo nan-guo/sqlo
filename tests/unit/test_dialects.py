@@ -1,13 +1,3 @@
-"""
-Tests for SQL dialects.
-
-Coverage:
-- Quote identifiers
-- Dotted identifiers (table.column)
-- Parameter placeholders
-- Limit/offset formatting
-"""
-
 from sqlo.dialects.mysql import MySQLDialect
 
 

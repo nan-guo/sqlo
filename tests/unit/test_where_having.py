@@ -1,13 +1,3 @@
-"""
-Tests for WHERE and HAVING clauses.
-
-Coverage:
-- WHERE with different operators
-- WHERE with Raw
-- WHERE with Condition
-- HAVING with different scenarios
-"""
-
 import pytest
 
 from sqlo import Condition, Q, Raw
@@ -39,12 +29,7 @@ def test_where_with_space_in_column():
 
 def test_having_simple():
     """Simple HAVING clause"""
-    query = (
-        Q.select("age")
-        .from_("users")
-        .group_by("age")
-        .having("age >", 18)
-    )
+    query = Q.select("age").from_("users").group_by("age").having("age >", 18)
     sql, params = query.build()
     assert "HAVING `age` > ?" in sql
     assert params == (18,)
@@ -85,5 +70,7 @@ def test_invalid_where_clause():
 
 def test_invalid_having_clause():
     """Invalid HAVING clause (missing value) raises error"""
-    with pytest.raises(ValueError, match="Invalid where clause"):  # Uses same mixin
+    with pytest.raises(
+        ValueError, match="Invalid where clause"
+    ):  # Uses same mixin
         Q.select("*").from_("users").having("column")

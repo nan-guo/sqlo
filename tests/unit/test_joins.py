@@ -1,15 +1,3 @@
-"""
-Tests for JOIN operations.
-
-Coverage:
-- INNER JOIN
-- LEFT JOIN
-- RIGHT JOIN
-- CROSS JOIN
-- Multiple JOINs
-- Generic join() method
-"""
-
 from sqlo import Q
 
 
@@ -47,8 +35,12 @@ def test_right_join():
 
 
 def test_cross_join():
-    """CROSS JOIN (Cartesian product)"""
-    query = Q.select("u.id", "p.name").from_("users", alias="u").cross_join("products p")
+    """CROSS JOIN"""
+    query = (
+        Q.select("u.id", "p.name")
+        .from_("users", alias="u")
+        .cross_join("products p")
+    )
     sql, _ = query.build()
     assert "CROSS JOIN products p" in sql
 

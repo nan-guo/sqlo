@@ -1,17 +1,17 @@
 # Getting Started
 
-Quick start guide for sqlo.
+Quick start guide for dm-core-sql-toolkit.
 
 ## Installation
 
 ```bash
-pip install sqlo
+pip install dm-core-sql-toolkit
 ```
 
 Or using PDM:
 
 ```bash
-pdm add sqlo
+pdm add dm-core-sql-toolkit
 ```
 
 ## Quick Examples

@@ -1,20 +1,3 @@
-"""
-Tests for SELECT queries.
-
-Coverage:
-- Basic SELECT
-- Complex SELECT with JOINs
-- WHERE clauses
-- GROUP BY, ORDER BY
-- LIMIT, OFFSET, PAGINATE
-- DISTINCT
-- Index hints (FORCE, USE, IGNORE)
-- EXPLAIN
-- UNION / UNION ALL
-- Subqueries
-- when() conditional building
-"""
-
 from sqlo import Condition, Q, Raw, func
 
 
@@ -77,14 +60,20 @@ def test_select_distinct_multiple_columns():
 
 def test_select_group_by():
     """SELECT with GROUP BY"""
-    query = Q.select("country", func.count("id")).from_("users").group_by("country")
+    query = (
+        Q.select("country", func.count("id"))
+        .from_("users")
+        .group_by("country")
+    )
     sql, _ = query.build()
     assert "GROUP BY `country`" in sql
 
 
 def test_select_group_by_multiple():
     """SELECT with GROUP BY multiple columns"""
-    query = Q.select("country", "city").from_("users").group_by("country", "city")
+    query = (
+        Q.select("country", "city").from_("users").group_by("country", "city")
+    )
     sql, _ = query.build()
     assert "GROUP BY `country`, `city`" in sql
 
@@ -105,7 +94,9 @@ def test_select_order_by_desc():
 
 def test_select_order_by_multiple():
     """SELECT with multiple ORDER BY columns"""
-    query = Q.select("*").from_("users").order_by("country", "-created_at", "name")
+    query = (
+        Q.select("*").from_("users").order_by("country", "-created_at", "name")
+    )
     sql, _ = query.build()
     assert "ORDER BY `country` ASC, `created_at` DESC, `name` ASC" in sql
 
@@ -196,7 +187,11 @@ def test_select_union_all():
 
 def test_select_when_true():
     """when() with True condition applies the lambda"""
-    query = Q.select("*").from_("users").when(True, lambda q: q.where("active", True))
+    query = (
+        Q.select("*")
+        .from_("users")
+        .when(True, lambda q: q.where("active", True))
+    )
     sql, params = query.build()
     assert "WHERE `active` = ?" in sql
     assert params == (True,)
@@ -204,7 +199,11 @@ def test_select_when_true():
 
 def test_select_when_false():
     """when() with False condition skips the lambda"""
-    query = Q.select("*").from_("users").when(False, lambda q: q.where("active", True))
+    query = (
+        Q.select("*")
+        .from_("users")
+        .when(False, lambda q: q.where("active", True))
+    )
     sql, params = query.build()
     assert "WHERE" not in sql
     assert params == ()
@@ -215,7 +214,10 @@ def test_select_from_subquery():
     subquery = Q.select("id", "name").from_("users").where("active", True)
     query = Q.select("*").from_(subquery, alias="active_users")
     sql, params = query.build()
-    assert "(SELECT `id`, `name` FROM `users` WHERE `active` = ?) active_users" in sql
+    assert (
+        "(SELECT `id`, `name` FROM `users` WHERE `active` = ?) AS active_users"
+        in sql
+    )
     assert params == (True,)
 
 

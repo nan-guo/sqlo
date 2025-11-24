@@ -1,6 +1,6 @@
 # UPDATE Queries
 
-Complete guide to UPDATE query building with sqlo.
+Complete guide to UPDATE query building with dm-core-sql-toolkit.
 
 ## Basic UPDATE
 

@@ -1,14 +1,3 @@
-"""
-Tests for Condition and ComplexCondition objects.
-
-Coverage:
-- Simple Condition
-- AND conditions (Condition & Condition)
-- OR conditions (Condition | Condition)
-- Complex nested conditions
-- ComplexCondition standalone
-"""
-
 from sqlo import Condition, Q
 from sqlo.expressions import ComplexCondition
 
@@ -42,7 +31,9 @@ def test_condition_or():
 
 def test_condition_complex_precedence():
     """Complex condition: (A AND B) OR C"""
-    cond = (Condition("age >", 18) & Condition("country", "FR")) | Condition("vip", True)
+    cond = (Condition("age >", 18) & Condition("country", "FR")) | Condition(
+        "vip", True
+    )
     query = Q.select("*").from_("users").where(cond)
     sql, params = query.build()
     assert "((`age` > ? AND `country` = ?) OR `vip` = ?)" in sql
@@ -52,7 +43,10 @@ def test_condition_complex_precedence():
 def test_condition_multiple_and():
     """Chaining multiple AND conditions"""
     cond = (
-        Condition("a", 1) & Condition("b", 2) & Condition("c", 3) & Condition("d", 4)
+        Condition("a", 1)
+        & Condition("b", 2)
+        & Condition("c", 3)
+        & Condition("d", 4)
     )
     query = Q.select("*").from_("users").where(cond)
     sql, params = query.build()

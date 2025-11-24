@@ -1,9 +1,12 @@
-from io import StringIO
-from typing import Any, List, Optional, Tuple, Union
+
+from typing import TYPE_CHECKING, Any, Callable, List, Optional, Tuple, Union
 
 from ..expressions import Func, Raw
 from .base import Query
 from .mixins import WhereClauseMixin
+
+if TYPE_CHECKING:
+    from ..expressions import ComplexCondition, Condition
 
 # Cache for IN clause placeholders
 _PLACEHOLDER_CACHE = {}
@@ -31,9 +34,11 @@ class SelectQuery(WhereClauseMixin, Query):
     def __init__(self, *columns: Union[str, Raw, Func], dialect=None):
         super().__init__(dialect)
         self._columns = columns if columns else ["*"]
-        self._table = None
-        self._alias = None
-        self._joins: List[Tuple[str, str, str]] = []  # (type, table, on)
+        self._table: Optional[Union[str, SelectQuery]] = None
+        self._alias: Optional[str] = None
+        self._joins: List[Tuple[str, str, Optional[str]]] = (
+            []
+        )  # (type, table, on)
         self._wheres: List[Tuple[str, str, Any]] = (
             []
         )  # (connector, sql, params)
@@ -48,25 +53,34 @@ class SelectQuery(WhereClauseMixin, Query):
         self._unions: List[Tuple[str, "SelectQuery"]] = []
 
     def from_(
-        self, table: Union[str, "SelectQuery"], alias: str = None
+        self, table: Union[str, "SelectQuery"], alias: Optional[str] = None
     ) -> "SelectQuery":
         self._table = table
-        self._alias = alias
+        # If table is a subquery with its own alias, use that alias
+        # Otherwise use the provided alias
+        if hasattr(table, "_alias") and table._alias and alias is None:
+            self._alias = table._alias
+        else:
+            self._alias = alias
         return self
 
     def join(
-        self, table: str, on: str = None, join_type: str = "INNER"
+        self, table: str, on: Optional[str] = None, join_type: str = "INNER"
     ) -> "SelectQuery":
         self._joins.append((join_type, table, on))
         return self
 
-    def inner_join(self, table: str, on: str = None) -> "SelectQuery":
+    def inner_join(
+        self, table: str, on: Optional[str] = None
+    ) -> "SelectQuery":
         return self.join(table, on, join_type="INNER")
 
-    def left_join(self, table: str, on: str = None) -> "SelectQuery":
+    def left_join(self, table: str, on: Optional[str] = None) -> "SelectQuery":
         return self.join(table, on, join_type="LEFT")
 
-    def right_join(self, table: str, on: str = None) -> "SelectQuery":
+    def right_join(
+        self, table: str, on: Optional[str] = None
+    ) -> "SelectQuery":
         return self.join(table, on, join_type="RIGHT")
 
     def cross_join(self, table: str) -> "SelectQuery":
@@ -112,16 +126,110 @@ class SelectQuery(WhereClauseMixin, Query):
             )
         return self
 
-    def order_by(self, *columns: str) -> "SelectQuery":
-        for col in columns:
-            direction = "ASC"
-            if col.startswith("-"):
-                direction = "DESC"
-                col = col[1:]
-            self._orders.append(f"{self._dialect.quote(col)} {direction}")
+    def or_where(
+        self,
+        column: Union[str, Raw, "Condition", "ComplexCondition"],
+        value: Any = None,
+        operator: str = "=",
+    ) -> "SelectQuery":
+        """Add an OR WHERE condition."""
+        connector, sql, params = self._build_where_clause(
+            column, value, operator
+        )
+        self._wheres.append(("OR", sql, params))
         return self
 
-    # _build_condition is now provided by WhereClauseMixin
+    def where_not_in(
+        self, column: str, values: Union[List[Any], "SelectQuery"]
+    ) -> "SelectQuery":
+        """Add a NOT IN WHERE condition."""
+        if hasattr(values, "build"):  # Subquery
+            sub_sql, sub_params = values.build()
+            self._wheres.append(
+                (
+                    "AND",
+                    f"{self._dialect.quote(column)} NOT IN ({sub_sql})",
+                    sub_params,
+                )
+            )
+        else:
+            count = len(values)
+            if count not in _PLACEHOLDER_CACHE:
+                ph = self._dialect.parameter_placeholder()
+                _PLACEHOLDER_CACHE[count] = ", ".join([ph] * count)
+            placeholders = _PLACEHOLDER_CACHE[count]
+            self._wheres.append(
+                (
+                    "AND",
+                    f"{self._dialect.quote(column)} NOT IN ({placeholders})",
+                    tuple(values),
+                )
+            )
+        return self
+
+    def where_null(self, column: str) -> "SelectQuery":
+        """Add an IS NULL WHERE condition."""
+        self._wheres.append(
+            ("AND", f"{self._dialect.quote(column)} IS NULL", [])
+        )
+        return self
+
+    def where_not_null(self, column: str) -> "SelectQuery":
+        """Add an IS NOT NULL WHERE condition."""
+        self._wheres.append(
+            ("AND", f"{self._dialect.quote(column)} IS NOT NULL", [])
+        )
+        return self
+
+    def where_between(
+        self, column: str, value1: Any, value2: Any
+    ) -> "SelectQuery":
+        """Add a BETWEEN WHERE condition."""
+        ph = self._dialect.parameter_placeholder()
+        self._wheres.append(
+            (
+                "AND",
+                f"{self._dialect.quote(column)} BETWEEN {ph} AND {ph}",
+                [value1, value2],
+            )
+        )
+        return self
+
+    def where_not_between(
+        self, column: str, value1: Any, value2: Any
+    ) -> "SelectQuery":
+        """Add a NOT BETWEEN WHERE condition."""
+        ph = self._dialect.parameter_placeholder()
+        self._wheres.append(
+            (
+                "AND",
+                f"{self._dialect.quote(column)} NOT BETWEEN {ph} AND {ph}",
+                [value1, value2],
+            )
+        )
+        return self
+
+    def where_like(self, column: str, pattern: str) -> "SelectQuery":
+        """Add a LIKE WHERE condition."""
+        return self.where(column, pattern, operator="LIKE")
+
+    def where_not_like(self, column: str, pattern: str) -> "SelectQuery":
+        """Add a NOT LIKE WHERE condition."""
+        return self.where(column, pattern, operator="NOT LIKE")
+
+    def order_by(
+        self, *columns: Union[str, Raw]
+    ) -> "SelectQuery":
+        for col in columns:
+            if isinstance(col, Raw):
+                self._orders.append(col.sql)
+            else:
+                direction = "ASC"
+                if col.startswith("-"):
+                    direction = "DESC"
+                    col = col[1:]
+                self._orders.append(f"{self._dialect.quote(col)} {direction}")
+        return self
 
     def limit(self, limit: int) -> "SelectQuery":
         self._limit = limit
@@ -135,7 +243,9 @@ class SelectQuery(WhereClauseMixin, Query):
         self._groups.extend(map(self._dialect.quote, columns))
         return self
 
-    def when(self, condition: Any, callback: callable) -> "SelectQuery":
+    def when(
+        self, condition: Any, callback: Callable[["SelectQuery"], None]
+    ) -> "SelectQuery":
         if condition:
             callback(self)
         return self
@@ -186,103 +296,131 @@ class SelectQuery(WhereClauseMixin, Query):
         self._unions.append(("UNION ALL", query))
         return self
 
-    def build(self) -> Tuple[str, Tuple[Any, ...]]:
-        if not self._table:
-            raise ValueError("No table specified")
+    def as_(self, alias: str) -> "SelectQuery":
+        """Set an alias for this query (used in FROM clauses)."""
+        self._alias = alias
+        return self
 
-        buf = StringIO()
-        params: List[Any] = []  # Use explicit type annotation
-
-        # EXPLAIN
-        if self._explain:
-            buf.write("EXPLAIN ")
-
-        # SELECT
-        buf.write("SELECT")
-
-        # DISTINCT
-        if self._distinct:
-            buf.write(" DISTINCT")
-
-        # Columns
-        buf.write(" ")
+    def _build_select_columns(self, parts: List[str], params: List[Any]) -> None:
+        """Build SELECT columns clause."""
+        parts.append(" ")
         first = True
         for col in self._columns:
             if not first:
-                buf.write(", ")
+                parts.append(", ")
             first = False
 
             if isinstance(col, Raw):
-                buf.write(col.sql)
+                parts.append(col.sql)
                 params.extend(col.params)
             elif isinstance(col, Func):
-                buf.write(f"{col.name}({', '.join(map(str, col.args))})")
+                parts.append(f"{col.name}({', '.join(map(str, col.args))})")
             else:
-                buf.write(self._dialect.quote(col) if col != "*" else "*")
+                parts.append(self._dialect.quote(col) if col != "*" else "*")
 
-        # FROM
-        buf.write(" FROM ")
-        if hasattr(self._table, "build"):  # Subquery
-            sub_sql, sub_params = self._table.build()
-            buf.write(f"({sub_sql})")
+    def _build_from_clause(self, parts: List[str], params: List[Any]) -> None:
+        """Build FROM clause."""
+        parts.append(" FROM ")
+        if self._table and hasattr(self._table, "build"):  # Subquery
+            # Get subquery's alias if it has one, otherwise use our alias
+            subquery_alias = None
+            if hasattr(self._table, "_alias"):
+                subquery_alias = self._table._alias
+            if subquery_alias is None:
+                subquery_alias = self._alias
+            
+            sub_sql, sub_params = self._table.build()  # type: ignore[union-attr]
+            parts.append(f"({sub_sql})")
             params.extend(sub_params)
+            # For subqueries, use AS keyword for alias
+            if subquery_alias:
+                parts.append(f" AS {subquery_alias}")
         else:
-            buf.write(self._dialect.quote(self._table))
-
-        if self._alias:
-            buf.write(f" {self._alias}")
+            parts.append(self._dialect.quote(self._table))  # type: ignore[arg-type]
+            # For regular tables, alias without AS (MySQL style)
+            if self._alias:
+                parts.append(f" {self._alias}")
 
         # Index Hints
         if self._index_hint:
             hint_type, indexes = self._index_hint
-            buf.write(f" {hint_type} INDEX (")
-            buf.write(", ".join(map(self._dialect.quote, indexes)))
-            buf.write(")")
+            parts.append(f" {hint_type} INDEX (")
+            parts.append(", ".join(map(self._dialect.quote, indexes)))
+            parts.append(")")
+
+    def _build_joins(self, parts: List[str]) -> None:
+        """Build JOIN clauses."""
+        for type_, table, on in self._joins:
+            parts.append(f" {type_} JOIN {table}")
+            if on:
+                parts.append(f" ON {on}")
+
+    @staticmethod
+    def _build_where_having(
+        parts: List[str], params: List[Any], clauses: List, keyword: str
+    ) -> None:
+        """Build WHERE or HAVING clause."""
+        if clauses:
+            parts.append(f" {keyword} ")
+            for i, (connector, sql, p) in enumerate(clauses):
+                if i > 0:
+                    parts.append(f" {connector} ")
+                parts.append(sql)
+                params.extend(p)
+
+    def build(self) -> Tuple[str, Tuple[Any, ...]]:
+        if not self._table:
+            raise ValueError("No table specified")
+
+        parts: List[str] = []
+        params: List[Any] = []
+
+        # EXPLAIN
+        if self._explain:
+            parts.append("EXPLAIN ")
+
+        # SELECT
+        parts.append("SELECT")
+
+        # DISTINCT
+        if self._distinct:
+            parts.append(" DISTINCT")
+
+        # Columns
+        self._build_select_columns(parts, params)
+
+        # FROM
+        self._build_from_clause(parts, params)
 
         # Joins
-        for type_, table, on in self._joins:
-            buf.write(f" {type_} JOIN {table}")
-            if on:
-                buf.write(f" ON {on}")
+        self._build_joins(parts)
 
         # Where
-        if self._wheres:
-            buf.write(" WHERE ")
-            for i, (connector, sql, p) in enumerate(self._wheres):
-                if i > 0:
-                    buf.write(f" {connector} ")
-                buf.write(sql)
-                params.extend(p)
+        self._build_where_having(parts, params, self._wheres, "WHERE")
 
         # Group By
         if self._groups:
-            buf.write(" GROUP BY ")
-            buf.write(", ".join(self._groups))
+            parts.append(" GROUP BY ")
+            parts.append(", ".join(self._groups))
 
         # Having
-        if self._havings:
-            buf.write(" HAVING ")
-            for i, (connector, sql, p) in enumerate(self._havings):
-                if i > 0:
-                    buf.write(f" {connector} ")
-                buf.write(sql)
-                params.extend(p)
+        self._build_where_having(parts, params, self._havings, "HAVING")
 
         # Order By
         if self._orders:
-            buf.write(" ORDER BY ")
-            buf.write(", ".join(self._orders))
+            parts.append(" ORDER BY ")
+            parts.append(", ".join(self._orders))
 
         # Limit/Offset
         if self._limit is not None:
-            buf.write(" ")
-            buf.write(self._dialect.limit_offset(self._limit, self._offset))
+            parts.append(" ")
+            parts.append(self._dialect.limit_offset(self._limit, self._offset))
 
         # Unions
         if self._unions:
             for type_, query in self._unions:
                 union_sql, union_params = query.build()
-                buf.write(f" {type_} {union_sql}")
+                parts.append(f" {type_} {union_sql}")
                 params.extend(union_params)
 
-        return buf.getvalue(), tuple(params)
+        return "".join(parts), tuple(params)

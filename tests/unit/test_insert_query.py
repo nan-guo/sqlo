@@ -1,14 +1,3 @@
-"""
-Tests for INSERT queries.
-
-Coverage:
-- Single row insert
-- Batch insert (multiple rows)
-- INSERT IGNORE
-- ON DUPLICATE KEY UPDATE
-- Error handling
-"""
-
 import pytest
 
 from sqlo import Q
@@ -16,7 +5,7 @@ from sqlo import Q
 
 def test_insert_single_row():
     """INSERT single row"""
-    query = Q.insert_into("users").values([{"name": "Alice", "age":25}])
+    query = Q.insert_into("users").values([{"name": "Alice", "age": 25}])
     sql, params = query.build()
     assert sql == "INSERT INTO `users` (`name`, `age`) VALUES (?, ?)"
     assert params == ("Alice", 25)

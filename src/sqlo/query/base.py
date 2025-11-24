@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, Tuple
+from typing import Any, Optional, Tuple
 
 from ..dialects.base import Dialect
 from ..dialects.mysql import MySQLDialect
@@ -8,7 +8,7 @@ from ..dialects.mysql import MySQLDialect
 class Query(ABC):
     """Abstract base class for all queries."""
 
-    def __init__(self, dialect: Dialect = None):
+    def __init__(self, dialect: Optional[Dialect] = None):
         self._dialect = dialect or MySQLDialect()
 
     @abstractmethod

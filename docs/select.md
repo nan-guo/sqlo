@@ -1,6 +1,6 @@
 # SELECT Queries
 
-Complete guide to SELECT query building with sqlo.
+Complete guide to SELECT query building with dm-core-sql-toolkit.
 
 ## Basic Queries
 
@@ -37,9 +37,20 @@ sql, params = query.build()
 query = Q.select("*").from_("users").where("active", True)
 # WHERE `active` = ?
 
-# Comparison operators
+# Comparison operators (Standard)
 query = Q.select("*").from_("users").where("age >", 18)
 # WHERE `age` > ?
+
+# Compact Syntax (New)
+query = Q.select("*").from_("users").where("age>", 18)
+# WHERE `age` > ?
+
+query = Q.select("*").from_("users").where("age>=", 18)
+# WHERE `age` >= ?
+
+# Extended Operators
+query = Q.select("*").from_("users").where("name LIKE", "John%")
+# WHERE `name` LIKE ?
 
 query = Q.select("*").from_("users").where("created_at >=", "2023-01-01")
 # WHERE `created_at` >= ?
@@ -450,7 +461,8 @@ count_query = (
 
 ```python
 query = Q.select("*").from_("users").where("email", "test@example.com")
-explain_sql = query.explain()
+explain_query = query.explain()
+explain_sql, params = explain_query.build()
 # Returns: EXPLAIN SELECT * FROM `users` WHERE `email` = ?
 
 # Execute with your database connection to see query plan

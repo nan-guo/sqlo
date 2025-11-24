@@ -1,6 +1,6 @@
 # JOIN Operations
 
-Complete guide to JOIN operations with sqlo.
+Complete guide to JOIN operations with dm-core-sql-toolkit.
 
 ## Basic JOINs
 

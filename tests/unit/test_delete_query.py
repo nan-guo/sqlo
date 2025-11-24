@@ -1,14 +1,3 @@
-"""
-Tests for DELETE queries.
-
-Coverage:
-- Basic DELETE
-- DELETE with WHERE clauses
-- DELETE with LIMIT
-- DELETE with ORDER BY
-- Error handling
-"""
-
 import pytest
 
 from sqlo import Condition, Q, Raw

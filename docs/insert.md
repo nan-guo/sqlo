@@ -1,6 +1,6 @@
 # INSERT Queries
 
-Complete guide to INSERT query building with sqlo.
+Complete guide to INSERT query building with dm-core-sql-toolkit.
 
 ## Basic INSERT
 

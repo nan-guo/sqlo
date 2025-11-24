@@ -1,6 +1,6 @@
 # Expressions & Functions
 
-Guide to using SQL functions and raw expressions in sqlo.
+Guide to using SQL functions and raw expressions in dm-core-sql-toolkit.
 
 ## Raw SQL Expressions
 
