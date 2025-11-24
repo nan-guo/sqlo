@@ -12,7 +12,6 @@ dependencies = []
 Homepage = "https://github.com/nan-guo/sqlo"
 Repository = "https://github.com/nan-guo/sqlo"
 
-[project.classifiers]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
