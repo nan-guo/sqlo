@@ -4,14 +4,6 @@ version = "0.0.1"
 description = "A modern, type-safe, and extensible SQL query builder for Python."
 license = {text = "MIT"}
 readme = "README.md"
-
-requires-python = ">=3.9"
-dependencies = []
-
-[project.urls]
-Homepage = "https://github.com/nan-guo/sqlo"
-Repository = "https://github.com/nan-guo/sqlo"
-
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
@@ -25,6 +17,14 @@ classifiers = [
     "Topic :: Database",
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
+
+requires-python = ">=3.9"
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/nan-guo/sqlo"
+Repository = "https://github.com/nan-guo/sqlo"
+
 
 [project.optional-dependencies]
 dev = [
