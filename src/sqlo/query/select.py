@@ -29,6 +29,7 @@ class SelectQuery(WhereClauseMixin, Query):
         "_distinct",
         "_unions",
         "_dialect",
+        "_optimizer_hints",
     )
 
     def __init__(self, *columns: Union[str, Raw, Func], dialect=None):
@@ -50,7 +51,9 @@ class SelectQuery(WhereClauseMixin, Query):
         self._index_hint: Optional[Tuple[str, Tuple[str, ...]]] = None
         self._explain: bool = False
         self._distinct: bool = False
+        self._distinct: bool = False
         self._unions: List[Tuple[str, "SelectQuery"]] = []
+        self._optimizer_hints: List[str] = []
 
     def from_(
         self, table: Union[str, "SelectQuery"], alias: Optional[str] = None
@@ -268,6 +271,11 @@ class SelectQuery(WhereClauseMixin, Query):
         self._index_hint = ("IGNORE", indexes)
         return self
 
+    def optimizer_hint(self, hint: str) -> "SelectQuery":
+        """Add an optimizer hint (MySQL 8.0+)."""
+        self._optimizer_hints.append(hint)
+        return self
+
     def explain(self) -> "SelectQuery":
         self._explain = True
         return self
@@ -381,6 +389,10 @@ class SelectQuery(WhereClauseMixin, Query):
 
         # SELECT
         parts.append("SELECT")
+
+        # Optimizer Hints
+        if self._optimizer_hints:
+            parts.append(f" /*+ {' '.join(self._optimizer_hints)} */")
 
         # DISTINCT
         if self._distinct:
