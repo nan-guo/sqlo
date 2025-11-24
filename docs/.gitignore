@@ -1,6 +1,0 @@
-# Sphinx build files
-_build/
-_static/
-_templates/
-*.pyc
-__pycache__/
