@@ -7,7 +7,7 @@ def test_insert_single_row():
     """INSERT single row"""
     query = Q.insert_into("users").values([{"name": "Alice", "age": 25}])
     sql, params = query.build()
-    assert sql == "INSERT INTO `users` (`name`, `age`) VALUES (?, ?)"
+    assert sql == "INSERT INTO `users` (`name`, `age`) VALUES (%s, %s)"
     assert params == ("Alice", 25)
 
 
@@ -17,7 +17,7 @@ def test_insert_batch():
         [{"name": "A", "age": 20}, {"name": "B", "age": 30}]
     )
     sql, params = q.build()
-    assert sql == "INSERT INTO `users` (`name`, `age`) VALUES (?, ?), (?, ?)"
+    assert sql == "INSERT INTO `users` (`name`, `age`) VALUES (%s, %s), (%s, %s)"
     assert params == ("A", 20, "B", 30)
 
 
@@ -29,7 +29,7 @@ def test_insert_ignore():
         .ignore()
     )
     sql, params = query.build()
-    assert sql == "INSERT IGNORE INTO `users` (`name`, `email`) VALUES (?, ?)"
+    assert sql == "INSERT IGNORE INTO `users` (`name`, `email`) VALUES (%s, %s)"
     assert params == ("John", "john@example.com")
 
 
@@ -43,7 +43,7 @@ def test_insert_on_duplicate_key_update():
     sql, params = query.build()
     assert "INSERT INTO `users`" in sql
     assert "ON DUPLICATE KEY UPDATE" in sql
-    assert "`count` = ?" in sql
+    assert "`count` = %s" in sql
     assert params == ("test@example.com", 1, 5)
 
 

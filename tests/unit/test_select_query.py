@@ -5,7 +5,7 @@ def test_select_basic():
     """Basic SELECT with WHERE"""
     query = Q.select("id", "name").from_("users").where("active", True)
     sql, params = query.build()
-    assert sql == "SELECT `id`, `name` FROM `users` WHERE `active` = ?"
+    assert sql == "SELECT `id`, `name` FROM `users` WHERE `active` = %s"
     assert params == (True,)
 
 
@@ -37,7 +37,7 @@ def test_select_complex():
     sql, params = query.build()
     assert "SELECT `u`.`id`, COUNT(o.id)" in sql
     assert "LEFT JOIN orders o ON u.id = o.user_id" in sql
-    assert "WHERE `u`.`age` > ?" in sql
+    assert "WHERE `u`.`age` > %s" in sql
     assert "GROUP BY `u`.`id`" in sql
     assert "ORDER BY `count` DESC" in sql
     assert "LIMIT 10" in sql
@@ -161,7 +161,7 @@ def test_select_explain():
     """SELECT with EXPLAIN"""
     q = Q.select("*").from_("users").where("id", 1).explain()
     sql, params = q.build()
-    assert sql == "EXPLAIN SELECT * FROM `users` WHERE `id` = ?"
+    assert sql == "EXPLAIN SELECT * FROM `users` WHERE `id` = %s"
     assert params == (1,)
 
 
@@ -193,7 +193,7 @@ def test_select_when_true():
         .when(True, lambda q: q.where("active", True))
     )
     sql, params = query.build()
-    assert "WHERE `active` = ?" in sql
+    assert "WHERE `active` = %s" in sql
     assert params == (True,)
 
 
@@ -215,7 +215,7 @@ def test_select_from_subquery():
     query = Q.select("*").from_(subquery, alias="active_users")
     sql, params = query.build()
     assert (
-        "(SELECT `id`, `name` FROM `users` WHERE `active` = ?) AS active_users"
+        "(SELECT `id`, `name` FROM `users` WHERE `active` = %s) AS active_users"
         in sql
     )
     assert params == (True,)
@@ -226,7 +226,7 @@ def test_select_where_in_subquery():
     sub = Q.select("id").from_("users").where("active", False)
     query = Q.select("email").from_("users").where_in("id", sub)
     sql, params = query.build()
-    assert "WHERE `id` IN (SELECT `id` FROM `users` WHERE `active` = ?)" in sql
+    assert "WHERE `id` IN (SELECT `id` FROM `users` WHERE `active` = %s)" in sql
     assert params == (False,)
 
 
@@ -234,7 +234,7 @@ def test_select_where_in_list():
     """WHERE IN with list of values"""
     query = Q.select("*").from_("users").where_in("id", [1, 2, 3])
     sql, params = query.build()
-    assert sql == "SELECT * FROM `users` WHERE `id` IN (?, ?, ?)"
+    assert sql == "SELECT * FROM `users` WHERE `id` IN (%s, %s, %s)"
     assert params == (1, 2, 3)
 
 

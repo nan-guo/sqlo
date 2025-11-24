@@ -175,7 +175,8 @@ class Condition(Expression):
                 sub_sql, sub_params = value.build()
                 self.parts.append((f"`{column}` {operator.upper()} ({sub_sql})", list(sub_params)))
             elif isinstance(value, (list, tuple)):
-                placeholders = ", ".join(["?"] * len(value))
+                ph = self._dialect.parameter_placeholder()
+                placeholders = ", ".join([ph] * len(value))
                 self.parts.append((f"`{column}` {operator.upper()} ({placeholders})", list(value)))
             else:
                 raise ValueError(f"{operator} operator requires a list, tuple, or subquery")
@@ -191,7 +192,7 @@ class Condition(Expression):
 
         # Handle standard operators with value
         if value is not None:
-            self.parts.append((f"`{column}` {operator} ?", [value]))
+            self.parts.append((f"`{column}` {operator} {self._dialect.parameter_placeholder()}", [value]))
 
     def build(self, dialect=None) -> Tuple[str, Tuple[Any, ...]]:
         """

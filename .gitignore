@@ -47,3 +47,6 @@ reports/
 .vscode/
 *.swp
 *.swo
+
+# MacOS
+.DS_Store

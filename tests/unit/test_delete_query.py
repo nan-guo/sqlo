@@ -7,7 +7,7 @@ def test_delete_basic():
     """Basic DELETE with WHERE"""
     q = Q.delete_from("users").where("id", 1)
     sql, params = q.build()
-    assert sql == "DELETE FROM `users` WHERE `id` = ?"
+    assert sql == "DELETE FROM `users` WHERE `id` = %s"
     assert params == (1,)
 
 

@@ -24,4 +24,4 @@ def test_builder_delete_from():
 def test_query_str_method():
     query = Q.select("*").from_("users").where("id", 1)
     sql_str = str(query)
-    assert "SELECT * FROM `users` WHERE `id` = ?" in sql_str
+    assert "SELECT * FROM `users` WHERE `id` = %s" in sql_str

@@ -4,10 +4,10 @@ from sqlo import Q, Raw, func
 def test_raw_expression():
     """Raw SQL expression in WHERE"""
     query = (
-        Q.select("*").from_("users").where(Raw("YEAR(created_at) = ?", [2023]))
+        Q.select("*").from_("users").where(Raw("YEAR(created_at) = %s", [2023]))
     )
     sql, params = query.build()
-    assert "YEAR(created_at) = ?" in sql
+    assert "YEAR(created_at) = %s" in sql
     assert params == (2023,)
 
 

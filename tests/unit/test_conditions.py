@@ -7,7 +7,7 @@ def test_simple_condition():
     cond = Condition("age >", 18)
     query = Q.select("*").from_("users").where(cond)
     sql, params = query.build()
-    assert "`age` > ?" in sql
+    assert "`age` > %s" in sql
     assert params == (18,)
 
 
@@ -36,7 +36,7 @@ def test_condition_complex_precedence():
     )
     query = Q.select("*").from_("users").where(cond)
     sql, params = query.build()
-    assert "((`age` > ? AND `country` = ?) OR `vip` = ?)" in sql
+    assert "((`age` > %s AND `country` = %s) OR `vip` = %s)" in sql
     assert params == (18, "FR", True)
 
 

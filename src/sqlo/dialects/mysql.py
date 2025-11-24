@@ -9,4 +9,4 @@ class MySQLDialect(Dialect):
         return "`"
 
     def parameter_placeholder(self) -> str:
-        return "?"
+        return "%s"

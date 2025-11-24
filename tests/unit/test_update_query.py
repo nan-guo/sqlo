@@ -7,7 +7,7 @@ def test_update_basic():
     """Basic UPDATE with WHERE"""
     q = Q.update("users").set({"active": True}).where("id", 1)
     sql, params = q.build()
-    assert sql == "UPDATE `users` SET `active` = ? WHERE `id` = ?"
+    assert sql == "UPDATE `users` SET `active` = %s WHERE `id` = %s"
     assert params == (True, 1)
 
 
@@ -19,7 +19,7 @@ def test_update_multiple_columns():
         .where("id", 1)
     )
     sql, params = q.build()
-    assert "SET `active` = ?, `verified` = ?" in sql
+    assert "SET `active` = %s, `verified` = %s" in sql
     assert params == (True, False, 1)
 
 
@@ -33,7 +33,7 @@ def test_update_with_limit_and_order():
         .limit(100)
     )
     sql, params = query.build()
-    assert "UPDATE `users` SET `status` = ?" in sql
+    assert "UPDATE `users` SET `status` = %s" in sql
     assert "ORDER BY `created_at` DESC" in sql
     assert "LIMIT 100" in sql
     assert params == ("inactive", "2020-01-01")

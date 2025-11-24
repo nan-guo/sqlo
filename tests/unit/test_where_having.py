@@ -7,7 +7,7 @@ def test_where_simple():
     """Simple WHERE clause"""
     query = Q.select("*").from_("users").where("age", 25)
     sql, params = query.build()
-    assert "WHERE `age` = ?" in sql
+    assert "WHERE `age` = %s" in sql
     assert params == (25,)
 
 
@@ -15,7 +15,7 @@ def test_where_with_operator():
     """WHERE with custom operator"""
     query = Q.select("*").from_("products").where("price", 100, operator=">=")
     sql, params = query.build()
-    assert "`price` >= ?" in sql
+    assert "`price` >= %s" in sql
     assert params == (100,)
 
 
@@ -23,7 +23,7 @@ def test_where_with_space_in_column():
     """WHERE with operator in column name (e.g., 'age >')"""
     query = Q.select("*").from_("users").where("age >=", 21)
     sql, params = query.build()
-    assert "`age` >= ?" in sql
+    assert "`age` >= %s" in sql
     assert params == (21,)
 
 
@@ -31,7 +31,7 @@ def test_having_simple():
     """Simple HAVING clause"""
     query = Q.select("age").from_("users").group_by("age").having("age >", 18)
     sql, params = query.build()
-    assert "HAVING `age` > ?" in sql
+    assert "HAVING `age` > %s" in sql
     assert params == (18,)
 
 
@@ -44,7 +44,7 @@ def test_having_with_operator():
         .having("category", "Electronics", operator="!=")
     )
     sql, params = query.build()
-    assert "HAVING `category` != ?" in sql
+    assert "HAVING `category` != %s" in sql
     assert params == ("Electronics",)
 
 
@@ -58,7 +58,7 @@ def test_having_with_condition():
         .having(cond)
     )
     sql, params = query.build()
-    assert "HAVING (`category` = ?)" in sql
+    assert "HAVING (`category` = %s)" in sql
     assert params == ("Electronics",)
 
 

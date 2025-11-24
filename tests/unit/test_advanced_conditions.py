@@ -15,21 +15,21 @@ class TestConditionBuildMethod:
         """Test basic condition build returns (sql, params) tuple."""
         c = Condition("age", 18)
         sql, params = c.build()
-        assert sql == "`age` = ?"
+        assert sql == "`age` = %s"
         assert params == (18,)
 
     def test_compact_operator_build(self):
         """Test compact operator syntax."""
         c = Condition("age>=", 18)
         sql, params = c.build()
-        assert sql == "`age` >= ?"
+        assert sql == "`age` >= %s"
         assert params == (18,)
 
     def test_space_operator_build(self):
         """Test space-separated operator syntax."""
         c = Condition("age >=", 18)
         sql, params = c.build()
-        assert sql == "`age` >= ?"
+        assert sql == "`age` >= %s"
         assert params == (18,)
 
     def test_combined_conditions_build(self):
@@ -102,35 +102,35 @@ class TestInConditions:
         """Test Condition.in_() static factory method."""
         c = Condition.in_("status", ["pending", "done"])
         sql, params = c.build()
-        assert sql == "`status` IN (?, ?)"
+        assert sql == "`status` IN (%s, %s)"
         assert params == ("pending", "done")
 
     def test_not_in_factory_method(self):
         """Test Condition.not_in() static factory method."""
         c = Condition.not_in("status", ["canceled", "failed"])
         sql, params = c.build()
-        assert sql == "`status` NOT IN (?, ?)"
+        assert sql == "`status` NOT IN (%s, %s)"
         assert params == ("canceled", "failed")
 
     def test_in_constructor_syntax(self):
         """Test IN using constructor."""
         c = Condition("status", ["pending", "done"], operator="IN")
         sql, params = c.build()
-        assert sql == "`status` IN (?, ?)"
+        assert sql == "`status` IN (%s, %s)"
         assert params == ("pending", "done")
 
     def test_not_in_constructor_syntax(self):
         """Test NOT IN using constructor."""
         c = Condition("status", ["canceled"], operator="NOT IN")
         sql, params = c.build()
-        assert sql == "`status` NOT IN (?)"
+        assert sql == "`status` NOT IN (%s)"
         assert params == ("canceled",)
 
     def test_in_with_tuple(self):
         """Test IN with tuple values."""
         c = Condition.in_("id", (1, 2, 3))
         sql, params = c.build()
-        assert sql == "`id` IN (?, ?, ?)"
+        assert sql == "`id` IN (%s, %s, %s)"
         assert params == (1, 2, 3)
 
     def test_in_with_subquery(self):
@@ -148,7 +148,7 @@ class TestInConditions:
             Condition.in_("status", ["pending", "processing"])
         )
         sql, params = query.build()
-        assert "`status` IN (?, ?)" in sql
+        assert "`status` IN (%s, %s)" in sql
         assert params == ("pending", "processing")
 
     def test_in_invalid_value(self):
@@ -199,7 +199,7 @@ class TestExistsConditions:
         c = Condition.exists(subquery)
         sql, params = c.build()
         assert "EXISTS (SELECT" in sql
-        assert "IN (?, ?)" in sql
+        assert "IN (%s, %s)" in sql
         assert params == (123, "pending", "processing")
 
 
@@ -249,7 +249,7 @@ class TestComplexCombinations:
             Condition.in_("status", ["pending", "processing"]) & Condition.not_null("total")
         )
         sql, params = query.build()
-        assert "`status` IN (?, ?)" in sql
+        assert "`status` IN (%s, %s)" in sql
         assert "`total` IS NOT NULL" in sql
         assert "AND" in sql
         assert params == ("pending", "processing")
@@ -261,7 +261,7 @@ class TestComplexCombinations:
             | (Condition("amount>", 100) | Condition("priority", "high"))
         )
         sql, params = query.build()
-        assert "IN (?, ?)" in sql
+        assert "IN (%s, %s)" in sql
         assert "IS NOT NULL" in sql
         assert "OR" in sql
         assert params == ("pending", "processing", 100, "high")
@@ -276,7 +276,7 @@ class TestComplexCombinations:
         )
         sql, params = query.build()
         assert "EXISTS" in sql
-        assert "`users.active` = ?" in sql  # Without dot - it's quoted as one identifier
+        assert "`users.active` = %s" in sql  # Without dot - it's quoted as one identifier
         assert params == (True,)
 
     def test_bitwise_operators_still_work(self):
@@ -321,7 +321,7 @@ class TestUserExamples:
         assert "EXISTS (SELECT" in sql
         assert "FROM `orders`" in sql
         assert "OR" in sql
-        assert "`orders.status` IN (?, ?)" in sql
+        assert "`orders.status` IN (%s, %s)" in sql
         assert params == ("canceled", "done")
 
     def test_in_statement(self):
@@ -332,7 +332,7 @@ class TestUserExamples:
         sql, params = query.build()
         
         assert "SELECT * FROM `orders`" in sql
-        assert "`status` IN (?, ?)" in sql
+        assert "`status` IN (%s, %s)" in sql
         assert params == ("canceled", "done")
 
     def test_is_null_with_raw(self):

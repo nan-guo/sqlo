@@ -16,9 +16,9 @@ def test_quote_dotted_identifier():
 
 
 def test_parameter_placeholder():
-    """MySQL uses ? as parameter placeholder"""
+    """MySQL uses %s as parameter placeholder"""
     dialect = MySQLDialect()
-    assert dialect.parameter_placeholder() == "?"
+    assert dialect.parameter_placeholder() == "%s"
 
 
 def test_limit_offset_with_offset():
