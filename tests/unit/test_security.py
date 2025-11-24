@@ -1,7 +1,5 @@
 """Tests for security utilities."""
 
-import pytest
-
 from sqlo import security
 
 
@@ -73,15 +71,15 @@ class TestValidateIdentifierWhitelist:
             security.validate_identifier_whitelist("malicious_table", whitelist)
             is False
         )
-        assert (
-            security.validate_identifier_whitelist("users; DROP", whitelist) is False
-        )
+        assert security.validate_identifier_whitelist("users; DROP", whitelist) is False
 
     def test_case_sensitive(self):
         """Test case sensitivity."""
         whitelist = {"users", "orders"}
         assert (
-            security.validate_identifier_whitelist("Users", whitelist, case_sensitive=True)
+            security.validate_identifier_whitelist(
+                "Users", whitelist, case_sensitive=True
+            )
             is False
         )
         assert (
@@ -120,4 +118,3 @@ class TestEscapeIdentifier:
     def test_empty_string(self):
         """Test empty string."""
         assert security.escape_identifier("") == ""
-

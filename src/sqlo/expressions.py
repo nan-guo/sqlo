@@ -1,6 +1,9 @@
-from typing import Any, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Any, Optional, Union
 
 from .constants import COMPACT_PATTERN
+
+if TYPE_CHECKING:
+    from .query.select import SelectQuery
 
 
 class Expression:
@@ -13,7 +16,7 @@ class Raw(Expression):
     def __init__(
         self,
         sql: str,
-        params: Optional[Union[List[Any], Tuple[Any, ...]]] = None,
+        params: Optional[Union[list[Any], tuple[Any, ...]]] = None,
     ):
         self.sql = sql
         self.params = params or []
@@ -128,7 +131,7 @@ class Condition(Expression):
     ):
         from .dialects.mysql import MySQLDialect
 
-        self.parts: List[Tuple[str, Any]] = []  # (sql, params)
+        self.parts: list[tuple[str, Any]] = []  # (sql, params)
         self.connector = "AND"
         self._dialect = MySQLDialect()
 
@@ -173,13 +176,19 @@ class Condition(Expression):
             # Check if value is a subquery (has build method)
             if hasattr(value, "build"):
                 sub_sql, sub_params = value.build()
-                self.parts.append((f"`{column}` {operator.upper()} ({sub_sql})", list(sub_params)))
+                self.parts.append(
+                    (f"`{column}` {operator.upper()} ({sub_sql})", list(sub_params))
+                )
             elif isinstance(value, (list, tuple)):
                 ph = self._dialect.parameter_placeholder()
                 placeholders = ", ".join([ph] * len(value))
-                self.parts.append((f"`{column}` {operator.upper()} ({placeholders})", list(value)))
+                self.parts.append(
+                    (f"`{column}` {operator.upper()} ({placeholders})", list(value))
+                )
             else:
-                raise ValueError(f"{operator} operator requires a list, tuple, or subquery")
+                raise ValueError(
+                    f"{operator} operator requires a list, tuple, or subquery"
+                )
             return
 
         # Handle Raw values (e.g., Raw("users.id") for column references)
@@ -192,9 +201,14 @@ class Condition(Expression):
 
         # Handle standard operators with value
         if value is not None:
-            self.parts.append((f"`{column}` {operator} {self._dialect.parameter_placeholder()}", [value]))
+            self.parts.append(
+                (
+                    f"`{column}` {operator} {self._dialect.parameter_placeholder()}",
+                    [value],
+                )
+            )
 
-    def build(self, dialect=None) -> Tuple[str, Tuple[Any, ...]]:
+    def build(self, dialect=None) -> tuple[str, tuple[Any, ...]]:
         """
         Build the condition and return (sql, params) tuple.
 
@@ -225,7 +239,7 @@ class Condition(Expression):
                     params.extend(p)
 
         sql = " ".join(parts_sql)
-        
+
         # Wrap in parentheses if multiple parts
         if len(self.parts) > 1:
             sql = f"({sql})"
@@ -279,7 +293,9 @@ class Condition(Expression):
         return Condition(column, operator="IS NOT NULL")
 
     @staticmethod
-    def in_(column: str, values: Union[List[Any], Tuple[Any, ...], "SelectQuery"]) -> "Condition":
+    def in_(
+        column: str, values: Union[list[Any], tuple[Any, ...], "SelectQuery"]
+    ) -> "Condition":
         """
         Create an IN condition.
 
@@ -298,7 +314,9 @@ class Condition(Expression):
         return Condition(column, values, operator="IN")
 
     @staticmethod
-    def not_in(column: str, values: Union[List[Any], Tuple[Any, ...], "SelectQuery"]) -> "Condition":
+    def not_in(
+        column: str, values: Union[list[Any], tuple[Any, ...], "SelectQuery"]
+    ) -> "Condition":
         """
         Create a NOT IN condition.
 
@@ -380,7 +398,7 @@ class Condition(Expression):
         """
         if not conditions:
             return Condition()
-        
+
         result = conditions[0]
         for cond in conditions[1:]:
             result = result & cond
@@ -405,7 +423,7 @@ class Condition(Expression):
         """
         if not conditions:
             return ComplexCondition("OR", Condition(), Condition())
-        
+
         result = conditions[0]
         for cond in conditions[1:]:
             result = result | cond
@@ -445,7 +463,7 @@ class ComplexCondition(Expression):
         self.left = left
         self.right = right
 
-    def build(self, dialect=None) -> Tuple[str, Tuple[Any, ...]]:
+    def build(self, dialect=None) -> tuple[str, tuple[Any, ...]]:
         """
         Build the complex condition and return (sql, params) tuple.
 
@@ -463,8 +481,12 @@ class ComplexCondition(Expression):
             >>> # SQL: (`age` >= ? OR `country` = ?)
         """
         # Build left and right conditions
-        left_sql, left_params = self.left.build(dialect) if hasattr(self.left, "build") else ("", ())
-        right_sql, right_params = self.right.build(dialect) if hasattr(self.right, "build") else ("", ())
+        left_sql, left_params = (
+            self.left.build(dialect) if hasattr(self.left, "build") else ("", ())
+        )
+        right_sql, right_params = (
+            self.right.build(dialect) if hasattr(self.right, "build") else ("", ())
+        )
 
         # Combine with operator
         sql = f"({left_sql} {self.operator} {right_sql})"

@@ -1,11 +1,11 @@
 from typing import Any, Union
 
+from .dialects.mysql import MySQLDialect
 from .expressions import Func, Raw
 from .query.delete import DeleteQuery
 from .query.insert import InsertQuery
 from .query.select import SelectQuery
 from .query.update import UpdateQuery
-from .dialects.mysql import MySQLDialect
 
 
 class Q:

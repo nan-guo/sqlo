@@ -1,5 +1,4 @@
-
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Any, Optional, Union
 
 from ..expressions import Raw
 from .base import Query
@@ -22,14 +21,14 @@ class InsertQuery(Query):
     def __init__(self, table: str, dialect=None):
         super().__init__(dialect)
         self._table = table
-        self._values: List[Dict[str, Any]] = []
+        self._values: list[dict[str, Any]] = []
         self._ignore = False
-        self._on_duplicate: Optional[Dict[str, Any]] = None
-        self._from_select: Optional["SelectQuery"] = None
-        self._select_columns: Optional[List[str]] = None
+        self._on_duplicate: Optional[dict[str, Any]] = None
+        self._from_select: Optional[SelectQuery] = None
+        self._select_columns: Optional[list[str]] = None
 
     def values(
-        self, values: Union[Dict[str, Any], List[Dict[str, Any]]]
+        self, values: Union[dict[str, Any], list[dict[str, Any]]]
     ) -> "InsertQuery":
         if isinstance(values, dict):
             self._values.append(values)
@@ -41,21 +40,21 @@ class InsertQuery(Query):
         self._ignore = True
         return self
 
-    def on_duplicate_key_update(self, values: Dict[str, Any]) -> "InsertQuery":
+    def on_duplicate_key_update(self, values: dict[str, Any]) -> "InsertQuery":
         self._on_duplicate = values
         return self
 
     def from_select(
-        self, columns: List[str], select_query: "SelectQuery"
+        self, columns: list[str], select_query: "SelectQuery"
     ) -> "InsertQuery":
         """Insert data from a SELECT query."""
         self._select_columns = columns
         self._from_select = select_query
         return self
 
-    def build(self) -> Tuple[str, Tuple[Any, ...]]:
-        parts: List[str] = []
-        params: List[Any] = []
+    def build(self) -> tuple[str, tuple[Any, ...]]:
+        parts: list[str] = []
+        params: list[Any] = []
         ph = self._dialect.parameter_placeholder()
 
         # Command

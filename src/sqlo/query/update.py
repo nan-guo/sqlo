@@ -1,5 +1,4 @@
-
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Optional, Union
 
 from ..expressions import ComplexCondition, Condition, Raw
 from .base import Query
@@ -20,15 +19,13 @@ class UpdateQuery(WhereClauseMixin, Query):
     def __init__(self, table: str, dialect=None):
         super().__init__(dialect)
         self._table = table
-        self._values: Dict[str, Any] = {}
-        self._wheres: List[Tuple[str, str, Any]] = []
+        self._values: dict[str, Any] = {}
+        self._wheres: list[tuple[str, str, Any]] = []
         self._limit: Optional[int] = None
-        self._order_bys: List[str] = []
-        self._joins: List[Tuple[str, str, Optional[str]]] = (
-            []
-        )  # (type, table, on)
+        self._order_bys: list[str] = []
+        self._joins: list[tuple[str, str, Optional[str]]] = []  # (type, table, on)
 
-    def set(self, values: Dict[str, Any]) -> "UpdateQuery":
+    def set(self, values: dict[str, Any]) -> "UpdateQuery":
         self._values.update(values)
         return self
 
@@ -49,9 +46,7 @@ class UpdateQuery(WhereClauseMixin, Query):
         value: Any = None,
         operator: str = "=",
     ) -> "UpdateQuery":
-        connector, sql, params = self._build_where_clause(
-            column, value, operator
-        )
+        connector, sql, params = self._build_where_clause(column, value, operator)
         self._wheres.append((connector, sql, params))
         return self
 
@@ -68,14 +63,14 @@ class UpdateQuery(WhereClauseMixin, Query):
             self._order_bys.append(f"{self._dialect.quote(col)} {direction}")
         return self
 
-    def build(self) -> Tuple[str, Tuple[Any, ...]]:
+    def build(self) -> tuple[str, tuple[Any, ...]]:
         if not self._table:
             raise ValueError("No table specified")
         if not self._values:
             raise ValueError("No values to update")
 
-        parts: List[str] = []
-        params: List[Any] = []
+        parts: list[str] = []
+        params: list[Any] = []
         ph = self._dialect.parameter_placeholder()
 
         # UPDATE table SET

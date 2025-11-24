@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from functools import lru_cache
 
 
 class Dialect(ABC):
@@ -10,7 +9,6 @@ class Dialect(ABC):
     def quote_char(self) -> str:
         """The character used to quote identifiers."""
 
-    @lru_cache(maxsize=256)
     def quote(self, identifier: str) -> str:
         """Quote an identifier."""
         if "." in identifier:

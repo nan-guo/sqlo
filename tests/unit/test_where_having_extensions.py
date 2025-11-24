@@ -1,9 +1,14 @@
-import pytest
 from sqlo import Q
+
 
 def test_or_where_in():
     """OR WHERE IN clause"""
-    query = Q.select("*").from_("users").where("age", 25).or_where_in("status", ["active", "pending"])
+    query = (
+        Q.select("*")
+        .from_("users")
+        .where("age", 25)
+        .or_where_in("status", ["active", "pending"])
+    )
     sql, params = query.build()
     assert "WHERE `age` = %s OR `status` IN (%s, %s)" in sql
     assert params == (25, "active", "pending")
@@ -11,7 +16,12 @@ def test_or_where_in():
 
 def test_or_where_not_in():
     """OR WHERE NOT IN clause"""
-    query = Q.select("*").from_("users").where("age", 25).or_where_not_in("status", ["banned", "deleted"])
+    query = (
+        Q.select("*")
+        .from_("users")
+        .where("age", 25)
+        .or_where_not_in("status", ["banned", "deleted"])
+    )
     sql, params = query.build()
     assert "WHERE `age` = %s OR `status` NOT IN (%s, %s)" in sql
     assert params == (25, "banned", "deleted")
@@ -35,7 +45,12 @@ def test_or_where_not_null():
 
 def test_or_where_between():
     """OR WHERE BETWEEN clause"""
-    query = Q.select("*").from_("users").where("status", "active").or_where_between("age", 18, 65)
+    query = (
+        Q.select("*")
+        .from_("users")
+        .where("status", "active")
+        .or_where_between("age", 18, 65)
+    )
     sql, params = query.build()
     assert "WHERE `status` = %s OR `age` BETWEEN %s AND %s" in sql
     assert params == ("active", 18, 65)
@@ -43,7 +58,12 @@ def test_or_where_between():
 
 def test_or_where_not_between():
     """OR WHERE NOT BETWEEN clause"""
-    query = Q.select("*").from_("users").where("status", "active").or_where_not_between("age", 18, 65)
+    query = (
+        Q.select("*")
+        .from_("users")
+        .where("status", "active")
+        .or_where_not_between("age", 18, 65)
+    )
     sql, params = query.build()
     assert "WHERE `status` = %s OR `age` NOT BETWEEN %s AND %s" in sql
     assert params == ("active", 18, 65)
@@ -59,7 +79,9 @@ def test_or_where_like():
 
 def test_or_where_not_like():
     """OR WHERE NOT LIKE clause"""
-    query = Q.select("*").from_("users").where("age", 25).or_where_not_like("name", "John%")
+    query = (
+        Q.select("*").from_("users").where("age", 25).or_where_not_like("name", "John%")
+    )
     sql, params = query.build()
     assert "WHERE `age` = %s OR `name` NOT LIKE %s" in sql
     assert params == (25, "John%")

@@ -38,13 +38,13 @@ def test_set_dialect():
     """Q.set_dialect() should change the default dialect"""
     # Save original
     original_dialect = Q.get_dialect()
-    
+
     # Create custom dialect
     custom_dialect = MySQLDialect()
     Q.set_dialect(custom_dialect)
-    
+
     assert Q.get_dialect() is custom_dialect
-    
+
     # Restore original
     Q.set_dialect(original_dialect)
 

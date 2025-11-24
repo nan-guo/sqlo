@@ -13,11 +13,7 @@ def test_update_basic():
 
 def test_update_multiple_columns():
     """UPDATE multiple columns"""
-    q = (
-        Q.update("users")
-        .set({"active": True, "verified": False})
-        .where("id", 1)
-    )
+    q = Q.update("users").set({"active": True, "verified": False}).where("id", 1)
     sql, params = q.build()
     assert "SET `active` = %s, `verified` = %s" in sql
     assert params == (True, False, 1)

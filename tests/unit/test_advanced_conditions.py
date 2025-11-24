@@ -5,7 +5,7 @@ Tests for advanced condition features: EXISTS, IN, IS NULL, and logical combinat
 import pytest
 
 from sqlo import Q
-from sqlo.expressions import Condition, ComplexCondition, Raw
+from sqlo.expressions import ComplexCondition, Condition, Raw
 
 
 class TestConditionBuildMethod:
@@ -135,7 +135,9 @@ class TestInConditions:
 
     def test_in_with_subquery(self):
         """Test IN with subquery."""
-        subquery = Q.select("user_id").from_("orders").where(Condition("status", "completed"))
+        subquery = (
+            Q.select("user_id").from_("orders").where(Condition("status", "completed"))
+        )
         c = Condition.in_("id", subquery)
         sql, params = c.build()
         assert "`id` IN (SELECT" in sql
@@ -144,8 +146,10 @@ class TestInConditions:
 
     def test_in_query(self):
         """Test IN condition in a query."""
-        query = Q.select("*").from_("orders").where(
-            Condition.in_("status", ["pending", "processing"])
+        query = (
+            Q.select("*")
+            .from_("orders")
+            .where(Condition.in_("status", ["pending", "processing"]))
         )
         sql, params = query.build()
         assert "`status` IN (%s, %s)" in sql
@@ -180,8 +184,10 @@ class TestExistsConditions:
 
     def test_exists_in_query(self):
         """Test EXISTS condition in a query."""
-        subquery = Q.select("1").from_("orders").where(
-            Condition("orders.user_id", Raw("users.id"))
+        subquery = (
+            Q.select("1")
+            .from_("orders")
+            .where(Condition("orders.user_id", Raw("users.id")))
         )
         query = Q.select("*").from_("users").where(Condition.exists(subquery))
         sql, params = query.build()
@@ -245,8 +251,13 @@ class TestComplexCombinations:
 
     def test_in_and_not_null(self):
         """Test combining IN and NOT NULL with AND."""
-        query = Q.select("*").from_("orders").where(
-            Condition.in_("status", ["pending", "processing"]) & Condition.not_null("total")
+        query = (
+            Q.select("*")
+            .from_("orders")
+            .where(
+                Condition.in_("status", ["pending", "processing"])
+                & Condition.not_null("total")
+            )
         )
         sql, params = query.build()
         assert "`status` IN (%s, %s)" in sql
@@ -256,9 +267,16 @@ class TestComplexCombinations:
 
     def test_complex_or_and_combination(self):
         """Test (IN AND NOT NULL) OR (> OR =)."""
-        query = Q.select("*").from_("orders").where(
-            (Condition.in_("status", ["pending", "processing"]) & Condition.not_null("total"))
-            | (Condition("amount>", 100) | Condition("priority", "high"))
+        query = (
+            Q.select("*")
+            .from_("orders")
+            .where(
+                (
+                    Condition.in_("status", ["pending", "processing"])
+                    & Condition.not_null("total")
+                )
+                | (Condition("amount>", 100) | Condition("priority", "high"))
+            )
         )
         sql, params = query.build()
         assert "IN (%s, %s)" in sql
@@ -268,15 +286,21 @@ class TestComplexCombinations:
 
     def test_exists_with_and(self):
         """Test EXISTS combined with other conditions."""
-        subquery = Q.select("1").from_("orders").where(
-            Condition("orders.user_id", Raw("users.id"))
+        subquery = (
+            Q.select("1")
+            .from_("orders")
+            .where(Condition("orders.user_id", Raw("users.id")))
         )
-        query = Q.select("*").from_("users").where(
-            Condition.exists(subquery) & Condition("users.active", True)
+        query = (
+            Q.select("*")
+            .from_("users")
+            .where(Condition.exists(subquery) & Condition("users.active", True))
         )
         sql, params = query.build()
         assert "EXISTS" in sql
-        assert "`users.active` = %s" in sql  # Without dot - it's quoted as one identifier
+        assert (
+            "`users.active` = %s" in sql
+        )  # Without dot - it's quoted as one identifier
         assert params == (True,)
 
     def test_bitwise_operators_still_work(self):
@@ -284,19 +308,19 @@ class TestComplexCombinations:
         c1 = Condition("age>=", 18)
         c2 = Condition("country", "US")
         c3 = Condition("verified", True)
-        
+
         # AND with &
         and_result = c1 & c2
         sql, params = and_result.build()
         assert "AND" in sql
         assert params == (18, "US")
-        
+
         # OR with |
         or_result = c1 | c2
         sql, params = or_result.build()
         assert "OR" in sql
         assert params == (18, "US")
-        
+
         # Complex: (c1 & c2) | c3
         complex_result = (c1 & c2) | c3
         sql, params = complex_result.build()
@@ -310,13 +334,17 @@ class TestUserExamples:
 
     def test_exists_with_or_condition(self):
         """Test the user's EXISTS example with OR in subquery."""
-        subquery = Q.select("1").from_("orders").where(
-            Condition("orders.user_id", Raw("users.id"))
-            | Condition.in_("orders.status", ["canceled", "done"])
+        subquery = (
+            Q.select("1")
+            .from_("orders")
+            .where(
+                Condition("orders.user_id", Raw("users.id"))
+                | Condition.in_("orders.status", ["canceled", "done"])
+            )
         )
         query = Q.select("*").from_("users").where(Condition.exists(subquery))
         sql, params = query.build()
-        
+
         assert "SELECT * FROM `users`" in sql
         assert "EXISTS (SELECT" in sql
         assert "FROM `orders`" in sql
@@ -326,11 +354,13 @@ class TestUserExamples:
 
     def test_in_statement(self):
         """Test IN statement support."""
-        query = Q.select("*").from_("orders").where(
-            Condition.in_("status", ["canceled", "done"])
+        query = (
+            Q.select("*")
+            .from_("orders")
+            .where(Condition.in_("status", ["canceled", "done"]))
         )
         sql, params = query.build()
-        
+
         assert "SELECT * FROM `orders`" in sql
         assert "`status` IN (%s, %s)" in sql
         assert params == ("canceled", "done")
@@ -339,7 +369,7 @@ class TestUserExamples:
         """Test IS NULL works properly."""
         query = Q.select("1").from_("orders").where(Condition.null("total"))
         sql, params = query.build()
-        
+
         # Note: "1" gets quoted as `1` by the dialect
         assert "FROM `orders`" in sql
         assert "`total` IS NULL" in sql
