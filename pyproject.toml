@@ -12,32 +12,75 @@ dependencies = []
 Homepage = "https://github.com/nan-guo/sqlo"
 Repository = "https://github.com/nan-guo/sqlo"
 
-[tool.pdm.dev-dependencies]
-dev = [
-    "black>=22.6.0",
-    "isort>=5.10.1",
-    "mypy>=0.971",
-    "pylint>=2.15.0",
-    "pytest>=7.1.2",
-    "pytest-cov>=3.0.0",
+[project.classifiers]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Database",
+    "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 
-[tool.pdm.build]
-includes = ["src/sqlo"]
+[project.optional-dependencies]
+dev = [
+    "ruff>=0.8.0",
+    "mypy>=1.0.0",
+    "pytest>=7.1.2",
+    "pytest-cov>=3.0.0",
+    "pre-commit>=3.0.0",
+]
 
-[tool.isort]
-profile = "black"
-known_first_party = ["sqlo"]
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/sqlo"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py39"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "N",   # pep8-naming
+    "UP",  # pyupgrade
+    "B",   # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "SIM", # flake8-simplify
+    "PL",  # pylint
+]
+ignore = [
+    "E501",    # line too long (handled by formatter)
+    "PLC0415", # import outside top-level (needed to avoid circular imports)
+    "PLR0912", # too many branches (acceptable for query builders)
+    "PLW2901", # loop variable overwritten (intentional for string stripping)
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["sqlo"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
 
 [tool.mypy]
-python_version = "3.11"
+python_version = "3.9"
 ignore_missing_imports = true
+strict = false
 
 [tool.pytest.ini_options]
 addopts = "-s -vv"
 pythonpath = "src"
 testpaths = ["tests"]
-
-[build-system]
-requires = ["pdm-pep517"]
-build-backend = "pdm.pep517.api"
