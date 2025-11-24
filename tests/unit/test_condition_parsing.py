@@ -1,5 +1,3 @@
-import pytest
-
 from sqlo import Condition, Q
 
 

@@ -1,5 +1,4 @@
-
-from typing import Any, List, Optional, Tuple, Union
+from typing import Any, Optional, Union
 
 from ..expressions import ComplexCondition, Condition, Raw
 from .base import Query
@@ -12,12 +11,10 @@ class DeleteQuery(WhereClauseMixin, Query):
     def __init__(self, table: str, dialect=None):
         super().__init__(dialect)
         self._table = table
-        self._wheres: List[Tuple[str, str, Any]] = []
+        self._wheres: list[tuple[str, str, Any]] = []
         self._limit: Optional[int] = None
-        self._order_bys: List[str] = []
-        self._joins: List[Tuple[str, str, Optional[str]]] = (
-            []
-        )  # (type, table, on)
+        self._order_bys: list[str] = []
+        self._joins: list[tuple[str, str, Optional[str]]] = []  # (type, table, on)
 
     def join(
         self, table: str, on: Optional[str] = None, join_type: str = "INNER"
@@ -36,9 +33,7 @@ class DeleteQuery(WhereClauseMixin, Query):
         value: Any = None,
         operator: str = "=",
     ) -> "DeleteQuery":
-        connector, sql, params = self._build_where_clause(
-            column, value, operator
-        )
+        connector, sql, params = self._build_where_clause(column, value, operator)
         self._wheres.append((connector, sql, params))
         return self
 
@@ -55,12 +50,12 @@ class DeleteQuery(WhereClauseMixin, Query):
             self._order_bys.append(f"{self._dialect.quote(col)} {direction}")
         return self
 
-    def build(self) -> Tuple[str, Tuple[Any, ...]]:
+    def build(self) -> tuple[str, tuple[Any, ...]]:
         if not self._table:
             raise ValueError("No table specified")
 
-        parts: List[str] = []
-        params: List[Any] = []
+        parts: list[str] = []
+        params: list[Any] = []
 
         # DELETE FROM
         parts.append("DELETE FROM ")

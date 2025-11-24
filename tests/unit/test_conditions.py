@@ -42,12 +42,7 @@ def test_condition_complex_precedence():
 
 def test_condition_multiple_and():
     """Chaining multiple AND conditions"""
-    cond = (
-        Condition("a", 1)
-        & Condition("b", 2)
-        & Condition("c", 3)
-        & Condition("d", 4)
-    )
+    cond = Condition("a", 1) & Condition("b", 2) & Condition("c", 3) & Condition("d", 4)
     query = Q.select("*").from_("users").where(cond)
     sql, params = query.build()
     assert "AND" in sql

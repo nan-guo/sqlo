@@ -1,5 +1,6 @@
 from sqlo import Q
 
+
 def test_optimizer_hint():
     """Optimizer hint"""
     query = Q.select("*").from_("users").optimizer_hint("INDEX(users idx_age)")

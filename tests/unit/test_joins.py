@@ -37,9 +37,7 @@ def test_right_join():
 def test_cross_join():
     """CROSS JOIN"""
     query = (
-        Q.select("u.id", "p.name")
-        .from_("users", alias="u")
-        .cross_join("products p")
+        Q.select("u.id", "p.name").from_("users", alias="u").cross_join("products p")
     )
     sql, _ = query.build()
     assert "CROSS JOIN products p" in sql

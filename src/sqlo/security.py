@@ -5,7 +5,6 @@ and other SQL identifiers to prevent SQL injection attacks.
 """
 
 import re
-from typing import List, Set
 
 # Pattern for valid SQL identifiers (letters, numbers, underscores, dots)
 # MySQL allows backticks for identifiers, but we validate the content
@@ -47,7 +46,7 @@ def validate_identifier(identifier: str, allow_dot: bool = True) -> bool:
     return bool(VALID_IDENTIFIER_PATTERN.match(identifier))
 
 
-def validate_identifiers(identifiers: List[str], allow_dot: bool = True) -> bool:
+def validate_identifiers(identifiers: list[str], allow_dot: bool = True) -> bool:
     """Validate multiple SQL identifiers.
 
     :param identifiers: List of identifiers to validate
@@ -65,7 +64,7 @@ def validate_identifiers(identifiers: List[str], allow_dot: bool = True) -> bool
 
 
 def validate_identifier_whitelist(
-    identifier: str, whitelist: Set[str], case_sensitive: bool = True
+    identifier: str, whitelist: set[str], case_sensitive: bool = True
 ) -> bool:
     """Validate an identifier against a whitelist.
 
@@ -131,4 +130,3 @@ __all__ = [
     "validate_identifier_whitelist",
     "escape_identifier",
 ]
-

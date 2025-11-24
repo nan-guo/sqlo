@@ -1,6 +1,6 @@
 import pytest
 
-from sqlo import Condition, Q, Raw
+from sqlo import Condition, Q
 
 
 def test_where_simple():
@@ -51,12 +51,7 @@ def test_having_with_operator():
 def test_having_with_condition():
     """HAVING with Condition object"""
     cond = Condition("category", "Electronics")
-    query = (
-        Q.select("category")
-        .from_("products")
-        .group_by("category")
-        .having(cond)
-    )
+    query = Q.select("category").from_("products").group_by("category").having(cond)
     sql, params = query.build()
     assert "HAVING (`category` = %s)" in sql
     assert params == ("Electronics",)
@@ -70,7 +65,5 @@ def test_invalid_where_clause():
 
 def test_invalid_having_clause():
     """Invalid HAVING clause (missing value) raises error"""
-    with pytest.raises(
-        ValueError, match="Invalid where clause"
-    ):  # Uses same mixin
+    with pytest.raises(ValueError, match="Invalid where clause"):  # Uses same mixin
         Q.select("*").from_("users").having("column")

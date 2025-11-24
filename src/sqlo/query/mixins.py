@@ -2,24 +2,23 @@
 Mixin classes for query builders to share common functionality.
 """
 
-from typing import TYPE_CHECKING, Any, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Any, Optional, Union
 
 from ..constants import COMPACT_PATTERN
 from ..expressions import Raw
 
 if TYPE_CHECKING:
     from ..expressions import ComplexCondition, Condition
+    from .select import SelectQuery
 
 
 class WhereClauseMixin:
     """Mixin for queries that support WHERE clauses."""
 
-    _dialect: (
-        Any  # Type hint for mixin - actual type defined in Query subclass
-    )
+    _dialect: Any  # Type hint for mixin - actual type defined in Query subclass
 
     @staticmethod
-    def _parse_column_operator(column: str) -> Optional[Tuple[str, str]]:
+    def _parse_column_operator(column: str) -> Optional[tuple[str, str]]:
         """Parse column and operator from string like 'age>' or 'age >'."""
         # Optimization: Fast path for space-separated operators
         if " " in column:
@@ -38,7 +37,7 @@ class WhereClauseMixin:
         column: Union[str, Raw, "Condition", "ComplexCondition"],
         value: Any,
         operator: str,
-    ) -> Tuple[str, str, Any]:
+    ) -> tuple[str, str, Any]:
         """
         Build a WHERE/HAVING clause from column, value, and operator.
 
@@ -82,9 +81,7 @@ class WhereClauseMixin:
         operator: str = "=",
     ):
         """Add an OR WHERE condition."""
-        connector, sql, params = self._build_where_clause(
-            column, value, operator
-        )
+        connector, sql, params = self._build_where_clause(column, value, operator)
         if hasattr(self, "_wheres"):
             self._wheres.append(("OR", sql, params))
         return self
@@ -92,7 +89,7 @@ class WhereClauseMixin:
     def _where_in_internal(
         self,
         column: str,
-        values: Union[List[Any], "SelectQuery"],
+        values: Union[list[Any], "SelectQuery"],
         connector: str = "AND",
         not_in: bool = False,
     ):
@@ -121,19 +118,19 @@ class WhereClauseMixin:
                 )
         return self
 
-    def where_in(self, column: str, values: Union[List[Any], "SelectQuery"]):
+    def where_in(self, column: str, values: Union[list[Any], "SelectQuery"]):
         """Add an IN WHERE condition."""
         return self._where_in_internal(column, values, connector="AND", not_in=False)
 
-    def or_where_in(self, column: str, values: Union[List[Any], "SelectQuery"]):
+    def or_where_in(self, column: str, values: Union[list[Any], "SelectQuery"]):
         """Add an OR IN WHERE condition."""
         return self._where_in_internal(column, values, connector="OR", not_in=False)
 
-    def where_not_in(self, column: str, values: Union[List[Any], "SelectQuery"]):
+    def where_not_in(self, column: str, values: Union[list[Any], "SelectQuery"]):
         """Add a NOT IN WHERE condition."""
         return self._where_in_internal(column, values, connector="AND", not_in=True)
 
-    def or_where_not_in(self, column: str, values: Union[List[Any], "SelectQuery"]):
+    def or_where_not_in(self, column: str, values: Union[list[Any], "SelectQuery"]):
         """Add an OR NOT IN WHERE condition."""
         return self._where_in_internal(column, values, connector="OR", not_in=True)
 
@@ -224,7 +221,7 @@ class WhereClauseMixin:
         return self.or_where(column, pattern, operator="NOT LIKE")
 
     @staticmethod
-    def _build_condition(condition) -> Tuple[str, List[Any]]:
+    def _build_condition(condition) -> tuple[str, list[Any]]:
         """
         Recursively build SQL from Condition or ComplexCondition objects.
 

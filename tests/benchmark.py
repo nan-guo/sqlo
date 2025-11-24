@@ -5,7 +5,6 @@ Run with: python -m tests.benchmark
 """
 
 import time
-
 from functools import wraps
 
 from sqlo import Condition, Q, func

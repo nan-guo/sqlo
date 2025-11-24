@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, Optional, Tuple
+from typing import Any, Optional
 
 from ..dialects.base import Dialect
 from ..dialects.mysql import MySQLDialect
@@ -12,7 +12,7 @@ class Query(ABC):
         self._dialect = dialect or MySQLDialect()
 
     @abstractmethod
-    def build(self) -> Tuple[str, Tuple[Any, ...]]:
+    def build(self) -> tuple[str, tuple[Any, ...]]:
         """Build the query and return (sql, params)."""
         raise NotImplementedError("Subclasses must implement build()")
 
