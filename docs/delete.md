@@ -24,7 +24,7 @@ sql, params = query.build()
 # Delete specific rows
 query = Q.delete_from("users").where("id", 123)
 sql, params = query.build()
-# DELETE FROM `users` WHERE `id` = ?
+# DELETE FROM `users` WHERE `id` = %s
 # Params: (123,)
 ```
 
@@ -42,7 +42,7 @@ query = (
     .where("level", "debug")
     .where("created_at <", "2023-01-01")
 )
-# DELETE FROM `logs` WHERE `level` = ? AND `created_at` < ?
+# DELETE FROM `logs` WHERE `level` = %s AND `created_at` < %s
 ```
 
 ### OR Conditions
@@ -53,14 +53,14 @@ query = (
     .where("status", "banned")
     .or_where("login_attempts >", 10)
 )
-# DELETE FROM `users` WHERE `status` = ? OR `login_attempts` > ?
+# DELETE FROM `users` WHERE `status` = %s OR `login_attempts` > %s
 ```
 
 ### IN Clause
 
 ```python
 query = Q.delete_from("users").where_in("id", [1, 2, 3, 4, 5])
-# DELETE FROM `users` WHERE `id` IN (?, ?, ?, ?, ?)
+# DELETE FROM `users` WHERE `id` IN (?, %s, %s, %s, %s)
 ```
 
 ### NULL Checks

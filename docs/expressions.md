@@ -25,9 +25,9 @@ You can safely bind parameters to raw expressions to prevent SQL injection.
 ```python
 # Safe raw expression with parameters
 query = Q.select("*").from_("users").where(
-    Raw("DATEDIFF(NOW(), created_at) > ?", [30])
+    Raw("DATEDIFF(NOW(), created_at) > %s", [30])
 )
-# WHERE DATEDIFF(NOW(), created_at) > ?
+# WHERE DATEDIFF(NOW(), created_at) > %s
 # Params: (30,)
 ```
 
@@ -82,7 +82,7 @@ query = Q.select("*").from_("users").where(Raw(f"name = '{user_input}'"))
 ```python
 user_input = "Alice"
 # DO THIS:
-query = Q.select("*").from_("users").where(Raw("name = ?", [user_input]))
+query = Q.select("*").from_("users").where(Raw("name = %s", [user_input]))
 ```
 
 ### Identifier Quoting

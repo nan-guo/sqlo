@@ -15,11 +15,11 @@ from sqlo import Condition
 
 # Create a condition (Standard)
 c = Condition("age", ">=", 18)
-# Represents: `age` >= ?
+# Represents: `age` >= %s
 
 # Create a condition (Compact)
 c = Condition("age>=", 18)
-# Represents: `age` >= ?
+# Represents: `age` >= %s
 ```
 
 ### Supported Operators
@@ -108,7 +108,7 @@ is_eligible = Condition.or_(
 
 # Use in query
 query = Q.select("*").from_("users").where(is_eligible)
-# WHERE (`age` >= ? OR (`age` >= ? AND `has_consent` = ?))
+# WHERE (`age` >= %s OR (`age` >= %s AND `has_consent` = %s))
 ```
 
 ## Dynamic Condition Building
@@ -155,10 +155,10 @@ from sqlo import Raw
 
 # Raw SQL condition
 c = Condition(Raw("LENGTH(password)"), ">", 8)
-# LENGTH(password) > ?
+# LENGTH(password) > %s
 
 # Completely raw condition
-c = Condition(Raw("MATCH(title, body) AGAINST(?)", ["search term"]))
+c = Condition(Raw("MATCH(title, body) AGAINST(  %s)", ["search term"]))
 ```
 
 ## See Also

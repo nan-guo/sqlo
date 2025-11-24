@@ -15,7 +15,7 @@ query = Q.insert_into("users").values([
 ])
 
 sql, params = query.build()
-# INSERT INTO `users` (`name`, `email`, `age`) VALUES (?, ?, ?)
+# INSERT INTO `users` (`name`, `email`, `age`) VALUES (?, %s, %s)
 # Params: ('Alice', 'alice@example.com', 25)
 ```
 
@@ -30,7 +30,7 @@ query = Q.insert_into("users").values([
 ])
 
 sql, params = query.build()
-# INSERT INTO `users` (`name`, `email`, `age`) VALUES (?, ?, ?), (?, ?, ?), (?, ?, ?)
+# INSERT INTO `users` (`name`, `email`, `age`) VALUES (?, %s, %s), (?, %s, %s), (?, %s, %s)
 # Params: ('Alice', 'alice@example.com', 25, 'Bob', 'bob@example.com', 30, 'Charlie', 'charlie@example.com', 35)
 ```
 
@@ -47,7 +47,7 @@ query = Q.insert_into("users").values([
 ])
 
 # Columns are ordered consistently based on first row
-# INSERT INTO `users` (`email`, `name`, `age`) VALUES (?, ?, ?), (?, ?, ?)
+# INSERT INTO `users` (`email`, `name`, `age`) VALUES (?, %s, %s), (?, %s, %s)
 ```
 
 ### Partial Columns
@@ -72,7 +72,7 @@ query = Q.insert_into("users").ignore().values([
 ])
 
 sql, params = query.build()
-# INSERT IGNORE INTO `users` (`email`, `name`) VALUES (?, ?)
+# INSERT IGNORE INTO `users` (`email`, `name`) VALUES (?, %s)
 ```
 
 ### Use Cases for INSERT IGNORE
@@ -100,7 +100,7 @@ query = (
 )
 
 sql, params = query.build()
-# INSERT INTO `users` (`email`, `name`, `login_count`) VALUES (?, ?, ?)
+# INSERT INTO `users` (`email`, `name`, `login_count`) VALUES (?, %s, %s)
 # ON DUPLICATE KEY UPDATE `login_count` = login_count + 1
 ```
 
@@ -117,7 +117,7 @@ query = (
     })
 )
 
-# ON DUPLICATE KEY UPDATE `name` = ?, `last_login` = ?, `updated_at` = NOW()
+# ON DUPLICATE KEY UPDATE `name` = %s, `last_login` = %s, `updated_at` = NOW()
 ```
 
 ### Using VALUES() Reference
@@ -174,7 +174,7 @@ query = Q.insert_into("users").from_select(
 
 sql, params = query.build()
 # INSERT INTO `users` (`name`, `email`, `created_at`)
-# SELECT `name`, `email`, `created_at` FROM `temp_users` WHERE `verified` = ?
+# SELECT `name`, `email`, `created_at` FROM `temp_users` WHERE `verified` = %s
 ```
 
 ### With Column Mapping
@@ -211,7 +211,7 @@ query = create_user({
     "email": "alice@example.com",
     "phone": None  # Will be excluded
 })
-# INSERT INTO `users` (`name`, `email`) VALUES (?, ?)
+# INSERT INTO `users` (`name`, `email`) VALUES (?, %s)
 ```
 
 ### Batch Insert with Validation

@@ -24,7 +24,7 @@ from sqlo import Q
 # SELECT query
 query = Q.select("id", "name").from_("users").where("active", True)
 sql, params = query.build()
-# SQL: SELECT `id`, `name` FROM `users` WHERE `active` = ?
+# SQL: SELECT `id`, `name` FROM `users` WHERE `active` = %s
 # Params: (True,)
 ```
 
@@ -97,6 +97,37 @@ Automatically generates parameterized queries to prevent SQL injection:
 query = Q.select("*").from_("users").where("email", user_input)
 sql, params = query.build()
 # user_input is never directly concatenated into SQL
+```
+
+### 4. SQL Dialects
+
+`sqlo` uses **MySQL** as the default dialect. This affects:
+- Identifier quoting: `` `table_name` ``
+- Parameter placeholders: `%s`
+
+```python
+from sqlo import Q
+
+# By default, uses MySQL dialect
+query = Q.select("*").from_("users").where("id", 1)
+sql, params = query.build()
+# SQL: SELECT * FROM `users` WHERE `id` = %s
+# Params: (1,)
+```
+
+#### Changing the Dialect
+
+You can change the default dialect for your entire application:
+
+```python
+from sqlo import Q
+from sqlo.dialects.mysql import MySQLDialect
+
+# Set the dialect globally (optional, MySQL is already default)
+Q.set_dialect(MySQLDialect())
+
+# All queries will use this dialect
+query = Q.select("*").from_("users")
 ```
 
 ## Next Steps

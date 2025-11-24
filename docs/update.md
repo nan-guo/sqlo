@@ -13,7 +13,7 @@ from sqlo import Q
 query = Q.update("users").set({"active": False})
 
 sql, params = query.build()
-# UPDATE `users` SET `active` = ?
+# UPDATE `users` SET `active` = %s
 # Params: (False,)
 ```
 
@@ -31,7 +31,7 @@ query = (
 )
 
 sql, params = query.build()
-# UPDATE `users` SET `active` = ? WHERE `id` = ?
+# UPDATE `users` SET `active` = %s WHERE `id` = %s
 # Params: (False, 123)
 ```
 
@@ -50,7 +50,7 @@ query = (
     .where("id", 123)
 )
 
-# UPDATE `users` SET `name` = ?, `email` = ?, `updated_at` = NOW() WHERE `id` = ?
+# UPDATE `users` SET `name` = %s, `email` = %s, `updated_at` = NOW() WHERE `id` = %s
 ```
 
 ### Increment/Decrement Values
@@ -63,7 +63,7 @@ query = (
     .where("id", 123)
 )
 
-# UPDATE `users` SET `login_count` = login_count + 1 WHERE `id` = ?
+# UPDATE `users` SET `login_count` = login_count + 1 WHERE `id` = %s
 
 # Decrement a value
 query = (
@@ -72,7 +72,7 @@ query = (
     .where("id", 456)
 )
 
-# UPDATE `products` SET `stock` = stock - 1 WHERE `id` = ?
+# UPDATE `products` SET `stock` = stock - 1 WHERE `id` = %s
 ```
 
 ### Using Expressions
@@ -90,7 +90,7 @@ query = (
     .where("id", 123)
 )
 
-# UPDATE `users` SET `full_name` = CONCAT(first_name, ' ', last_name), `updated_at` = NOW() WHERE `id` = ?
+# UPDATE `users` SET `full_name` = CONCAT(first_name, ' ', last_name), `updated_at` = NOW() WHERE `id` = %s
 ```
 
 ## WHERE Clause
@@ -108,7 +108,7 @@ query = (
     .where("last_login <", "2020-01-01")
     .where("email_verified", False)
 )
-# WHERE `last_login` < ? AND `email_verified` = ?
+# WHERE `last_login` < %s AND `email_verified` = %s
 ```
 
 ### OR Conditions
@@ -120,7 +120,7 @@ query = (
     .where("last_login <", "2020-01-01")
     .or_where("login_count", 0)
 )
-# WHERE `last_login` < ? OR `login_count` = ?
+# WHERE `last_login` < %s OR `login_count` = %s
 ```
 
 ### IN Clause
@@ -131,7 +131,7 @@ query = (
     .set({"group": "premium"})
     .where_in("id", [1, 2, 3, 4, 5])
 )
-# WHERE `id` IN (?, ?, ?, ?, ?)
+# WHERE `id` IN (?, %s, %s, %s, %s)
 ```
 
 ### NULL Checks
@@ -144,7 +144,7 @@ query = (
     .where_null("email_verified_at")
     .where("email_sent", True)
 )
-# WHERE `email_verified_at` IS NULL AND `email_sent` = ?
+# WHERE `email_verified_at` IS NULL AND `email_sent` = %s
 ```
 
 ### Complex Conditions
@@ -166,7 +166,7 @@ query = (
     .set({"permissions": "elevated"})
     .where(condition)
 )
-# WHERE (`active` = ? AND (`role` = ? OR `role` = ?))
+# WHERE (`active` = %s AND (`role` = %s OR `role` = %s))
 ```
 
 See [Condition Objects](conditions.md) for more details.
@@ -184,7 +184,7 @@ query = (
     .order_by("created_at")  # Ascending order
     .limit(100)
 )
-# UPDATE `users` SET `processed` = ? WHERE `processed` = ? ORDER BY `created_at` ASC LIMIT 100
+# UPDATE `users` SET `processed` = %s WHERE `processed` = %s ORDER BY `created_at` ASC LIMIT 100
 
 # Update newest records first
 query = (
@@ -209,7 +209,7 @@ query = (
     .where("last_login <", "2020-01-01")
     .limit(100)
 )
-# UPDATE `users` SET `active` = ? WHERE `last_login` < ? LIMIT 100
+# UPDATE `users` SET `active` = %s WHERE `last_login` < %s LIMIT 100
 ```
 
 ### Batch Updates with LIMIT
@@ -237,37 +237,6 @@ def batch_update(condition_value, batch_size=1000):
 
 ## Dynamic UPDATE Building
 
-### Conditional Updates with `when()`
-
-```python
-def update_user(user_id: int, updates: dict):
-    """Build UPDATE query dynamically based on provided fields"""
-    query = Q.update("users").where("id", user_id)
-    
-    # Only update fields that are provided
-    query = query.when(
-        "name" in updates,
-        lambda q: q.set({"name": updates["name"]})
-    )
-    
-    query = query.when(
-        "email" in updates,
-        lambda q: q.set({"email": updates["email"]})
-    )
-    
-    # Always update timestamp
-    query = query.set({"updated_at": "NOW()"})
-    
-    return query
-
-# Usage
-query = update_user(123, {"name": "Alice"})
-# UPDATE `users` SET `name` = ?, `updated_at` = NOW() WHERE `id` = ?
-
-query = update_user(123, {"name": "Alice", "email": "alice@example.com"})
-# UPDATE `users` SET `name` = ?, `email` = ?, `updated_at` = NOW() WHERE `id` = ?
-```
-
 ### Partial Updates
 
 ```python
@@ -293,7 +262,7 @@ query = partial_update("users", 123, {
     "email": None,  # Will be excluded
     "age": 25
 })
-# UPDATE `users` SET `name` = ?, `age` = ? WHERE `id` = ?
+# UPDATE `users` SET `name` = %s, `age` = %s WHERE `id` = %s
 ```
 
 ## Advanced Examples
@@ -313,7 +282,7 @@ query = (
     .set({"avg_rating": subquery})
     .where("id", 123)
 )
-# UPDATE `products` SET `avg_rating` = (SELECT AVG(rating) FROM `reviews` WHERE reviews.product_id = products.id) WHERE `id` = ?
+# UPDATE `products` SET `avg_rating` = (SELECT AVG(rating) FROM `reviews` WHERE reviews.product_id = products.id) WHERE `id` = %s
 ```
 
 ### Conditional Value Updates
@@ -367,7 +336,7 @@ def update_user_status(user_ids: list[int], new_status: str):
 
 # Usage
 query = update_user_status([1, 2, 3, 4, 5], "verified")
-# UPDATE `users` SET `status` = ?, `updated_at` = NOW() WHERE `id` IN (?, ?, ?, ?, ?)
+# UPDATE `users` SET `status` = %s, `updated_at` = NOW() WHERE `id` IN (?, %s, %s, %s, %s)
 ```
 
 ### Increment with Bounds
@@ -379,7 +348,7 @@ query = (
     .set({"points": Raw("LEAST(points + 10, 1000)")})  # Max 1000 points
     .where("id", 123)
 )
-# UPDATE `users` SET `points` = LEAST(points + 10, 1000) WHERE `id` = ?
+# UPDATE `users` SET `points` = LEAST(points + 10, 1000) WHERE `id` = %s
 
 # Decrement but don't go below minimum
 query = (
@@ -387,7 +356,7 @@ query = (
     .set({"stock": Raw("GREATEST(stock - 1, 0)")})  # Min 0 stock
     .where("id", 456)
 )
-# UPDATE `products` SET `stock` = GREATEST(stock - 1, 0) WHERE `id` = ?
+# UPDATE `products` SET `stock` = GREATEST(stock - 1, 0) WHERE `id` = %s
 ```
 
 ## Safety Best Practices
@@ -537,7 +506,7 @@ query = (
     .set({"active": Raw("NOT active")})
     .where("id", 123)
 )
-# UPDATE `users` SET `active` = NOT active WHERE `id` = ?
+# UPDATE `users` SET `active` = NOT active WHERE `id` = %s
 ```
 
 ### Update JSON Field

@@ -35,25 +35,25 @@ sql, params = query.build()
 ```python
 # Simple equality
 query = Q.select("*").from_("users").where("active", True)
-# WHERE `active` = ?
+# WHERE `active` = %s
 
 # Comparison operators (Standard)
 query = Q.select("*").from_("users").where("age >", 18)
-# WHERE `age` > ?
+# WHERE `age` > %s
 
 # Compact Syntax (New)
 query = Q.select("*").from_("users").where("age>", 18)
-# WHERE `age` > ?
+# WHERE `age` > %s
 
 query = Q.select("*").from_("users").where("age>=", 18)
-# WHERE `age` >= ?
+# WHERE `age` >= %s
 
 # Extended Operators
 query = Q.select("*").from_("users").where("name LIKE", "John%")
 # WHERE `name` LIKE ?
 
 query = Q.select("*").from_("users").where("created_at >=", "2023-01-01")
-# WHERE `created_at` >= ?
+# WHERE `created_at` >= %s
 ```
 
 ### Multiple Conditions
@@ -66,7 +66,7 @@ query = (
     .where("active", True)
     .where("age >=", 18)
 )
-# WHERE `active` = ? AND `age` >= ?
+# WHERE `active` = %s AND `age` >= %s
 
 # OR conditions
 query = (
@@ -75,7 +75,7 @@ query = (
     .or_where("role", "admin")
     .or_where("role", "moderator")
 )
-# WHERE `role` = ? OR `role` = ?
+# WHERE `role` = %s OR `role` = %s
 ```
 
 ### IN and NOT IN
@@ -83,11 +83,19 @@ query = (
 ```python
 # IN clause
 query = Q.select("*").from_("users").where_in("id", [1, 2, 3, 4, 5])
-# WHERE `id` IN (?, ?, ?, ?, ?)
+# WHERE `id` IN (?, %s, %s, %s, %s)
+
+# OR IN clause
+query = Q.select("*").from_("users").where("active", True).or_where_in("role", ["admin", "mod"])
+# WHERE `active` = %s OR `role` IN (?, %s)
 
 # NOT IN clause
 query = Q.select("*").from_("users").where_not_in("status", ["banned", "deleted"])
-# WHERE `status` NOT IN (?, ?)
+# WHERE `status` NOT IN (?, %s)
+
+# OR NOT IN clause
+query = Q.select("*").from_("users").where("active", True).or_where_not_in("id", [1, 2])
+# WHERE `active` = %s OR `id` NOT IN (?, %s)
 ```
 
 ### NULL Checks
@@ -97,9 +105,17 @@ query = Q.select("*").from_("users").where_not_in("status", ["banned", "deleted"
 query = Q.select("*").from_("users").where_null("deleted_at")
 # WHERE `deleted_at` IS NULL
 
+# OR IS NULL
+query = Q.select("*").from_("users").where("active", False).or_where_null("last_login")
+# WHERE `active` = %s OR `last_login` IS NULL
+
 # IS NOT NULL
 query = Q.select("*").from_("users").where_not_null("email_verified_at")
 # WHERE `email_verified_at` IS NOT NULL
+
+# OR IS NOT NULL
+query = Q.select("*").from_("users").where("active", True).or_where_not_null("phone")
+# WHERE `active` = %s OR `phone` IS NOT NULL
 ```
 
 ### BETWEEN
@@ -108,8 +124,14 @@ query = Q.select("*").from_("users").where_not_null("email_verified_at")
 query = Q.select("*").from_("orders").where_between("created_at", "2023-01-01", "2023-12-31")
 # WHERE `created_at` BETWEEN ? AND ?
 
+query = Q.select("*").from_("orders").where("total >", 100).or_where_between("quantity", 10, 20)
+# WHERE `total` > %s OR `quantity` BETWEEN ? AND ?
+
 query = Q.select("*").from_("products").where_not_between("price", 10, 100)
 # WHERE `price` NOT BETWEEN ? AND ?
+
+query = Q.select("*").from_("products").where("category", "A").or_where_not_between("stock", 0, 5)
+# WHERE `category` = %s OR `stock` NOT BETWEEN ? AND ?
 ```
 
 ### LIKE Patterns
@@ -119,9 +141,17 @@ query = Q.select("*").from_("products").where_not_between("price", 10, 100)
 query = Q.select("*").from_("users").where_like("email", "%@example.com")
 # WHERE `email` LIKE ?
 
+# OR LIKE
+query = Q.select("*").from_("users").where("name", "John").or_where_like("email", "%@gmail.com")
+# WHERE `name` = %s OR `email` LIKE ?
+
 # NOT LIKE
 query = Q.select("*").from_("users").where_not_like("name", "test%")
 # WHERE `name` NOT LIKE ?
+
+# OR NOT LIKE
+query = Q.select("*").from_("users").where("active", True).or_where_not_like("name", "guest%")
+# WHERE `active` = %s OR `name` NOT LIKE ?
 ```
 
 ## Complex Conditions
@@ -141,7 +171,7 @@ condition = Condition.and_(
 )
 
 query = Q.select("*").from_("users").where(condition)
-# WHERE (`age` >= ? AND (`country` = ? OR `country` = ?))
+# WHERE (`age` >= %s AND (`country` = %s OR `country` = %s))
 ```
 
 See [Condition Objects](conditions.md) for detailed information.
@@ -221,7 +251,7 @@ query = (
     .group_by("country")
     .having("COUNT(*) >", 100)
 )
-# HAVING COUNT(*) > ?
+# HAVING COUNT(*) > %s
 
 # Multiple HAVING conditions
 query = (
@@ -231,7 +261,7 @@ query = (
     .having("AVG(age) >=", 18)
     .having("COUNT(*) >", 50)
 )
-# HAVING AVG(age) >= ? AND COUNT(*) > ?
+# HAVING AVG(age) >= %s AND COUNT(*) > %s
 ```
 
 ## DISTINCT
@@ -293,7 +323,7 @@ query = (
     .from_("users")
     .where_in("id", subquery)
 )
-# WHERE `id` IN (SELECT `user_id` FROM `orders` WHERE `total` > ?)
+# WHERE `id` IN (SELECT `user_id` FROM `orders` WHERE `total` > %s)
 ```
 
 ### Subquery in FROM
@@ -334,29 +364,40 @@ query = (
 
 ## Index Hints
 
-### FORCE INDEX
+### Optimizer Hints (MySQL 8.0+)
+
+MySQL 8.0 deprecated `FORCE INDEX`, `USE INDEX`, and `IGNORE INDEX` in favor of Optimizer Hints.
 
 ```python
+# Using Optimizer Hints
+query = Q.select("*").from_("users").optimizer_hint("INDEX(users idx_email)")
+# SELECT /*+ INDEX(users idx_email) */ * FROM `users`
+
+# Multiple hints
+query = (
+    Q.select("*")
+    .from_("users")
+    .optimizer_hint("INDEX(users idx_email)")
+    .optimizer_hint("MAX_EXECUTION_TIME(1000)")
+)
+# SELECT /*+ INDEX(users idx_email) MAX_EXECUTION_TIME(1000) */ * FROM `users`
+```
+
+### Legacy Index Hints (Deprecated)
+
+> [!WARNING]
+> These methods are deprecated and may be removed in future versions. Use `optimizer_hint()` instead.
+
+```python
+# FORCE INDEX
 query = Q.select("*").from_("users").force_index("idx_email")
 # SELECT * FROM `users` FORCE INDEX (`idx_email`)
 
-# Multiple indexes
-query = Q.select("*").from_("users").force_index("idx_email", "idx_created_at")
-# FORCE INDEX (`idx_email`, `idx_created_at`)
-```
-
-### USE INDEX
-
-```python
+# USE INDEX
 query = Q.select("*").from_("users").use_index("idx_name")
-# SELECT * FROM `users` USE INDEX (`idx_name`)
-```
 
-### IGNORE INDEX
-
-```python
+# IGNORE INDEX
 query = Q.select("*").from_("users").ignore_index("idx_old")
-# SELECT * FROM `users` IGNORE INDEX (`idx_old`)
 ```
 
 ## Dynamic Query Building
@@ -382,10 +423,10 @@ def build_user_query(filters: dict):
 
 # Usage
 query = build_user_query({"email": "test@example.com"})
-# Only includes WHERE email = ?
+# Only includes WHERE email = %s
 
 query = build_user_query({"min_age": 18})
-# Only includes WHERE age >= ?
+# Only includes WHERE age >= %s
 ```
 
 ### Complex Dynamic Conditions
@@ -463,7 +504,7 @@ count_query = (
 query = Q.select("*").from_("users").where("email", "test@example.com")
 explain_query = query.explain()
 explain_sql, params = explain_query.build()
-# Returns: EXPLAIN SELECT * FROM `users` WHERE `email` = ?
+# Returns: EXPLAIN SELECT * FROM `users` WHERE `email` = %s
 
 # Execute with your database connection to see query plan
 # cursor.execute(explain_sql, params)
