@@ -51,3 +51,47 @@ def test_delete_without_table():
     query._table = None
     with pytest.raises(ValueError, match="No table specified"):
         query.build()
+
+
+def test_delete_join():
+    """DELETE with JOIN (MySQL multi-table delete)"""
+    query = (
+        Q.delete_from("users")
+        .join("orders", "orders.user_id = users.id")
+        .where("orders.status", "cancelled")
+    )
+    sql, params = query.build()
+    assert "DELETE FROM `users` INNER JOIN orders ON orders.user_id = users.id" in sql
+    assert "WHERE `orders`.`status` = %s" in sql
+    assert params == ("cancelled",)
+
+
+def test_delete_left_join():
+    """DELETE with LEFT JOIN"""
+    query = (
+        Q.delete_from("users")
+        .left_join("orders", "orders.user_id = users.id")
+        .where_null("orders.id")
+    )
+    sql, params = query.build()
+    assert "DELETE FROM `users` LEFT JOIN orders ON orders.user_id = users.id" in sql
+    assert "WHERE `orders`.`id` IS NULL" in sql
+
+
+def test_delete_order_by_desc():
+    """DELETE with ORDER BY DESC"""
+    query = Q.delete_from("logs").order_by("-created_at")
+    sql, _ = query.build()
+    assert "ORDER BY `created_at` DESC" in sql
+
+
+def test_delete_multiple_joins():
+    """DELETE with multiple JOINs"""
+    query = (
+        Q.delete_from("t1")
+        .join("t2", "t1.id = t2.t1_id")
+        .left_join("t3", "t2.id = t3.t2_id")
+    )
+    sql, _ = query.build()
+    assert "INNER JOIN t2" in sql
+    assert "LEFT JOIN t3" in sql

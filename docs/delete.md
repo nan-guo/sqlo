@@ -60,7 +60,7 @@ query = (
 
 ```python
 query = Q.delete_from("users").where_in("id", [1, 2, 3, 4, 5])
-# DELETE FROM `users` WHERE `id` IN (?, %s, %s, %s, %s)
+# DELETE FROM `users` WHERE `id` IN (%s, %s, %s, %s, %s)
 ```
 
 ### NULL Checks

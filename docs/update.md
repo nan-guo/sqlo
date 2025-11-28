@@ -131,7 +131,7 @@ query = (
     .set({"group": "premium"})
     .where_in("id", [1, 2, 3, 4, 5])
 )
-# WHERE `id` IN (?, %s, %s, %s, %s)
+# WHERE `id` IN (%s, %s, %s, %s, %s)
 ```
 
 ### NULL Checks
@@ -336,7 +336,7 @@ def update_user_status(user_ids: list[int], new_status: str):
 
 # Usage
 query = update_user_status([1, 2, 3, 4, 5], "verified")
-# UPDATE `users` SET `status` = %s, `updated_at` = NOW() WHERE `id` IN (?, %s, %s, %s, %s)
+# UPDATE `users` SET `status` = %s, `updated_at` = NOW() WHERE `id` IN (%s, %s, %s, %s, %s)
 ```
 
 ### Increment with Bounds

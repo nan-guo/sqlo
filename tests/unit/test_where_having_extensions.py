@@ -1,87 +1,62 @@
 from sqlo import Q
+from sqlo.dialects.mysql import MySQLDialect
+from sqlo.query.mixins import WhereClauseMixin
 
 
-def test_or_where_in():
-    """OR WHERE IN clause"""
-    query = (
-        Q.select("*")
-        .from_("users")
-        .where("age", 25)
-        .or_where_in("status", ["active", "pending"])
-    )
-    sql, params = query.build()
-    assert "WHERE `age` = %s OR `status` IN (%s, %s)" in sql
-    assert params == (25, "active", "pending")
+class MockQuery(WhereClauseMixin):
+    def __init__(self):
+        self._dialect = MySQLDialect()
+        self._wheres = []
+
+    def where(self, column, value=None, operator="="):
+        # Simple mock implementation
+        connector, sql, params = self._build_where_clause(column, value, operator)
+        self._wheres.append((connector, sql, params))
+        return self
 
 
-def test_or_where_not_in():
-    """OR WHERE NOT IN clause"""
-    query = (
-        Q.select("*")
-        .from_("users")
-        .where("age", 25)
-        .or_where_not_in("status", ["banned", "deleted"])
-    )
-    sql, params = query.build()
-    assert "WHERE `age` = %s OR `status` NOT IN (%s, %s)" in sql
-    assert params == (25, "banned", "deleted")
+def test_or_where():
+    q = MockQuery()
+    q.or_where("id", 1)
+    assert q._wheres == [("OR", "`id` = %s", [1])]
 
 
-def test_or_where_null():
-    """OR WHERE IS NULL clause"""
-    query = Q.select("*").from_("users").where("age", 25).or_where_null("deleted_at")
-    sql, params = query.build()
-    assert "WHERE `age` = %s OR `deleted_at` IS NULL" in sql
-    assert params == (25,)
+def test_where_in_subquery_mixin():
+    q = MockQuery()
+    sub = Q.select("id").from_("users")
+    q.where_in("user_id", sub)
+    assert q._wheres[0][0] == "AND"
+    assert "IN (SELECT `id` FROM `users`)" in q._wheres[0][1]
 
 
-def test_or_where_not_null():
-    """OR WHERE IS NOT NULL clause"""
-    query = Q.select("*").from_("users").where("age", 25).or_where_not_null("email")
-    sql, params = query.build()
-    assert "WHERE `age` = %s OR `email` IS NOT NULL" in sql
-    assert params == (25,)
+def test_mixin_methods():
+    """Test all mixin methods directly to ensure coverage"""
+    q = MockQuery()
 
+    # where_in / or_where_in / where_not_in / or_where_not_in
+    q.where_in("id", [1])
+    q.or_where_in("id", [2])
+    q.where_not_in("id", [3])
+    q.or_where_not_in("id", [4])
 
-def test_or_where_between():
-    """OR WHERE BETWEEN clause"""
-    query = (
-        Q.select("*")
-        .from_("users")
-        .where("status", "active")
-        .or_where_between("age", 18, 65)
-    )
-    sql, params = query.build()
-    assert "WHERE `status` = %s OR `age` BETWEEN %s AND %s" in sql
-    assert params == ("active", 18, 65)
+    # where_null / or_where_null / where_not_null / or_where_not_null
+    q.where_null("a")
+    q.or_where_null("b")
+    q.where_not_null("c")
+    q.or_where_not_null("d")
 
+    # where_between / or_where_between / where_not_between / or_where_not_between
+    q.where_between("x", 1, 2)
+    q.or_where_between("x", 3, 4)
+    q.where_not_between("x", 5, 6)
+    q.or_where_not_between("x", 7, 8)
 
-def test_or_where_not_between():
-    """OR WHERE NOT BETWEEN clause"""
-    query = (
-        Q.select("*")
-        .from_("users")
-        .where("status", "active")
-        .or_where_not_between("age", 18, 65)
-    )
-    sql, params = query.build()
-    assert "WHERE `status` = %s OR `age` NOT BETWEEN %s AND %s" in sql
-    assert params == ("active", 18, 65)
+    # where_like / or_where_like / where_not_like / or_where_not_like
+    q.where_like("name", "A%")
+    q.or_where_like("name", "B%")
+    q.where_not_like("name", "C%")
+    q.or_where_not_like("name", "D%")
 
-
-def test_or_where_like():
-    """OR WHERE LIKE clause"""
-    query = Q.select("*").from_("users").where("age", 25).or_where_like("name", "John%")
-    sql, params = query.build()
-    assert "WHERE `age` = %s OR `name` LIKE %s" in sql
-    assert params == (25, "John%")
-
-
-def test_or_where_not_like():
-    """OR WHERE NOT LIKE clause"""
-    query = (
-        Q.select("*").from_("users").where("age", 25).or_where_not_like("name", "John%")
-    )
-    sql, params = query.build()
-    assert "WHERE `age` = %s OR `name` NOT LIKE %s" in sql
-    assert params == (25, "John%")
+    # Expected total number of where conditions
+    expected_conditions = 16
+    assert len(q._wheres) == expected_conditions

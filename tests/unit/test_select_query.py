@@ -1,4 +1,4 @@
-from sqlo import Q, func
+from sqlo import Q, Raw, func
 
 
 def test_select_basic():
@@ -228,3 +228,76 @@ def test_select_no_table_error():
     query = Q.select("*")
     with pytest.raises(ValueError, match="No table specified"):
         query.build()
+
+
+def test_select_from_subquery_alias():
+    """SELECT from subquery using subquery's alias"""
+    subquery = Q.select("id").from_("users").as_("u")
+    query = Q.select("*").from_(subquery)
+    sql, _ = query.build()
+    assert "(SELECT `id` FROM `users` u) AS u" in sql
+
+
+def test_select_overrides():
+    """Test SelectQuery overrides for where methods"""
+    q = Q.select("*").from_("users")
+
+    # where_not_in
+    q.where_not_in("id", [1, 2])
+    sql, params = q.build()
+    assert "NOT IN (%s, %s)" in sql
+    assert params == (1, 2)
+
+    # where_null
+    q = Q.select("*").from_("users").where_null("deleted_at")
+    sql, _ = q.build()
+    assert "IS NULL" in sql
+
+    # where_not_null
+    q = Q.select("*").from_("users").where_not_null("email")
+    sql, _ = q.build()
+    assert "IS NOT NULL" in sql
+
+    # where_between
+    q = Q.select("*").from_("users").where_between("age", 18, 30)
+    sql, params = q.build()
+    assert "BETWEEN %s AND %s" in sql
+    assert params == (18, 30)
+
+    # where_not_between
+    q = Q.select("*").from_("users").where_not_between("age", 0, 10)
+    sql, params = q.build()
+    assert "NOT BETWEEN %s AND %s" in sql
+    assert params == (0, 10)
+
+    # where_like
+    q = Q.select("*").from_("users").where_like("name", "A%")
+    sql, params = q.build()
+    assert "LIKE %s" in sql
+    assert params == ("A%",)
+
+    # where_not_like
+    q = Q.select("*").from_("users").where_not_like("name", "B%")
+    sql, params = q.build()
+    assert "NOT LIKE %s" in sql
+    assert params == ("B%",)
+
+
+def test_select_order_by_raw():
+    """ORDER BY with Raw expression"""
+    q = Q.select("*").from_("users").order_by(Raw("FIELD(status, 'active', 'pending')"))
+    sql, _ = q.build()
+    assert "ORDER BY FIELD(status, 'active', 'pending')" in sql
+
+
+def test_select_raw_column():
+    """SELECT with Raw column"""
+    q = Q.select(Raw("COUNT(*) as count")).from_("users")
+    sql, _ = q.build()
+    assert "SELECT COUNT(*) as count FROM `users`" in sql
+
+
+def test_select_as():
+    """Test as_ method"""
+    q = Q.select("*").from_("users").as_("u")
+    assert q._alias == "u"

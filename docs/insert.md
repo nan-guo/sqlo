@@ -15,7 +15,7 @@ query = Q.insert_into("users").values([
 ])
 
 sql, params = query.build()
-# INSERT INTO `users` (`name`, `email`, `age`) VALUES (?, %s, %s)
+# INSERT INTO `users` (`name`, `email`, `age`) VALUES (%s, %s, %s)
 # Params: ('Alice', 'alice@example.com', 25)
 ```
 
@@ -30,7 +30,7 @@ query = Q.insert_into("users").values([
 ])
 
 sql, params = query.build()
-# INSERT INTO `users` (`name`, `email`, `age`) VALUES (?, %s, %s), (?, %s, %s), (?, %s, %s)
+# INSERT INTO `users` (`name`, `email`, `age`) VALUES (%s, %s, %s), (%s, %s, %s), (%s, %s, %s)
 # Params: ('Alice', 'alice@example.com', 25, 'Bob', 'bob@example.com', 30, 'Charlie', 'charlie@example.com', 35)
 ```
 
@@ -47,7 +47,7 @@ query = Q.insert_into("users").values([
 ])
 
 # Columns are ordered consistently based on first row
-# INSERT INTO `users` (`email`, `name`, `age`) VALUES (?, %s, %s), (?, %s, %s)
+# INSERT INTO `users` (`email`, `name`, `age`) VALUES (%s, %s, %s), (%s, %s, %s)
 ```
 
 ### Partial Columns
@@ -72,7 +72,7 @@ query = Q.insert_into("users").ignore().values([
 ])
 
 sql, params = query.build()
-# INSERT IGNORE INTO `users` (`email`, `name`) VALUES (?, %s)
+# INSERT IGNORE INTO `users` (`email`, `name`) VALUES (%s, %s)
 ```
 
 ### Use Cases for INSERT IGNORE
@@ -100,7 +100,7 @@ query = (
 )
 
 sql, params = query.build()
-# INSERT INTO `users` (`email`, `name`, `login_count`) VALUES (?, %s, %s)
+# INSERT INTO `users` (`email`, `name`, `login_count`) VALUES (%s, %s, %s)
 # ON DUPLICATE KEY UPDATE `login_count` = login_count + 1
 ```
 
@@ -211,7 +211,7 @@ query = create_user({
     "email": "alice@example.com",
     "phone": None  # Will be excluded
 })
-# INSERT INTO `users` (`name`, `email`) VALUES (?, %s)
+# INSERT INTO `users` (`name`, `email`) VALUES (%s, %s)
 ```
 
 ### Batch Insert with Validation

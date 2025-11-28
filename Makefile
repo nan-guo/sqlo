@@ -4,32 +4,35 @@
 install:
 	uv sync --all-extras
 
-# Format code with ruff
+# Format code (imports and sources)
 format:
+	uv run ruff check --select I --fix .
 	uv run ruff format .
 
-# Lint code with ruff
-lint:
+# Check code style (format, lint, types)
+style:
+	uv run ruff format --check .
 	uv run ruff check .
-
-# Lint and auto-fix
-lint-fix:
-	uv run ruff check --fix .
-
-# Type check with mypy
-typecheck:
 	uv run mypy src/
 
-# Run all checks (format + lint + typecheck)
-check: format lint typecheck
+# Check code complexity
+complexity:
+	uv run xenon --max-absolute B --max-modules B --max-average A src
+
+# Check security issues
+security:
+	uv run bandit -c pyproject.toml -r src
+
+# Run all checks (alias for style)
+check: style
 
 # Run tests
 test:
-	uv run pytest
+	uv run pytest --cov=sqlo --cov-report=term-missing
 
 # Run tests with coverage
 coverage:
-	uv run pytest --cov=sqlo --cov-report=html --cov-report=term
+	uv run pytest --cov=sqlo --cov-report=html --cov-report=term-missing
 
 # Test against multiple Python versions (requires pyenv or similar)
 test-all-versions:

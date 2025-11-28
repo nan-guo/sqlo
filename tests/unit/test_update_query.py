@@ -69,3 +69,47 @@ def test_update_without_table():
     query._table = None
     with pytest.raises(ValueError, match="No table specified"):
         query.build()
+
+
+def test_update_join():
+    """UPDATE with JOIN (MySQL multi-table update)"""
+    query = (
+        Q.update("users")
+        .join("profiles", "users.id = profiles.user_id")
+        .set({"users.active": True, "profiles.updated": True})
+        .where("profiles.status", "pending")
+    )
+    sql, params = query.build()
+    assert "UPDATE `users` INNER JOIN profiles ON users.id = profiles.user_id" in sql
+    assert "SET `users`.`active` = %s, `profiles`.`updated` = %s" in sql
+    assert params == (True, True, "pending")
+
+
+def test_update_left_join():
+    """UPDATE with LEFT JOIN"""
+    query = (
+        Q.update("users")
+        .left_join("profiles", "users.id = profiles.user_id")
+        .set({"users.has_profile": False})
+        .where_null("profiles.id")
+    )
+    sql, params = query.build()
+    assert "UPDATE `users` LEFT JOIN profiles" in sql
+    assert "WHERE `profiles`.`id` IS NULL" in sql
+
+
+def test_update_set_raw():
+    """UPDATE with Raw value in SET"""
+    query = Q.update("users").set({"count": Raw("count + 1")}).where("id", 1)
+    sql, params = query.build()
+    assert "SET `count` = count + 1" in sql
+    assert params == (1,)
+
+
+def test_update_set_subquery():
+    """UPDATE with subquery in SET"""
+    sub = Q.select("count").from_("stats").where("id", 1)
+    query = Q.update("users").set({"count": sub}).where("id", 1)
+    sql, params = query.build()
+    assert "SET `count` = (SELECT `count` FROM `stats` WHERE `id` = %s)" in sql
+    assert params == (1, 1)

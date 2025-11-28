@@ -50,7 +50,7 @@ query = Q.select("*").from_("users").where("age>=", 18)
 
 # Extended Operators
 query = Q.select("*").from_("users").where("name LIKE", "John%")
-# WHERE `name` LIKE ?
+# WHERE `name` LIKE %s
 
 query = Q.select("*").from_("users").where("created_at >=", "2023-01-01")
 # WHERE `created_at` >= %s
@@ -83,19 +83,19 @@ query = (
 ```python
 # IN clause
 query = Q.select("*").from_("users").where_in("id", [1, 2, 3, 4, 5])
-# WHERE `id` IN (?, %s, %s, %s, %s)
+# WHERE `id` IN (%s, %s, %s, %s, %s)
 
 # OR IN clause
 query = Q.select("*").from_("users").where("active", True).or_where_in("role", ["admin", "mod"])
-# WHERE `active` = %s OR `role` IN (?, %s)
+# WHERE `active` = %s OR `role` IN (%s, %s)
 
 # NOT IN clause
 query = Q.select("*").from_("users").where_not_in("status", ["banned", "deleted"])
-# WHERE `status` NOT IN (?, %s)
+# WHERE `status` NOT IN (%s, %s)
 
 # OR NOT IN clause
 query = Q.select("*").from_("users").where("active", True).or_where_not_in("id", [1, 2])
-# WHERE `active` = %s OR `id` NOT IN (?, %s)
+# WHERE `active` = %s OR `id` NOT IN (%s, %s)
 ```
 
 ### NULL Checks
@@ -122,16 +122,16 @@ query = Q.select("*").from_("users").where("active", True).or_where_not_null("ph
 
 ```python
 query = Q.select("*").from_("orders").where_between("created_at", "2023-01-01", "2023-12-31")
-# WHERE `created_at` BETWEEN ? AND ?
+# WHERE `created_at` BETWEEN %s AND %s
 
 query = Q.select("*").from_("orders").where("total >", 100).or_where_between("quantity", 10, 20)
-# WHERE `total` > %s OR `quantity` BETWEEN ? AND ?
+# WHERE `total` > %s OR `quantity` BETWEEN %s AND %s
 
 query = Q.select("*").from_("products").where_not_between("price", 10, 100)
-# WHERE `price` NOT BETWEEN ? AND ?
+# WHERE `price` NOT BETWEEN %s AND %s
 
 query = Q.select("*").from_("products").where("category", "A").or_where_not_between("stock", 0, 5)
-# WHERE `category` = %s OR `stock` NOT BETWEEN ? AND ?
+# WHERE `category` = %s OR `stock` NOT BETWEEN %s AND %s
 ```
 
 ### LIKE Patterns
@@ -139,19 +139,19 @@ query = Q.select("*").from_("products").where("category", "A").or_where_not_betw
 ```python
 # LIKE
 query = Q.select("*").from_("users").where_like("email", "%@example.com")
-# WHERE `email` LIKE ?
+# WHERE `email` LIKE %s
 
 # OR LIKE
 query = Q.select("*").from_("users").where("name", "John").or_where_like("email", "%@gmail.com")
-# WHERE `name` = %s OR `email` LIKE ?
+# WHERE `name` = %s OR `email` LIKE %s
 
 # NOT LIKE
 query = Q.select("*").from_("users").where_not_like("name", "test%")
-# WHERE `name` NOT LIKE ?
+# WHERE `name` NOT LIKE %s
 
 # OR NOT LIKE
 query = Q.select("*").from_("users").where("active", True).or_where_not_like("name", "guest%")
-# WHERE `active` = %s OR `name` NOT LIKE ?
+# WHERE `active` = %s OR `name` NOT LIKE %s
 ```
 
 ## Complex Conditions

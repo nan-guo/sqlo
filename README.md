@@ -1,5 +1,10 @@
 # sqlo
 
+[![CI](https://github.com/nan-guo/sqlo/actions/workflows/ci.yml/badge.svg)](https://github.com/nan-guo/sqlo/actions/workflows/ci.yml)
+[![PyPI](https://img.shields.io/pypi/v/sqlo)](https://pypi.org/project/sqlo/)
+[![License](https://img.shields.io/github/license/nan-guo/sqlo)](LICENSE)
+
+
 **sqlo** is a modern, type-safe, and extensible SQL query builder for Python. It allows you to construct complex SQL queries using a fluent, Pythonic API while ensuring safety against SQL injection.
 
 ## Features
@@ -24,7 +29,7 @@ from sqlo import Q
 # SELECT query
 query = Q.select("id", "name").from_("users").where("active", True)
 sql, params = query.build()
-# SQL: SELECT `id`, `name` FROM `users` WHERE `active` = ?
+# SQL: SELECT `id`, `name` FROM `users` WHERE `active` = %s
 # Params: (True,)
 
 # INSERT query
