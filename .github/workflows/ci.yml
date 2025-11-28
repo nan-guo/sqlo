@@ -37,7 +37,6 @@ jobs:
 
       - name: Run mypy
         run: uv run mypy src/
-        continue-on-error: true  # Don't fail on type errors for now
 
       - name: Run tests
         run: uv run pytest --cov=sqlo --cov-report=xml --cov-report=term
