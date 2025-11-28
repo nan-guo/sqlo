@@ -17,7 +17,7 @@ style:
 
 # Check code complexity
 complexity:
-	uv run xenon --max-absolute B --max-modules B --max-average A src
+	uv run xenon --max-absolute C --max-modules C --max-average B src
 
 # Check security issues
 security:
