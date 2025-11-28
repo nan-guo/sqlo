@@ -46,6 +46,8 @@ test-all-versions:
 	@uv run --python 3.12 pytest || echo "Python 3.12 not available"
 	@echo "Testing Python 3.13..."
 	@uv run --python 3.13 pytest || echo "Python 3.13 not available"
+	@echo "Testing Python 3.14..."
+	@uv run --python 3.14 pytest || echo "Python 3.14 not available"
 
 # Install pre-commit hooks
 pre-commit-install:
