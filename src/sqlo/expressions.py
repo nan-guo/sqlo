@@ -405,7 +405,7 @@ class Condition(Expression):
         return result
 
     @staticmethod
-    def or_(*conditions: "Condition") -> "ComplexCondition":
+    def or_(*conditions: "Condition") -> Union["Condition", "ComplexCondition"]:
         """
         Combine multiple conditions with OR logic.
 
@@ -424,7 +424,7 @@ class Condition(Expression):
         if not conditions:
             return ComplexCondition("OR", Condition(), Condition())
 
-        result = conditions[0]
+        result: Union[Condition, ComplexCondition] = conditions[0]
         for cond in conditions[1:]:
             result = result | cond
         return result

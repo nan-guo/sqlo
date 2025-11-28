@@ -46,7 +46,6 @@ class SelectQuery(WhereClauseMixin, Query):
         self._index_hint: Optional[tuple[str, tuple[str, ...]]] = None
         self._explain: bool = False
         self._distinct: bool = False
-        self._distinct: bool = False
         self._unions: list[tuple[str, SelectQuery]] = []
         self._optimizer_hints: list[str] = []
 

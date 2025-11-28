@@ -206,19 +206,39 @@ class WhereClauseMixin:
 
     def where_like(self, column: str, pattern: str):
         """Add a LIKE WHERE condition."""
-        return self.where(column, pattern, operator="LIKE")
+        ph = self._dialect.parameter_placeholder()
+        if hasattr(self, "_wheres"):
+            self._wheres.append(
+                ("AND", f"{self._dialect.quote(column)} LIKE {ph}", [pattern])
+            )
+        return self
 
     def or_where_like(self, column: str, pattern: str):
         """Add an OR LIKE WHERE condition."""
-        return self.or_where(column, pattern, operator="LIKE")
+        ph = self._dialect.parameter_placeholder()
+        if hasattr(self, "_wheres"):
+            self._wheres.append(
+                ("OR", f"{self._dialect.quote(column)} LIKE {ph}", [pattern])
+            )
+        return self
 
     def where_not_like(self, column: str, pattern: str):
         """Add a NOT LIKE WHERE condition."""
-        return self.where(column, pattern, operator="NOT LIKE")
+        ph = self._dialect.parameter_placeholder()
+        if hasattr(self, "_wheres"):
+            self._wheres.append(
+                ("AND", f"{self._dialect.quote(column)} NOT LIKE {ph}", [pattern])
+            )
+        return self
 
     def or_where_not_like(self, column: str, pattern: str):
         """Add an OR NOT LIKE WHERE condition."""
-        return self.or_where(column, pattern, operator="NOT LIKE")
+        ph = self._dialect.parameter_placeholder()
+        if hasattr(self, "_wheres"):
+            self._wheres.append(
+                ("OR", f"{self._dialect.quote(column)} NOT LIKE {ph}", [pattern])
+            )
+        return self
 
     @staticmethod
     def _build_condition(condition) -> tuple[str, list[Any]]:
