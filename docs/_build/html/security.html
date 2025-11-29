@@ -1,0 +1,569 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Security Guide &mdash; sqlo Documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=01f34227"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="SELECT Queries" href="select.html" />
+    <link rel="prev" title="Getting Started" href="getting-started.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            sqlo
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="getting-started.html">Getting Started</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Security Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#security-features">Security Features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#identifier-validation">Identifier Validation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#automatic-validation">Automatic Validation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#what-s-allowed">What’s Allowed</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#table-aliases">Table Aliases</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#parameter-binding">Parameter Binding</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#automatic-protection">Automatic Protection</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#raw-sql-expressions">Raw SQL Expressions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#when-to-use-raw">When to Use Raw()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#safety-warning">Safety Warning</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#type-checking">Type Checking</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#update-delete-safety">UPDATE/DELETE Safety</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#mandatory-where-clause">Mandatory WHERE Clause</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#the-allow-all-rows-method">The <code class="docutils literal notranslate"><span class="pre">.allow_all_rows()</span></code> Method</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#empty-list-handling">Empty List Handling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#where-in-with-empty-lists">WHERE IN with Empty Lists</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#null-value-handling">NULL Value Handling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#correct-null-checks">Correct NULL Checks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#null-in-insert-update">NULL in INSERT/UPDATE</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#best-practices">Best Practices</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#always-validate-dynamic-identifiers">1. Always Validate Dynamic Identifiers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#use-parameterized-queries-for-values">2. Use Parameterized Queries for Values</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#use-dedicated-methods">3. Use Dedicated Methods</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#verify-before-mass-operations">4. Verify Before Mass Operations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#use-transactions-for-related-operations">5. Use Transactions for Related Operations</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#security-checklist">Security Checklist</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#common-vulnerabilities-and-prevention">Common Vulnerabilities and Prevention</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#table-name-injection">1. Table Name Injection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#column-name-injection">2. Column Name Injection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#where-clause-injection">3. WHERE Clause Injection</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#migration-guide">Migration Guide</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#breaking-changes">Breaking Changes</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#additional-resources">Additional Resources</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Query Types</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="select.html">SELECT Queries</a></li>
+<li class="toctree-l1"><a class="reference internal" href="insert.html">INSERT Queries</a></li>
+<li class="toctree-l1"><a class="reference internal" href="update.html">UPDATE Queries</a></li>
+<li class="toctree-l1"><a class="reference internal" href="delete.html">DELETE Queries</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Advanced Topics</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="conditions.html">Condition Objects</a></li>
+<li class="toctree-l1"><a class="reference internal" href="expressions.html">Expressions &amp; Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="joins.html">JOIN Operations</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="reference.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">sqlo</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Security Guide</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/security.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="security-guide">
+<h1>Security Guide<a class="headerlink" href="#security-guide" title="Link to this heading"></a></h1>
+<p>Complete guide to security features and best practices in sqlo.</p>
+<section id="security-features">
+<h2>Security Features<a class="headerlink" href="#security-features" title="Link to this heading"></a></h2>
+<p>sqlo implements multiple layers of security to prevent SQL injection attacks:</p>
+<ol class="arabic simple">
+<li><p><strong>Automatic parameter binding</strong> for all values</p></li>
+<li><p><strong>Mandatory identifier validation</strong> for table and column names</p></li>
+<li><p><strong>UPDATE/DELETE safety checks</strong> to prevent accidental mass operations</p></li>
+<li><p><strong>Type-safe Raw() expressions</strong> with clear documentation</p></li>
+<li><p><strong>Empty list handling</strong> for safe WHERE IN operations</p></li>
+</ol>
+</section>
+<hr class="docutils" />
+<section id="identifier-validation">
+<h2>Identifier Validation<a class="headerlink" href="#identifier-validation" title="Link to this heading"></a></h2>
+<section id="automatic-validation">
+<h3>Automatic Validation<a class="headerlink" href="#automatic-validation" title="Link to this heading"></a></h3>
+<p>All table and column names are automatically validated to prevent SQL injection:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">sqlo</span><span class="w"> </span><span class="kn">import</span> <span class="n">Q</span>
+
+<span class="c1"># ✅ Valid identifiers are allowed</span>
+<span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+<span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;mydb.users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>  <span class="c1"># schema.table format</span>
+
+<span class="c1"># ❌ Invalid identifiers are rejected</span>
+<span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users; DROP TABLE users;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+<span class="c1"># Raises: ValueError: Invalid identifier &#39;users; DROP TABLE users;&#39;</span>
+</pre></div>
+</div>
+</section>
+<section id="what-s-allowed">
+<h3>What’s Allowed<a class="headerlink" href="#what-s-allowed" title="Link to this heading"></a></h3>
+<p>Valid identifiers must:</p>
+<ul class="simple">
+<li><p>Start with a letter or underscore</p></li>
+<li><p>Contain only letters, numbers, underscores, and dots</p></li>
+<li><p>Not contain spaces, special characters, or SQL keywords in vulnerable positions</p></li>
+</ul>
+<p><strong>Examples:</strong></p>
+<ul class="simple">
+<li><p>✅ <code class="docutils literal notranslate"><span class="pre">users</span></code></p></li>
+<li><p>✅ <code class="docutils literal notranslate"><span class="pre">user_accounts</span></code></p></li>
+<li><p>✅ <code class="docutils literal notranslate"><span class="pre">mydb.users</span></code> (schema.table)</p></li>
+<li><p>✅ <code class="docutils literal notranslate"><span class="pre">users.id</span></code> (table.column)</p></li>
+<li><p>❌ <code class="docutils literal notranslate"><span class="pre">users;</span> <span class="pre">DROP</span> <span class="pre">TABLE</span></code> (semicolon)</p></li>
+<li><p>❌ <code class="docutils literal notranslate"><span class="pre">users--comment</span></code> (SQL comment)</p></li>
+<li><p>❌ <code class="docutils literal notranslate"><span class="pre">users</span> <span class="pre">/*comment*/</span></code> (SQL comment)</p></li>
+<li><p>❌ <code class="docutils literal notranslate"><span class="pre">users</span> <span class="pre">OR</span> <span class="pre">1=1</span></code> (SQL injection attempt)</p></li>
+</ul>
+</section>
+<section id="table-aliases">
+<h3>Table Aliases<a class="headerlink" href="#table-aliases" title="Link to this heading"></a></h3>
+<p>Table aliases with spaces are supported:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># ✅ Allowed - validates &quot;orders&quot; part</span>
+<span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users u&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;orders o&quot;</span><span class="p">,</span> <span class="s2">&quot;u.id = o.user_id&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="parameter-binding">
+<h2>Parameter Binding<a class="headerlink" href="#parameter-binding" title="Link to this heading"></a></h2>
+<section id="automatic-protection">
+<h3>Automatic Protection<a class="headerlink" href="#automatic-protection" title="Link to this heading"></a></h3>
+<p>All <strong>values</strong> are automatically parameterized to prevent SQL injection:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># ✅ SAFE - value is parameterized</span>
+<span class="n">malicious_input</span> <span class="o">=</span> <span class="s2">&quot;admin&#39; OR &#39;1&#39;=&#39;1&quot;</span>
+<span class="n">query</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;email&quot;</span><span class="p">,</span> <span class="n">malicious_input</span><span class="p">)</span>
+<span class="n">sql</span><span class="p">,</span> <span class="n">params</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+<span class="c1"># SQL: SELECT * FROM `users` WHERE `email` = %s</span>
+<span class="c1"># Params: (&quot;admin&#39; OR &#39;1&#39;=&#39;1&quot;,)  # Treated as literal string</span>
+</pre></div>
+</div>
+<p>The malicious SQL is treated as a <strong>string value</strong>, not as executable SQL code.</p>
+</section>
+</section>
+<hr class="docutils" />
+<section id="raw-sql-expressions">
+<h2>Raw SQL Expressions<a class="headerlink" href="#raw-sql-expressions" title="Link to this heading"></a></h2>
+<section id="when-to-use-raw">
+<h3>When to Use Raw()<a class="headerlink" href="#when-to-use-raw" title="Link to this heading"></a></h3>
+<p>Use <code class="docutils literal notranslate"><span class="pre">Raw()</span></code> for SQL expressions that cannot be represented as identifiers or values:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">sqlo</span><span class="w"> </span><span class="kn">import</span> <span class="n">Raw</span>
+
+<span class="c1"># ✅ SQL functions</span>
+<span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">Raw</span><span class="p">(</span><span class="s2">&quot;COUNT(*)&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span>
+<span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">Raw</span><span class="p">(</span><span class="s2">&quot;CONCAT(first_name, &#39; &#39;, last_name)&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span>
+
+<span class="c1"># ✅ SQL expressions in WHERE</span>
+<span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">Raw</span><span class="p">(</span><span class="s2">&quot;created_at &gt; NOW() - INTERVAL 7 DAY&quot;</span><span class="p">))</span>
+
+<span class="c1"># ✅ Raw with parameters (still safe!)</span>
+<span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">Raw</span><span class="p">(</span><span class="s2">&quot;age &gt; </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mi">18</span><span class="p">]))</span>
+</pre></div>
+</div>
+</section>
+<section id="safety-warning">
+<h3>Safety Warning<a class="headerlink" href="#safety-warning" title="Link to this heading"></a></h3>
+<blockquote>
+<div><p>[!CAUTION]
+<strong>Never use user input directly in Raw()</strong> - this bypasses all security protections!</p>
+</div></blockquote>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># ❌ DANGEROUS - SQL injection vulnerability!</span>
+<span class="n">user_input</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;condition&quot;</span><span class="p">)</span>
+<span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">Raw</span><span class="p">(</span><span class="n">user_input</span><span class="p">))</span>  <span class="c1"># NEVER DO THIS!</span>
+
+<span class="c1"># ✅ SAFE - validate/whitelist first, or use parameterized queries</span>
+<span class="n">allowed_fields</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="s2">&quot;email&quot;</span><span class="p">,</span> <span class="s2">&quot;age&quot;</span><span class="p">}</span>
+<span class="k">if</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">allowed_fields</span><span class="p">:</span>
+    <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="n">user_value</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="type-checking">
+<h3>Type Checking<a class="headerlink" href="#type-checking" title="Link to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">Raw()</span></code> requires a string argument:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">sqlo</span><span class="w"> </span><span class="kn">import</span> <span class="n">Raw</span>
+
+<span class="c1"># ✅ Valid</span>
+<span class="n">Raw</span><span class="p">(</span><span class="s2">&quot;COUNT(*)&quot;</span><span class="p">)</span>
+
+<span class="c1"># ❌ Invalid - raises TypeError</span>
+<span class="n">Raw</span><span class="p">(</span><span class="mi">123</span><span class="p">)</span>  <span class="c1"># TypeError: Raw SQL must be a string</span>
+</pre></div>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="update-delete-safety">
+<h2>UPDATE/DELETE Safety<a class="headerlink" href="#update-delete-safety" title="Link to this heading"></a></h2>
+<section id="mandatory-where-clause">
+<h3>Mandatory WHERE Clause<a class="headerlink" href="#mandatory-where-clause" title="Link to this heading"></a></h3>
+<p>To prevent accidental mass operations, UPDATE and DELETE require either:</p>
+<ol class="arabic simple">
+<li><p>A WHERE clause, or</p></li>
+<li><p>Explicit <code class="docutils literal notranslate"><span class="pre">.allow_all_rows()</span></code> call</p></li>
+</ol>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># ❌ Raises ValueError - no WHERE clause</span>
+<span class="n">Q</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">set</span><span class="p">({</span><span class="s2">&quot;active&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">})</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+<span class="c1"># ValueError: UPDATE without WHERE clause would affect all rows</span>
+
+<span class="c1"># ✅ With WHERE clause</span>
+<span class="n">Q</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">set</span><span class="p">({</span><span class="s2">&quot;active&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">})</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="mi">123</span><span class="p">)</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+
+<span class="c1"># ✅ Explicit confirmation for mass operation</span>
+<span class="n">Q</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">set</span><span class="p">({</span><span class="s2">&quot;active&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">})</span><span class="o">.</span><span class="n">allow_all_rows</span><span class="p">()</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+<section id="the-allow-all-rows-method">
+<h3>The <code class="docutils literal notranslate"><span class="pre">.allow_all_rows()</span></code> Method<a class="headerlink" href="#the-allow-all-rows-method" title="Link to this heading"></a></h3>
+<p>Use this method when you intentionally want to affect all rows:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">sqlo</span><span class="w"> </span><span class="kn">import</span> <span class="n">Q</span>
+
+<span class="c1"># Mass update</span>
+<span class="n">Q</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s2">&quot;settings&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">set</span><span class="p">({</span><span class="s2">&quot;migrated&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">})</span><span class="o">.</span><span class="n">allow_all_rows</span><span class="p">()</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+
+<span class="c1"># Mass delete</span>
+<span class="n">Q</span><span class="o">.</span><span class="n">delete_from</span><span class="p">(</span><span class="s2">&quot;temp_logs&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">allow_all_rows</span><span class="p">()</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+
+<span class="c1"># With ORDER BY and LIMIT (still requires allow_all_rows without WHERE)</span>
+<span class="n">Q</span><span class="o">.</span><span class="n">delete_from</span><span class="p">(</span><span class="s2">&quot;logs&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="s2">&quot;-created_at&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="mi">1000</span><span class="p">)</span><span class="o">.</span><span class="n">allow_all_rows</span><span class="p">()</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="empty-list-handling">
+<h2>Empty List Handling<a class="headerlink" href="#empty-list-handling" title="Link to this heading"></a></h2>
+<section id="where-in-with-empty-lists">
+<h3>WHERE IN with Empty Lists<a class="headerlink" href="#where-in-with-empty-lists" title="Link to this heading"></a></h3>
+<p>Empty lists in <code class="docutils literal notranslate"><span class="pre">WHERE</span> <span class="pre">IN</span></code> clauses are automatically handled:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Empty IN list generates FALSE</span>
+<span class="n">sql</span><span class="p">,</span> <span class="n">params</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">where_in</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="p">[])</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+<span class="c1"># SQL: SELECT * FROM `users` WHERE FALSE</span>
+<span class="c1"># Params: ()</span>
+
+<span class="c1"># Empty NOT IN list generates TRUE</span>
+<span class="n">sql</span><span class="p">,</span> <span class="n">params</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">where_not_in</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="p">[])</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+<span class="c1"># SQL: SELECT * FROM `users` WHERE TRUE</span>
+<span class="c1"># Params: ()</span>
+</pre></div>
+</div>
+<p>This ensures syntactically correct SQL even with dynamic lists.</p>
+</section>
+</section>
+<hr class="docutils" />
+<section id="null-value-handling">
+<h2>NULL Value Handling<a class="headerlink" href="#null-value-handling" title="Link to this heading"></a></h2>
+<section id="correct-null-checks">
+<h3>Correct NULL Checks<a class="headerlink" href="#correct-null-checks" title="Link to this heading"></a></h3>
+<p>Use dedicated methods for NULL checks:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">sqlo</span><span class="w"> </span><span class="kn">import</span> <span class="n">Q</span><span class="p">,</span> <span class="n">Condition</span>
+
+<span class="c1"># ✅ Correct ways to check for NULL</span>
+<span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">where_null</span><span class="p">(</span><span class="s2">&quot;email&quot;</span><span class="p">)</span>  <span class="c1"># Simplest</span>
+<span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">Condition</span><span class="o">.</span><span class="n">null</span><span class="p">(</span><span class="s2">&quot;email&quot;</span><span class="p">))</span>  <span class="c1"># Type-safe</span>
+<span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">Condition</span><span class="p">(</span><span class="s2">&quot;email&quot;</span><span class="p">,</span> <span class="n">operator</span><span class="o">=</span><span class="s2">&quot;IS NULL&quot;</span><span class="p">))</span>
+
+<span class="c1"># ❌ WRONG - this checks for the STRING &#39;NULL&#39;, not SQL NULL</span>
+<span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;email&quot;</span><span class="p">,</span> <span class="s2">&quot;NULL&quot;</span><span class="p">)</span>
+<span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">Condition</span><span class="p">(</span><span class="s2">&quot;email&quot;</span><span class="p">,</span> <span class="s2">&quot;NULL&quot;</span><span class="p">,</span> <span class="s2">&quot;IS&quot;</span><span class="p">))</span>
+</pre></div>
+</div>
+</section>
+<section id="null-in-insert-update">
+<h3>NULL in INSERT/UPDATE<a class="headerlink" href="#null-in-insert-update" title="Link to this heading"></a></h3>
+<p>NULL values in data dictionaries are properly handled:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># ✅ NULL values work correctly</span>
+<span class="n">Q</span><span class="o">.</span><span class="n">insert_into</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">({</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Alice&quot;</span><span class="p">,</span> <span class="s2">&quot;email&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">})</span>
+<span class="c1"># email will be set to NULL</span>
+
+<span class="n">Q</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">set</span><span class="p">({</span><span class="s2">&quot;email&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">})</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="mi">123</span><span class="p">)</span>
+<span class="c1"># email will be set to NULL</span>
+</pre></div>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="best-practices">
+<h2>Best Practices<a class="headerlink" href="#best-practices" title="Link to this heading"></a></h2>
+<section id="always-validate-dynamic-identifiers">
+<h3>1. Always Validate Dynamic Identifiers<a class="headerlink" href="#always-validate-dynamic-identifiers" title="Link to this heading"></a></h3>
+<p>When allowing users to specify table or column names:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">sqlo</span><span class="w"> </span><span class="kn">import</span> <span class="n">Q</span>
+
+<span class="n">ALLOWED_TABLES</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;users&quot;</span><span class="p">,</span> <span class="s2">&quot;orders&quot;</span><span class="p">,</span> <span class="s2">&quot;products&quot;</span><span class="p">}</span>
+<span class="n">ALLOWED_COLUMNS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="s2">&quot;email&quot;</span><span class="p">,</span> <span class="s2">&quot;created_at&quot;</span><span class="p">}</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">dynamic_query</span><span class="p">(</span><span class="n">table</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">columns</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]):</span>
+    <span class="c1"># Validate inputs</span>
+    <span class="k">if</span> <span class="n">table</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ALLOWED_TABLES</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Table &#39;</span><span class="si">{</span><span class="n">table</span><span class="si">}</span><span class="s2">&#39; not allowed&quot;</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="n">col</span> <span class="ow">in</span> <span class="n">ALLOWED_COLUMNS</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">columns</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid column name&quot;</span><span class="p">)</span>
+    
+    <span class="c1"># Safe to use</span>
+    <span class="k">return</span> <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="o">*</span><span class="n">columns</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="n">table</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="use-parameterized-queries-for-values">
+<h3>2. Use Parameterized Queries for Values<a class="headerlink" href="#use-parameterized-queries-for-values" title="Link to this heading"></a></h3>
+<p>Never concatenate user input into SQL strings:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># ❌ DANGEROUS</span>
+<span class="n">user_email</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">form</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;email&quot;</span><span class="p">)</span>
+<span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">Raw</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;email = &#39;</span><span class="si">{</span><span class="n">user_email</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">))</span>
+
+<span class="c1"># ✅ SAFE</span>
+<span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;email&quot;</span><span class="p">,</span> <span class="n">user_email</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="use-dedicated-methods">
+<h3>3. Use Dedicated Methods<a class="headerlink" href="#use-dedicated-methods" title="Link to this heading"></a></h3>
+<p>Prefer dedicated methods over generic ones:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Instead of Raw() or complex Conditions</span>
+<span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">where_null</span><span class="p">(</span><span class="s2">&quot;deleted_at&quot;</span><span class="p">)</span>  <span class="c1"># Clear intent</span>
+<span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">where_in</span><span class="p">(</span><span class="s2">&quot;status&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;active&quot;</span><span class="p">,</span> <span class="s2">&quot;pending&quot;</span><span class="p">])</span>
+<span class="n">Q</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">set</span><span class="p">({</span><span class="s2">&quot;active&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">})</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="mi">123</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="verify-before-mass-operations">
+<h3>4. Verify Before Mass Operations<a class="headerlink" href="#verify-before-mass-operations" title="Link to this heading"></a></h3>
+<p>Always double-check before calling <code class="docutils literal notranslate"><span class="pre">.allow_all_rows()</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">archive_old_data</span><span class="p">(</span><span class="n">cutoff_date</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Archive data older than cutoff_date.&quot;&quot;&quot;</span>
+    <span class="c1"># Add confirmation in your application layer</span>
+    <span class="n">query</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">Q</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s2">&quot;orders&quot;</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">set</span><span class="p">({</span><span class="s2">&quot;archived&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">})</span>
+        <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;created_at &lt;&quot;</span><span class="p">,</span> <span class="n">cutoff_date</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="c1"># Only use allow_all_rows() if truly necessary</span>
+    <span class="k">return</span> <span class="n">query</span>
+</pre></div>
+</div>
+</section>
+<section id="use-transactions-for-related-operations">
+<h3>5. Use Transactions for Related Operations<a class="headerlink" href="#use-transactions-for-related-operations" title="Link to this heading"></a></h3>
+<p>When performing multiple related operations:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Use database-level transactions</span>
+<span class="c1"># with conn.transaction():</span>
+<span class="c1">#     Q.update(&quot;users&quot;).set({&quot;status&quot;: &quot;deleted&quot;}).where(&quot;id&quot;, user_id).execute()</span>
+<span class="c1">#     Q.delete_from(&quot;sessions&quot;).where(&quot;user_id&quot;, user_id).execute()</span>
+</pre></div>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="security-checklist">
+<h2>Security Checklist<a class="headerlink" href="#security-checklist" title="Link to this heading"></a></h2>
+<p>When building queries with sqlo:</p>
+<ul class="simple">
+<li><p>✅ Table and column names are validated automatically</p></li>
+<li><p>✅ User values are parameterized automatically</p></li>
+<li><p>✅ <code class="docutils literal notranslate"><span class="pre">Raw()</span></code> is only used with trusted, hardcoded SQL</p></li>
+<li><p>✅ UPDATE and DELETE have WHERE clauses or explicit <code class="docutils literal notranslate"><span class="pre">.allow_all_rows()</span></code></p></li>
+<li><p>✅ NULL checks use <code class="docutils literal notranslate"><span class="pre">.where_null()</span></code> or <code class="docutils literal notranslate"><span class="pre">Condition.null()</span></code></p></li>
+<li><p>✅ Dynamic identifiers (table/column names) are whitelisted</p></li>
+<li><p>✅ Empty lists in WHERE IN are handled correctly</p></li>
+<li><p>✅ Type checking is enabled (<code class="docutils literal notranslate"><span class="pre">Raw()</span></code> rejects non-strings)</p></li>
+</ul>
+</section>
+<hr class="docutils" />
+<section id="common-vulnerabilities-and-prevention">
+<h2>Common Vulnerabilities and Prevention<a class="headerlink" href="#common-vulnerabilities-and-prevention" title="Link to this heading"></a></h2>
+<section id="table-name-injection">
+<h3>1. Table Name Injection<a class="headerlink" href="#table-name-injection" title="Link to this heading"></a></h3>
+<p><strong>Vulnerability:</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># ❌ Old approach - vulnerable</span>
+<span class="n">user_table</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;table&quot;</span><span class="p">)</span>
+<span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="n">user_table</span><span class="p">)</span>  <span class="c1"># Could be &quot;users; DROP TABLE users;--&quot;</span>
+</pre></div>
+</div>
+<p><strong>Protection:</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># ✅ Now automatically blocked</span>
+<span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users; DROP TABLE users;--&quot;</span><span class="p">)</span>
+<span class="c1"># Raises: ValueError: Invalid identifier</span>
+</pre></div>
+</div>
+</section>
+<section id="column-name-injection">
+<h3>2. Column Name Injection<a class="headerlink" href="#column-name-injection" title="Link to this heading"></a></h3>
+<p><strong>Protection:</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Automatically validates all column names</span>
+<span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;id; DROP TABLE users;--&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span>
+<span class="c1"># Raises: ValueError: Invalid identifier</span>
+</pre></div>
+</div>
+</section>
+<section id="where-clause-injection">
+<h3>3. WHERE Clause Injection<a class="headerlink" href="#where-clause-injection" title="Link to this heading"></a></h3>
+<p><strong>Protection:</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Values are automatically parameterized</span>
+<span class="n">malicious</span> <span class="o">=</span> <span class="s2">&quot;1&#39; OR &#39;1&#39;=&#39;1&quot;</span>
+<span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="n">malicious</span><span class="p">)</span>
+<span class="c1"># Safe - malicious string is treated as a literal value</span>
+</pre></div>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="migration-guide">
+<h2>Migration Guide<a class="headerlink" href="#migration-guide" title="Link to this heading"></a></h2>
+<p>If you’re upgrading from an older version:</p>
+<section id="breaking-changes">
+<h3>Breaking Changes<a class="headerlink" href="#breaking-changes" title="Link to this heading"></a></h3>
+<ol class="arabic">
+<li><p><strong>Identifier validation is now mandatory</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Before: This might have worked</span>
+<span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;COUNT(*)&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span>
+
+<span class="c1"># Now: Use Raw() for expressions</span>
+<span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">Raw</span><span class="p">(</span><span class="s2">&quot;COUNT(*)&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</li>
+<li><p><strong>UPDATE/DELETE require WHERE or allow_all_rows()</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Before: This would work (dangerous!)</span>
+<span class="n">Q</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">set</span><span class="p">({</span><span class="s2">&quot;active&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">})</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+
+<span class="c1"># Now: Add WHERE or call allow_all_rows()</span>
+<span class="n">Q</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">set</span><span class="p">({</span><span class="s2">&quot;active&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">})</span><span class="o">.</span><span class="n">allow_all_rows</span><span class="p">()</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+</pre></div>
+</div>
+</li>
+<li><p><strong>Empty lists generate FALSE/TRUE</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Before: Might generate invalid SQL like &quot;WHERE id IN ()&quot;</span>
+<span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">where_in</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="p">[])</span>
+
+<span class="c1"># Now: Generates valid SQL &quot;WHERE FALSE&quot;</span>
+</pre></div>
+</div>
+</li>
+</ol>
+</section>
+</section>
+<hr class="docutils" />
+<section id="additional-resources">
+<h2>Additional Resources<a class="headerlink" href="#additional-resources" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><a class="reference external" href="https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html">OWASP SQL Injection Prevention</a></p></li>
+<li><p><a class="reference internal" href="conditions.html"><span class="std std-doc">Condition Objects</span></a> - Type-safe query conditions</p></li>
+<li><p><a class="reference internal" href="expressions.html"><span class="std std-doc">Expressions &amp; Functions</span></a> - Using Raw() safely</p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="getting-started.html" class="btn btn-neutral float-left" title="Getting Started" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="select.html" class="btn btn-neutral float-right" title="SELECT Queries" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Nan Guo.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

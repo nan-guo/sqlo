@@ -1,4 +1,4 @@
-.PHONY: install format lint check test coverage clean
+.PHONY: install format lint check test coverage clean docs docs-serve
 
 # Install dependencies
 install:
@@ -62,3 +62,14 @@ clean:
 	rm -rf build/ dist/ *.egg-info .pytest_cache .ruff_cache .mypy_cache htmlcov/
 	find . -type d -name __pycache__ -exec rm -rf {} +
 	find . -type f -name '*.pyc' -delete
+	rm -rf docs/_build
+
+# Build documentation
+docs:
+	uv run sphinx-build -b html docs docs/_build/html
+	@echo "Documentation built in docs/_build/html"
+
+# Build and serve documentation
+docs-serve: docs
+	@echo "Serving documentation at http://localhost:8000"
+	python3 -m http.server 8000 --directory docs/_build/html

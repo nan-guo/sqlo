@@ -6,7 +6,15 @@ from .mixins import WhereClauseMixin
 
 
 class DeleteQuery(WhereClauseMixin, Query):
-    __slots__ = ("_table", "_wheres", "_limit", "_order_bys", "_joins", "_dialect")
+    __slots__ = (
+        "_table",
+        "_wheres",
+        "_limit",
+        "_order_bys",
+        "_joins",
+        "_dialect",
+        "_allow_all_rows",
+    )
 
     def __init__(self, table: str, dialect=None):
         super().__init__(dialect)
@@ -15,6 +23,7 @@ class DeleteQuery(WhereClauseMixin, Query):
         self._limit: Optional[int] = None
         self._order_bys: list[str] = []
         self._joins: list[tuple[str, str, Optional[str]]] = []  # (type, table, on)
+        self._allow_all_rows: bool = False
 
     def join(
         self, table: str, on: Optional[str] = None, join_type: str = "INNER"
@@ -50,9 +59,31 @@ class DeleteQuery(WhereClauseMixin, Query):
             self._order_bys.append(f"{self._dialect.quote(col)} {direction}")
         return self
 
+    def allow_all_rows(self) -> "DeleteQuery":
+        """Allow DELETE without WHERE clause (deletes all rows).
+
+        This is a safety feature to prevent accidental mass deletions.
+        You must call this method explicitly if you want to delete all rows.
+
+        Returns:
+            Self for method chaining
+
+        Example:
+            >>> Q.delete_from("temp_table").allow_all_rows().build()
+        """
+        self._allow_all_rows = True
+        return self
+
     def build(self) -> tuple[str, tuple[Any, ...]]:
         if not self._table:
             raise ValueError("No table specified")
+
+        # Safety check: DELETE without WHERE
+        if not self._wheres and not self._allow_all_rows:
+            raise ValueError(
+                "DELETE without WHERE clause would affect all rows. "
+                "If this is intentional, call .allow_all_rows() first."
+            )
 
         parts: list[str] = []
         params: list[Any] = []

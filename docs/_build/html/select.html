@@ -1,0 +1,724 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SELECT Queries &mdash; sqlo Documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=01f34227"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="INSERT Queries" href="insert.html" />
+    <link rel="prev" title="Security Guide" href="security.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            sqlo
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="getting-started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="security.html">Security Guide</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Query Types</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">SELECT Queries</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#basic-queries">Basic Queries</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#simple-select">Simple SELECT</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#table-aliases">Table Aliases</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#where-clauses">WHERE Clauses</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#basic-conditions">Basic Conditions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#multiple-conditions">Multiple Conditions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#in-and-not-in">IN and NOT IN</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#null-checks">NULL Checks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#between">BETWEEN</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#like-patterns">LIKE Patterns</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#complex-conditions">Complex Conditions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#using-condition-objects">Using Condition Objects</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#order-by">ORDER BY</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#basic-sorting">Basic Sorting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#raw-sql-in-order-by">Raw SQL in ORDER BY</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#limit-and-offset">LIMIT and OFFSET</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#pagination">Pagination</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#group-by-and-having">GROUP BY and HAVING</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#grouping">Grouping</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#having-clause">HAVING Clause</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#distinct">DISTINCT</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#union">UNION</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#basic-union">Basic UNION</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#union-all">UNION ALL</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#multiple-union">Multiple UNION</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#subqueries">Subqueries</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#subquery-in-where">Subquery in WHERE</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#subquery-in-from">Subquery in FROM</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#scalar-subquery-in-select">Scalar Subquery in SELECT</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#index-hints">Index Hints</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#optimizer-hints-mysql-8-0">Optimizer Hints (MySQL 8.0+)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#legacy-index-hints-deprecated">Legacy Index Hints (Deprecated)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#dynamic-query-building">Dynamic Query Building</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#conditional-clauses-with-when">Conditional Clauses with <code class="docutils literal notranslate"><span class="pre">when()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#complex-dynamic-conditions">Complex Dynamic Conditions</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#advanced-examples">Advanced Examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#complex-query-with-multiple-features">Complex Query with Multiple Features</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pagination-with-total-count">Pagination with Total Count</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#performance-tips">Performance Tips</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#explain-support">EXPLAIN Support</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#see-also">See Also</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="insert.html">INSERT Queries</a></li>
+<li class="toctree-l1"><a class="reference internal" href="update.html">UPDATE Queries</a></li>
+<li class="toctree-l1"><a class="reference internal" href="delete.html">DELETE Queries</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Advanced Topics</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="conditions.html">Condition Objects</a></li>
+<li class="toctree-l1"><a class="reference internal" href="expressions.html">Expressions &amp; Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="joins.html">JOIN Operations</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="reference.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">sqlo</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">SELECT Queries</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/select.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="select-queries">
+<h1>SELECT Queries<a class="headerlink" href="#select-queries" title="Link to this heading"></a></h1>
+<p>Complete guide to SELECT query building with sqlo.</p>
+<section id="basic-queries">
+<h2>Basic Queries<a class="headerlink" href="#basic-queries" title="Link to this heading"></a></h2>
+<section id="simple-select">
+<h3>Simple SELECT<a class="headerlink" href="#simple-select" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">sqlo</span><span class="w"> </span><span class="kn">import</span> <span class="n">Q</span>
+
+<span class="c1"># Select all columns</span>
+<span class="n">query</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span>
+<span class="n">sql</span><span class="p">,</span> <span class="n">params</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+<span class="c1"># SELECT * FROM `users`</span>
+
+<span class="c1"># Select specific columns</span>
+<span class="n">query</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="s2">&quot;email&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span>
+<span class="n">sql</span><span class="p">,</span> <span class="n">params</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+<span class="c1"># SELECT `id`, `name`, `email` FROM `users`</span>
+</pre></div>
+</div>
+</section>
+<section id="table-aliases">
+<h3>Table Aliases<a class="headerlink" href="#table-aliases" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;u.id&quot;</span><span class="p">,</span> <span class="s2">&quot;u.name&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users AS u&quot;</span><span class="p">)</span>
+<span class="n">sql</span><span class="p">,</span> <span class="n">params</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+<span class="c1"># SELECT `u`.`id`, `u`.`name` FROM `users` AS `u`</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="where-clauses">
+<h2>WHERE Clauses<a class="headerlink" href="#where-clauses" title="Link to this heading"></a></h2>
+<section id="basic-conditions">
+<h3>Basic Conditions<a class="headerlink" href="#basic-conditions" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Simple equality</span>
+<span class="n">query</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;active&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+<span class="c1"># WHERE `active` = %s</span>
+
+<span class="c1"># Comparison operators (Standard)</span>
+<span class="n">query</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;age &gt;&quot;</span><span class="p">,</span> <span class="mi">18</span><span class="p">)</span>
+<span class="c1"># WHERE `age` &gt; %s</span>
+
+<span class="c1"># Compact Syntax (New)</span>
+<span class="n">query</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;age&gt;&quot;</span><span class="p">,</span> <span class="mi">18</span><span class="p">)</span>
+<span class="c1"># WHERE `age` &gt; %s</span>
+
+<span class="n">query</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;age&gt;=&quot;</span><span class="p">,</span> <span class="mi">18</span><span class="p">)</span>
+<span class="c1"># WHERE `age` &gt;= %s</span>
+
+<span class="c1"># Extended Operators</span>
+<span class="n">query</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;name LIKE&quot;</span><span class="p">,</span> <span class="s2">&quot;John%&quot;</span><span class="p">)</span>
+<span class="c1"># WHERE `name` LIKE %s</span>
+
+<span class="n">query</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;created_at &gt;=&quot;</span><span class="p">,</span> <span class="s2">&quot;2023-01-01&quot;</span><span class="p">)</span>
+<span class="c1"># WHERE `created_at` &gt;= %s</span>
+</pre></div>
+</div>
+</section>
+<section id="multiple-conditions">
+<h3>Multiple Conditions<a class="headerlink" href="#multiple-conditions" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># AND conditions (default)</span>
+<span class="n">query</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;active&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;age &gt;=&quot;</span><span class="p">,</span> <span class="mi">18</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="c1"># WHERE `active` = %s AND `age` &gt;= %s</span>
+
+<span class="c1"># OR conditions</span>
+<span class="n">query</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">or_where</span><span class="p">(</span><span class="s2">&quot;role&quot;</span><span class="p">,</span> <span class="s2">&quot;admin&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">or_where</span><span class="p">(</span><span class="s2">&quot;role&quot;</span><span class="p">,</span> <span class="s2">&quot;moderator&quot;</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="c1"># WHERE `role` = %s OR `role` = %s</span>
+</pre></div>
+</div>
+</section>
+<section id="in-and-not-in">
+<h3>IN and NOT IN<a class="headerlink" href="#in-and-not-in" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># IN clause</span>
+<span class="n">query</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">where_in</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">])</span>
+<span class="c1"># WHERE `id` IN (%s, %s, %s, %s, %s)</span>
+
+<span class="c1"># OR IN clause</span>
+<span class="n">query</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;active&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">or_where_in</span><span class="p">(</span><span class="s2">&quot;role&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;admin&quot;</span><span class="p">,</span> <span class="s2">&quot;mod&quot;</span><span class="p">])</span>
+<span class="c1"># WHERE `active` = %s OR `role` IN (%s, %s)</span>
+
+<span class="c1"># NOT IN clause</span>
+<span class="n">query</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">where_not_in</span><span class="p">(</span><span class="s2">&quot;status&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;banned&quot;</span><span class="p">,</span> <span class="s2">&quot;deleted&quot;</span><span class="p">])</span>
+<span class="c1"># WHERE `status` NOT IN (%s, %s)</span>
+
+<span class="c1"># OR NOT IN clause</span>
+<span class="n">query</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;active&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">or_where_not_in</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
+<span class="c1"># WHERE `active` = %s OR `id` NOT IN (%s, %s)</span>
+</pre></div>
+</div>
+</section>
+<section id="null-checks">
+<h3>NULL Checks<a class="headerlink" href="#null-checks" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># IS NULL</span>
+<span class="n">query</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">where_null</span><span class="p">(</span><span class="s2">&quot;deleted_at&quot;</span><span class="p">)</span>
+<span class="c1"># WHERE `deleted_at` IS NULL</span>
+
+<span class="c1"># OR IS NULL</span>
+<span class="n">query</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;active&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">or_where_null</span><span class="p">(</span><span class="s2">&quot;last_login&quot;</span><span class="p">)</span>
+<span class="c1"># WHERE `active` = %s OR `last_login` IS NULL</span>
+
+<span class="c1"># IS NOT NULL</span>
+<span class="n">query</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">where_not_null</span><span class="p">(</span><span class="s2">&quot;email_verified_at&quot;</span><span class="p">)</span>
+<span class="c1"># WHERE `email_verified_at` IS NOT NULL</span>
+
+<span class="c1"># OR IS NOT NULL</span>
+<span class="n">query</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;active&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">or_where_not_null</span><span class="p">(</span><span class="s2">&quot;phone&quot;</span><span class="p">)</span>
+<span class="c1"># WHERE `active` = %s OR `phone` IS NOT NULL</span>
+</pre></div>
+</div>
+</section>
+<section id="between">
+<h3>BETWEEN<a class="headerlink" href="#between" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;orders&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">where_between</span><span class="p">(</span><span class="s2">&quot;created_at&quot;</span><span class="p">,</span> <span class="s2">&quot;2023-01-01&quot;</span><span class="p">,</span> <span class="s2">&quot;2023-12-31&quot;</span><span class="p">)</span>
+<span class="c1"># WHERE `created_at` BETWEEN %s AND %s</span>
+
+<span class="n">query</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;orders&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;total &gt;&quot;</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span><span class="o">.</span><span class="n">or_where_between</span><span class="p">(</span><span class="s2">&quot;quantity&quot;</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">)</span>
+<span class="c1"># WHERE `total` &gt; %s OR `quantity` BETWEEN %s AND %s</span>
+
+<span class="n">query</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;products&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">where_not_between</span><span class="p">(</span><span class="s2">&quot;price&quot;</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>
+<span class="c1"># WHERE `price` NOT BETWEEN %s AND %s</span>
+
+<span class="n">query</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;products&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;category&quot;</span><span class="p">,</span> <span class="s2">&quot;A&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">or_where_not_between</span><span class="p">(</span><span class="s2">&quot;stock&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+<span class="c1"># WHERE `category` = %s OR `stock` NOT BETWEEN %s AND %s</span>
+</pre></div>
+</div>
+</section>
+<section id="like-patterns">
+<h3>LIKE Patterns<a class="headerlink" href="#like-patterns" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># LIKE</span>
+<span class="n">query</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">where_like</span><span class="p">(</span><span class="s2">&quot;email&quot;</span><span class="p">,</span> <span class="s2">&quot;%@example.com&quot;</span><span class="p">)</span>
+<span class="c1"># WHERE `email` LIKE %s</span>
+
+<span class="c1"># OR LIKE</span>
+<span class="n">query</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="s2">&quot;John&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">or_where_like</span><span class="p">(</span><span class="s2">&quot;email&quot;</span><span class="p">,</span> <span class="s2">&quot;%@gmail.com&quot;</span><span class="p">)</span>
+<span class="c1"># WHERE `name` = %s OR `email` LIKE %s</span>
+
+<span class="c1"># NOT LIKE</span>
+<span class="n">query</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">where_not_like</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="s2">&quot;test%&quot;</span><span class="p">)</span>
+<span class="c1"># WHERE `name` NOT LIKE %s</span>
+
+<span class="c1"># OR NOT LIKE</span>
+<span class="n">query</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;active&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">or_where_not_like</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="s2">&quot;guest%&quot;</span><span class="p">)</span>
+<span class="c1"># WHERE `active` = %s OR `name` NOT LIKE %s</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="complex-conditions">
+<h2>Complex Conditions<a class="headerlink" href="#complex-conditions" title="Link to this heading"></a></h2>
+<section id="using-condition-objects">
+<h3>Using Condition Objects<a class="headerlink" href="#using-condition-objects" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">sqlo</span><span class="w"> </span><span class="kn">import</span> <span class="n">Condition</span>
+
+<span class="c1"># Create complex conditions</span>
+<span class="n">condition</span> <span class="o">=</span> <span class="n">Condition</span><span class="o">.</span><span class="n">and_</span><span class="p">(</span>
+    <span class="n">Condition</span><span class="p">(</span><span class="s2">&quot;age&quot;</span><span class="p">,</span> <span class="s2">&quot;&gt;=&quot;</span><span class="p">,</span> <span class="mi">18</span><span class="p">),</span>
+    <span class="n">Condition</span><span class="o">.</span><span class="n">or_</span><span class="p">(</span>
+        <span class="n">Condition</span><span class="p">(</span><span class="s2">&quot;country&quot;</span><span class="p">,</span> <span class="s2">&quot;=&quot;</span><span class="p">,</span> <span class="s2">&quot;US&quot;</span><span class="p">),</span>
+        <span class="n">Condition</span><span class="p">(</span><span class="s2">&quot;country&quot;</span><span class="p">,</span> <span class="s2">&quot;=&quot;</span><span class="p">,</span> <span class="s2">&quot;CA&quot;</span><span class="p">)</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+
+<span class="n">query</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">condition</span><span class="p">)</span>
+<span class="c1"># WHERE (`age` &gt;= %s AND (`country` = %s OR `country` = %s))</span>
+</pre></div>
+</div>
+<p>See <a class="reference internal" href="conditions.html"><span class="std std-doc">Condition Objects</span></a> for detailed information.</p>
+</section>
+</section>
+<section id="order-by">
+<h2>ORDER BY<a class="headerlink" href="#order-by" title="Link to this heading"></a></h2>
+<section id="basic-sorting">
+<h3>Basic Sorting<a class="headerlink" href="#basic-sorting" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Ascending order</span>
+<span class="n">query</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">)</span>
+<span class="c1"># ORDER BY `name` ASC</span>
+
+<span class="c1"># Descending order (prefix with -)</span>
+<span class="n">query</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="s2">&quot;-created_at&quot;</span><span class="p">)</span>
+<span class="c1"># ORDER BY `created_at` DESC</span>
+
+<span class="c1"># Multiple columns</span>
+<span class="n">query</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="s2">&quot;country&quot;</span><span class="p">,</span> <span class="s2">&quot;-created_at&quot;</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">)</span>
+<span class="c1"># ORDER BY `country` ASC, `created_at` DESC, `name` ASC</span>
+</pre></div>
+</div>
+</section>
+<section id="raw-sql-in-order-by">
+<h3>Raw SQL in ORDER BY<a class="headerlink" href="#raw-sql-in-order-by" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">sqlo</span><span class="w"> </span><span class="kn">import</span> <span class="n">Raw</span>
+
+<span class="n">query</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;products&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="n">Raw</span><span class="p">(</span><span class="s2">&quot;FIELD(status, &#39;active&#39;, &#39;pending&#39;, &#39;inactive&#39;)&quot;</span><span class="p">))</span>
+<span class="c1"># ORDER BY FIELD(status, &#39;active&#39;, &#39;pending&#39;, &#39;inactive&#39;)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="limit-and-offset">
+<h2>LIMIT and OFFSET<a class="headerlink" href="#limit-and-offset" title="Link to this heading"></a></h2>
+<section id="pagination">
+<h3>Pagination<a class="headerlink" href="#pagination" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># LIMIT only</span>
+<span class="n">query</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="c1"># LIMIT 10</span>
+
+<span class="c1"># LIMIT with OFFSET</span>
+<span class="n">query</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">offset</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>
+<span class="c1"># LIMIT 10 OFFSET 20</span>
+
+<span class="c1"># Helper method for pagination</span>
+<span class="n">query</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">paginate</span><span class="p">(</span><span class="n">page</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">per_page</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+<span class="c1"># LIMIT 20 OFFSET 40</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="group-by-and-having">
+<h2>GROUP BY and HAVING<a class="headerlink" href="#group-by-and-having" title="Link to this heading"></a></h2>
+<section id="grouping">
+<h3>Grouping<a class="headerlink" href="#grouping" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;country&quot;</span><span class="p">,</span> <span class="s2">&quot;COUNT(*) as user_count&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">group_by</span><span class="p">(</span><span class="s2">&quot;country&quot;</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="c1"># SELECT `country`, COUNT(*) as user_count FROM `users` GROUP BY `country`</span>
+
+<span class="c1"># Multiple columns</span>
+<span class="n">query</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;country&quot;</span><span class="p">,</span> <span class="s2">&quot;city&quot;</span><span class="p">,</span> <span class="s2">&quot;COUNT(*) as count&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">group_by</span><span class="p">(</span><span class="s2">&quot;country&quot;</span><span class="p">,</span> <span class="s2">&quot;city&quot;</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="c1"># GROUP BY `country`, `city`</span>
+</pre></div>
+</div>
+</section>
+<section id="having-clause">
+<h3>HAVING Clause<a class="headerlink" href="#having-clause" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;country&quot;</span><span class="p">,</span> <span class="s2">&quot;COUNT(*) as user_count&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">group_by</span><span class="p">(</span><span class="s2">&quot;country&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">having</span><span class="p">(</span><span class="s2">&quot;COUNT(*) &gt;&quot;</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="c1"># HAVING COUNT(*) &gt; %s</span>
+
+<span class="c1"># Multiple HAVING conditions</span>
+<span class="n">query</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;country&quot;</span><span class="p">,</span> <span class="s2">&quot;AVG(age) as avg_age&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">group_by</span><span class="p">(</span><span class="s2">&quot;country&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">having</span><span class="p">(</span><span class="s2">&quot;AVG(age) &gt;=&quot;</span><span class="p">,</span> <span class="mi">18</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">having</span><span class="p">(</span><span class="s2">&quot;COUNT(*) &gt;&quot;</span><span class="p">,</span> <span class="mi">50</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="c1"># HAVING AVG(age) &gt;= %s AND COUNT(*) &gt; %s</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="distinct">
+<h2>DISTINCT<a class="headerlink" href="#distinct" title="Link to this heading"></a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;country&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">distinct</span><span class="p">()</span>
+<span class="c1"># SELECT DISTINCT `country` FROM `users`</span>
+
+<span class="c1"># DISTINCT with multiple columns</span>
+<span class="n">query</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;country&quot;</span><span class="p">,</span> <span class="s2">&quot;city&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">distinct</span><span class="p">()</span>
+<span class="c1"># SELECT DISTINCT `country`, `city` FROM `users`</span>
+</pre></div>
+</div>
+</section>
+<section id="union">
+<h2>UNION<a class="headerlink" href="#union" title="Link to this heading"></a></h2>
+<section id="basic-union">
+<h3>Basic UNION<a class="headerlink" href="#basic-union" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">query1</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;active_users&quot;</span><span class="p">)</span>
+<span class="n">query2</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;inactive_users&quot;</span><span class="p">)</span>
+
+<span class="n">combined</span> <span class="o">=</span> <span class="n">query1</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">query2</span><span class="p">)</span>
+<span class="n">sql</span><span class="p">,</span> <span class="n">params</span> <span class="o">=</span> <span class="n">combined</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+<span class="c1"># SELECT `id`, `name` FROM `active_users`</span>
+<span class="c1"># UNION</span>
+<span class="c1"># SELECT `id`, `name` FROM `inactive_users`</span>
+</pre></div>
+</div>
+</section>
+<section id="union-all">
+<h3>UNION ALL<a class="headerlink" href="#union-all" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">query1</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users_2022&quot;</span><span class="p">)</span>
+<span class="n">query2</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users_2023&quot;</span><span class="p">)</span>
+
+<span class="n">combined</span> <span class="o">=</span> <span class="n">query1</span><span class="o">.</span><span class="n">union_all</span><span class="p">(</span><span class="n">query2</span><span class="p">)</span>
+<span class="c1"># UNION ALL (includes duplicates)</span>
+</pre></div>
+</div>
+</section>
+<section id="multiple-union">
+<h3>Multiple UNION<a class="headerlink" href="#multiple-union" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">q1</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;table1&quot;</span><span class="p">)</span>
+<span class="n">q2</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;table2&quot;</span><span class="p">)</span>
+<span class="n">q3</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;table3&quot;</span><span class="p">)</span>
+
+<span class="n">combined</span> <span class="o">=</span> <span class="n">q1</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">q2</span><span class="p">)</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">q3</span><span class="p">)</span>
+<span class="c1"># Multiple UNION operations</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="subqueries">
+<h2>Subqueries<a class="headerlink" href="#subqueries" title="Link to this heading"></a></h2>
+<section id="subquery-in-where">
+<h3>Subquery in WHERE<a class="headerlink" href="#subquery-in-where" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">subquery</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;user_id&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;orders&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;total &gt;&quot;</span><span class="p">,</span> <span class="mi">1000</span><span class="p">)</span>
+
+<span class="n">query</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">where_in</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="n">subquery</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="c1"># WHERE `id` IN (SELECT `user_id` FROM `orders` WHERE `total` &gt; %s)</span>
+</pre></div>
+</div>
+</section>
+<section id="subquery-in-from">
+<h3>Subquery in FROM<a class="headerlink" href="#subquery-in-from" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">subquery</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;user_id&quot;</span><span class="p">,</span> <span class="s2">&quot;COUNT(*) as order_count&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;orders&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">group_by</span><span class="p">(</span><span class="s2">&quot;user_id&quot;</span><span class="p">)</span>
+<span class="p">)</span>
+
+<span class="n">query</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;u.name&quot;</span><span class="p">,</span> <span class="s2">&quot;o.order_count&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="n">subquery</span><span class="o">.</span><span class="n">as_</span><span class="p">(</span><span class="s2">&quot;o&quot;</span><span class="p">))</span>
+    <span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;users AS u&quot;</span><span class="p">,</span> <span class="s2">&quot;u.id = o.user_id&quot;</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="c1"># SELECT `u`.`name`, `o`.`order_count`</span>
+<span class="c1"># FROM (SELECT `user_id`, COUNT(*) as order_count FROM `orders` GROUP BY `user_id`) AS `o`</span>
+<span class="c1"># INNER JOIN `users` AS `u` ON u.id = o.user_id</span>
+</pre></div>
+</div>
+</section>
+<section id="scalar-subquery-in-select">
+<h3>Scalar Subquery in SELECT<a class="headerlink" href="#scalar-subquery-in-select" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">subquery</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;COUNT(*)&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;orders&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;orders.user_id = users.id&quot;</span><span class="p">)</span>
+<span class="p">)</span>
+
+<span class="n">query</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="n">subquery</span><span class="o">.</span><span class="n">as_</span><span class="p">(</span><span class="s2">&quot;order_count&quot;</span><span class="p">))</span>
+    <span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="c1"># SELECT `id`, `name`, (SELECT COUNT(*) FROM `orders` WHERE orders.user_id = users.id) AS `order_count`</span>
+<span class="c1"># FROM `users`</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="index-hints">
+<h2>Index Hints<a class="headerlink" href="#index-hints" title="Link to this heading"></a></h2>
+<section id="optimizer-hints-mysql-8-0">
+<h3>Optimizer Hints (MySQL 8.0+)<a class="headerlink" href="#optimizer-hints-mysql-8-0" title="Link to this heading"></a></h3>
+<p>MySQL 8.0 deprecated <code class="docutils literal notranslate"><span class="pre">FORCE</span> <span class="pre">INDEX</span></code>, <code class="docutils literal notranslate"><span class="pre">USE</span> <span class="pre">INDEX</span></code>, and <code class="docutils literal notranslate"><span class="pre">IGNORE</span> <span class="pre">INDEX</span></code> in favor of Optimizer Hints.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Using Optimizer Hints</span>
+<span class="n">query</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">optimizer_hint</span><span class="p">(</span><span class="s2">&quot;INDEX(users idx_email)&quot;</span><span class="p">)</span>
+<span class="c1"># SELECT /*+ INDEX(users idx_email) */ * FROM `users`</span>
+
+<span class="c1"># Multiple hints</span>
+<span class="n">query</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">optimizer_hint</span><span class="p">(</span><span class="s2">&quot;INDEX(users idx_email)&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">optimizer_hint</span><span class="p">(</span><span class="s2">&quot;MAX_EXECUTION_TIME(1000)&quot;</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="c1"># SELECT /*+ INDEX(users idx_email) MAX_EXECUTION_TIME(1000) */ * FROM `users`</span>
+</pre></div>
+</div>
+</section>
+<section id="legacy-index-hints-deprecated">
+<h3>Legacy Index Hints (Deprecated)<a class="headerlink" href="#legacy-index-hints-deprecated" title="Link to this heading"></a></h3>
+<blockquote>
+<div><p>[!WARNING]
+These methods are deprecated and may be removed in future versions. Use <code class="docutils literal notranslate"><span class="pre">optimizer_hint()</span></code> instead.</p>
+</div></blockquote>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># FORCE INDEX</span>
+<span class="n">query</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">force_index</span><span class="p">(</span><span class="s2">&quot;idx_email&quot;</span><span class="p">)</span>
+<span class="c1"># SELECT * FROM `users` FORCE INDEX (`idx_email`)</span>
+
+<span class="c1"># USE INDEX</span>
+<span class="n">query</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">use_index</span><span class="p">(</span><span class="s2">&quot;idx_name&quot;</span><span class="p">)</span>
+
+<span class="c1"># IGNORE INDEX</span>
+<span class="n">query</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">ignore_index</span><span class="p">(</span><span class="s2">&quot;idx_old&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="dynamic-query-building">
+<h2>Dynamic Query Building<a class="headerlink" href="#dynamic-query-building" title="Link to this heading"></a></h2>
+<section id="conditional-clauses-with-when">
+<h3>Conditional Clauses with <code class="docutils literal notranslate"><span class="pre">when()</span></code><a class="headerlink" href="#conditional-clauses-with-when" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">build_user_query</span><span class="p">(</span><span class="n">filters</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+    <span class="n">query</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span>
+    
+    <span class="c1"># Add WHERE clause only if filter exists</span>
+    <span class="n">query</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">when</span><span class="p">(</span>
+        <span class="s2">&quot;email&quot;</span> <span class="ow">in</span> <span class="n">filters</span><span class="p">,</span>
+        <span class="k">lambda</span> <span class="n">q</span><span class="p">:</span> <span class="n">q</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;email&quot;</span><span class="p">,</span> <span class="n">filters</span><span class="p">[</span><span class="s2">&quot;email&quot;</span><span class="p">])</span>
+    <span class="p">)</span>
+    
+    <span class="n">query</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">when</span><span class="p">(</span>
+        <span class="s2">&quot;min_age&quot;</span> <span class="ow">in</span> <span class="n">filters</span><span class="p">,</span>
+        <span class="k">lambda</span> <span class="n">q</span><span class="p">:</span> <span class="n">q</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;age &gt;=&quot;</span><span class="p">,</span> <span class="n">filters</span><span class="p">[</span><span class="s2">&quot;min_age&quot;</span><span class="p">])</span>
+    <span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">query</span>
+
+<span class="c1"># Usage</span>
+<span class="n">query</span> <span class="o">=</span> <span class="n">build_user_query</span><span class="p">({</span><span class="s2">&quot;email&quot;</span><span class="p">:</span> <span class="s2">&quot;test@example.com&quot;</span><span class="p">})</span>
+<span class="c1"># Only includes WHERE email = %s</span>
+
+<span class="n">query</span> <span class="o">=</span> <span class="n">build_user_query</span><span class="p">({</span><span class="s2">&quot;min_age&quot;</span><span class="p">:</span> <span class="mi">18</span><span class="p">})</span>
+<span class="c1"># Only includes WHERE age &gt;= %s</span>
+</pre></div>
+</div>
+</section>
+<section id="complex-dynamic-conditions">
+<h3>Complex Dynamic Conditions<a class="headerlink" href="#complex-dynamic-conditions" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">search_products</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">min_price</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">max_price</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">categories</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="n">query</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;products&quot;</span><span class="p">)</span>
+    
+    <span class="n">query</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">query</span>
+        <span class="o">.</span><span class="n">when</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">q</span><span class="p">:</span> <span class="n">q</span><span class="o">.</span><span class="n">where_like</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;%</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">%&quot;</span><span class="p">))</span>
+        <span class="o">.</span><span class="n">when</span><span class="p">(</span><span class="n">min_price</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">q</span><span class="p">:</span> <span class="n">q</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;price &gt;=&quot;</span><span class="p">,</span> <span class="n">min_price</span><span class="p">))</span>
+        <span class="o">.</span><span class="n">when</span><span class="p">(</span><span class="n">max_price</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">q</span><span class="p">:</span> <span class="n">q</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;price &lt;=&quot;</span><span class="p">,</span> <span class="n">max_price</span><span class="p">))</span>
+        <span class="o">.</span><span class="n">when</span><span class="p">(</span><span class="n">categories</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">q</span><span class="p">:</span> <span class="n">q</span><span class="o">.</span><span class="n">where_in</span><span class="p">(</span><span class="s2">&quot;category_id&quot;</span><span class="p">,</span> <span class="n">categories</span><span class="p">))</span>
+    <span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">query</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="advanced-examples">
+<h2>Advanced Examples<a class="headerlink" href="#advanced-examples" title="Link to this heading"></a></h2>
+<section id="complex-query-with-multiple-features">
+<h3>Complex Query with Multiple Features<a class="headerlink" href="#complex-query-with-multiple-features" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span>
+        <span class="s2">&quot;u.id&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;u.name&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;u.email&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;COUNT(o.id) as order_count&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;SUM(o.total) as total_spent&quot;</span>
+    <span class="p">)</span>
+    <span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users AS u&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">left_join</span><span class="p">(</span><span class="s2">&quot;orders AS o&quot;</span><span class="p">,</span> <span class="s2">&quot;o.user_id = u.id&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;u.active&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;u.created_at &gt;=&quot;</span><span class="p">,</span> <span class="s2">&quot;2023-01-01&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">group_by</span><span class="p">(</span><span class="s2">&quot;u.id&quot;</span><span class="p">,</span> <span class="s2">&quot;u.name&quot;</span><span class="p">,</span> <span class="s2">&quot;u.email&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">having</span><span class="p">(</span><span class="s2">&quot;COUNT(o.id) &gt;&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="s2">&quot;-total_spent&quot;</span><span class="p">,</span> <span class="s2">&quot;u.name&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="pagination-with-total-count">
+<h3>Pagination with Total Count<a class="headerlink" href="#pagination-with-total-count" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Get paginated results</span>
+<span class="n">query</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;active&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="s2">&quot;-created_at&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">paginate</span><span class="p">(</span><span class="n">page</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">per_page</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+<span class="p">)</span>
+
+<span class="c1"># Get total count (without LIMIT)</span>
+<span class="n">count_query</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;COUNT(*) as total&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;active&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="performance-tips">
+<h2>Performance Tips<a class="headerlink" href="#performance-tips" title="Link to this heading"></a></h2>
+<ol class="arabic simple">
+<li><p><strong>Use specific columns</strong> instead of <code class="docutils literal notranslate"><span class="pre">SELECT</span> <span class="pre">*</span></code> when possible</p></li>
+<li><p><strong>Add appropriate indexes</strong> for WHERE and JOIN columns</p></li>
+<li><p><strong>Use LIMIT</strong> to restrict result sets</p></li>
+<li><p><strong>Use EXPLAIN</strong> to analyze query performance (see below)</p></li>
+<li><p><strong>Avoid N+1 queries</strong> by using JOINs or subqueries</p></li>
+</ol>
+<section id="explain-support">
+<h3>EXPLAIN Support<a class="headerlink" href="#explain-support" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;email&quot;</span><span class="p">,</span> <span class="s2">&quot;test@example.com&quot;</span><span class="p">)</span>
+<span class="n">explain_query</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">explain</span><span class="p">()</span>
+<span class="n">explain_sql</span><span class="p">,</span> <span class="n">params</span> <span class="o">=</span> <span class="n">explain_query</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+<span class="c1"># Returns: EXPLAIN SELECT * FROM `users` WHERE `email` = %s</span>
+
+<span class="c1"># Execute with your database connection to see query plan</span>
+<span class="c1"># cursor.execute(explain_sql, params)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="joins.html"><span class="std std-doc">JOIN Operations</span></a> - Detailed JOIN documentation</p></li>
+<li><p><a class="reference internal" href="conditions.html"><span class="std std-doc">Condition Objects</span></a> - Complex condition building</p></li>
+<li><p><a class="reference internal" href="expressions.html"><span class="std std-doc">Expressions &amp; Functions</span></a> - SQL functions and raw expressions</p></li>
+<li><p><a class="reference internal" href="getting-started.html"><span class="std std-doc">Getting Started</span></a> - Basic concepts</p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="security.html" class="btn btn-neutral float-left" title="Security Guide" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="insert.html" class="btn btn-neutral float-right" title="INSERT Queries" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Nan Guo.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

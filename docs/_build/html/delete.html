@@ -1,0 +1,376 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DELETE Queries &mdash; sqlo Documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=01f34227"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Condition Objects" href="conditions.html" />
+    <link rel="prev" title="UPDATE Queries" href="update.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            sqlo
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="getting-started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="security.html">Security Guide</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Query Types</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="select.html">SELECT Queries</a></li>
+<li class="toctree-l1"><a class="reference internal" href="insert.html">INSERT Queries</a></li>
+<li class="toctree-l1"><a class="reference internal" href="update.html">UPDATE Queries</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">DELETE Queries</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#basic-delete">Basic DELETE</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#simple-delete">Simple Delete</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#delete-all-rows-with-confirmation">Delete All Rows (with confirmation)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#delete-with-where">Delete with WHERE</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#where-clause">WHERE Clause</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#basic-conditions">Basic Conditions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#or-conditions">OR Conditions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#in-clause">IN Clause</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#null-checks">NULL Checks</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#order-by-and-limit">ORDER BY and LIMIT</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#advanced-usage">Advanced Usage</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#multi-table-delete-mysql">Multi-Table DELETE (MySQL)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#delete-with-subquery">DELETE with Subquery</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#safety-best-practices">Safety Best Practices</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#always-use-where">1. Always Use WHERE</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#use-soft-deletes-instead">2. Use Soft Deletes Instead</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#limit-deletions">3. Limit Deletions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#verify-before-execution">4. Verify Before Execution</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#common-patterns">Common Patterns</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#pruning-old-data">Pruning Old Data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#duplicate-removal">Duplicate Removal</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#see-also">See Also</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Advanced Topics</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="conditions.html">Condition Objects</a></li>
+<li class="toctree-l1"><a class="reference internal" href="expressions.html">Expressions &amp; Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="joins.html">JOIN Operations</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="reference.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">sqlo</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">DELETE Queries</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/delete.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="delete-queries">
+<h1>DELETE Queries<a class="headerlink" href="#delete-queries" title="Link to this heading"></a></h1>
+<p>Complete guide to DELETE query building with sqlo.</p>
+<section id="basic-delete">
+<h2>Basic DELETE<a class="headerlink" href="#basic-delete" title="Link to this heading"></a></h2>
+<section id="simple-delete">
+<h3>Simple Delete<a class="headerlink" href="#simple-delete" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">sqlo</span><span class="w"> </span><span class="kn">import</span> <span class="n">Q</span>
+
+<span class="c1"># ❌ ERROR: DELETE requires WHERE clause or explicit confirmation</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="n">query</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">delete_from</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span>
+    <span class="n">sql</span><span class="p">,</span> <span class="n">params</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+<span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>  <span class="c1"># &quot;DELETE without WHERE clause would affect all rows...&quot;</span>
+</pre></div>
+</div>
+<blockquote>
+<div><p>[!WARNING]
+<strong>DELETE Safety</strong>: sqlo requires either a WHERE clause or explicit <code class="docutils literal notranslate"><span class="pre">.allow_all_rows()</span></code> to prevent accidental mass deletions.</p>
+</div></blockquote>
+</section>
+<section id="delete-all-rows-with-confirmation">
+<h3>Delete All Rows (with confirmation)<a class="headerlink" href="#delete-all-rows-with-confirmation" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Delete ALL rows (requires explicit confirmation)</span>
+<span class="n">query</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">delete_from</span><span class="p">(</span><span class="s2">&quot;temp_logs&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">allow_all_rows</span><span class="p">()</span>
+<span class="n">sql</span><span class="p">,</span> <span class="n">params</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+<span class="c1"># DELETE FROM `temp_logs`</span>
+</pre></div>
+</div>
+</section>
+<section id="delete-with-where">
+<h3>Delete with WHERE<a class="headerlink" href="#delete-with-where" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Delete specific rows (recommended)</span>
+<span class="n">query</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">delete_from</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="mi">123</span><span class="p">)</span>
+<span class="n">sql</span><span class="p">,</span> <span class="n">params</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+<span class="c1"># DELETE FROM `users` WHERE `id` = %s</span>
+<span class="c1"># Params: (123,)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="where-clause">
+<h2>WHERE Clause<a class="headerlink" href="#where-clause" title="Link to this heading"></a></h2>
+<section id="basic-conditions">
+<h3>Basic Conditions<a class="headerlink" href="#basic-conditions" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Single condition</span>
+<span class="n">query</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">delete_from</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;active&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+
+<span class="c1"># Multiple AND conditions</span>
+<span class="n">query</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">Q</span><span class="o">.</span><span class="n">delete_from</span><span class="p">(</span><span class="s2">&quot;logs&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;level&quot;</span><span class="p">,</span> <span class="s2">&quot;debug&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;created_at &lt;&quot;</span><span class="p">,</span> <span class="s2">&quot;2023-01-01&quot;</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="c1"># DELETE FROM `logs` WHERE `level` = %s AND `created_at` &lt; %s</span>
+</pre></div>
+</div>
+</section>
+<section id="or-conditions">
+<h3>OR Conditions<a class="headerlink" href="#or-conditions" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">Q</span><span class="o">.</span><span class="n">delete_from</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;status&quot;</span><span class="p">,</span> <span class="s2">&quot;banned&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">or_where</span><span class="p">(</span><span class="s2">&quot;login_attempts &gt;&quot;</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="c1"># DELETE FROM `users` WHERE `status` = %s OR `login_attempts` &gt; %s</span>
+</pre></div>
+</div>
+</section>
+<section id="in-clause">
+<h3>IN Clause<a class="headerlink" href="#in-clause" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">delete_from</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">where_in</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">])</span>
+<span class="c1"># DELETE FROM `users` WHERE `id` IN (%s, %s, %s, %s, %s)</span>
+</pre></div>
+</div>
+</section>
+<section id="null-checks">
+<h3>NULL Checks<a class="headerlink" href="#null-checks" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Delete rows with NULL values</span>
+<span class="n">query</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">delete_from</span><span class="p">(</span><span class="s2">&quot;tokens&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">where_null</span><span class="p">(</span><span class="s2">&quot;expires_at&quot;</span><span class="p">)</span>
+<span class="c1"># DELETE FROM `tokens` WHERE `expires_at` IS NULL</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="order-by-and-limit">
+<h2>ORDER BY and LIMIT<a class="headerlink" href="#order-by-and-limit" title="Link to this heading"></a></h2>
+<p>Control which rows are deleted (useful for pruning):</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Delete oldest 100 logs</span>
+<span class="n">query</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">Q</span><span class="o">.</span><span class="n">delete_from</span><span class="p">(</span><span class="s2">&quot;logs&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="s2">&quot;created_at&quot;</span><span class="p">)</span>  <span class="c1"># Ascending order (oldest first)</span>
+    <span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="c1"># DELETE FROM `logs` ORDER BY `created_at` ASC LIMIT 100</span>
+
+<span class="c1"># Delete newest records (e.g., undo recent imports)</span>
+<span class="n">query</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">Q</span><span class="o">.</span><span class="n">delete_from</span><span class="p">(</span><span class="s2">&quot;imports&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="s2">&quot;-created_at&quot;</span><span class="p">)</span>  <span class="c1"># Descending order</span>
+    <span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="c1"># DELETE FROM `imports` ORDER BY `created_at` DESC LIMIT 10</span>
+</pre></div>
+</div>
+</section>
+<section id="advanced-usage">
+<h2>Advanced Usage<a class="headerlink" href="#advanced-usage" title="Link to this heading"></a></h2>
+<section id="multi-table-delete-mysql">
+<h3>Multi-Table DELETE (MySQL)<a class="headerlink" href="#multi-table-delete-mysql" title="Link to this heading"></a></h3>
+<p>Delete from multiple tables using JOINs:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Delete users who have no orders</span>
+<span class="n">query</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">Q</span><span class="o">.</span><span class="n">delete_from</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">left_join</span><span class="p">(</span><span class="s2">&quot;orders&quot;</span><span class="p">,</span> <span class="s2">&quot;orders.user_id = users.id&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">where_null</span><span class="p">(</span><span class="s2">&quot;orders.id&quot;</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="c1"># DELETE `users` FROM `users` LEFT JOIN `orders` ON orders.user_id = users.id WHERE `orders`.`id` IS NULL</span>
+</pre></div>
+</div>
+</section>
+<section id="delete-with-subquery">
+<h3>DELETE with Subquery<a class="headerlink" href="#delete-with-subquery" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Delete users based on subquery</span>
+<span class="n">subquery</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;user_id&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;blacklisted_emails&quot;</span><span class="p">)</span>
+
+<span class="n">query</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">Q</span><span class="o">.</span><span class="n">delete_from</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">where_in</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="n">subquery</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="c1"># DELETE FROM `users` WHERE `id` IN (SELECT `user_id` FROM `blacklisted_emails`)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="safety-best-practices">
+<h2>Safety Best Practices<a class="headerlink" href="#safety-best-practices" title="Link to this heading"></a></h2>
+<section id="always-use-where">
+<h3>1. Always Use WHERE<a class="headerlink" href="#always-use-where" title="Link to this heading"></a></h3>
+<p>Never run <code class="docutils literal notranslate"><span class="pre">Q.delete_from(&quot;table&quot;)</span></code> without a WHERE clause unless you intentionally want to truncate the table.</p>
+</section>
+<section id="use-soft-deletes-instead">
+<h3>2. Use Soft Deletes Instead<a class="headerlink" href="#use-soft-deletes-instead" title="Link to this heading"></a></h3>
+<p>Consider using “Soft Deletes” (updating a <code class="docutils literal notranslate"><span class="pre">deleted_at</span></code> timestamp) instead of actual DELETE queries for important data.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Instead of DELETE:</span>
+<span class="c1"># query = Q.delete_from(&quot;users&quot;).where(&quot;id&quot;, 123)</span>
+
+<span class="c1"># Use UPDATE:</span>
+<span class="n">query</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">Q</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">set</span><span class="p">({</span><span class="s2">&quot;deleted_at&quot;</span><span class="p">:</span> <span class="s2">&quot;NOW()&quot;</span><span class="p">})</span>
+    <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="mi">123</span><span class="p">)</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="limit-deletions">
+<h3>3. Limit Deletions<a class="headerlink" href="#limit-deletions" title="Link to this heading"></a></h3>
+<p>When running cleanup jobs, use <code class="docutils literal notranslate"><span class="pre">limit()</span></code> to avoid locking the table for too long.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Delete in batches of 1000</span>
+<span class="n">query</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">Q</span><span class="o">.</span><span class="n">delete_from</span><span class="p">(</span><span class="s2">&quot;logs&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;created_at &lt;&quot;</span><span class="p">,</span> <span class="s2">&quot;2022-01-01&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="mi">1000</span><span class="p">)</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="verify-before-execution">
+<h3>4. Verify Before Execution<a class="headerlink" href="#verify-before-execution" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">safe_delete</span><span class="p">(</span><span class="n">table_name</span><span class="p">,</span> <span class="n">conditions</span><span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">conditions</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cannot delete without conditions!&quot;</span><span class="p">)</span>
+    
+    <span class="n">query</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">delete_from</span><span class="p">(</span><span class="n">table_name</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">col</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">conditions</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">query</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">col</span><span class="p">,</span> <span class="n">val</span><span class="p">)</span>
+        
+    <span class="k">return</span> <span class="n">query</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="common-patterns">
+<h2>Common Patterns<a class="headerlink" href="#common-patterns" title="Link to this heading"></a></h2>
+<section id="pruning-old-data">
+<h3>Pruning Old Data<a class="headerlink" href="#pruning-old-data" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timedelta</span>
+
+<span class="c1"># Delete logs older than 30 days</span>
+<span class="n">cutoff_date</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span> <span class="o">-</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span>
+
+<span class="n">query</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">Q</span><span class="o">.</span><span class="n">delete_from</span><span class="p">(</span><span class="s2">&quot;app_logs&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;created_at &lt;&quot;</span><span class="p">,</span> <span class="n">cutoff_date</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="mi">5000</span><span class="p">)</span>  <span class="c1"># Limit batch size</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="duplicate-removal">
+<h3>Duplicate Removal<a class="headerlink" href="#duplicate-removal" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Keep only the latest entry for each user_id (MySQL specific trick)</span>
+<span class="c1"># This is complex and often better done with a temporary table or multiple queries</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="update.html"><span class="std std-doc">UPDATE Queries</span></a> - Soft delete implementation</p></li>
+<li><p><a class="reference internal" href="select.html"><span class="std std-doc">SELECT Queries</span></a> - Selecting data to verify before delete</p></li>
+<li><p><a class="reference internal" href="conditions.html"><span class="std std-doc">Condition Objects</span></a> - Complex conditions</p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="update.html" class="btn btn-neutral float-left" title="UPDATE Queries" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="conditions.html" class="btn btn-neutral float-right" title="Condition Objects" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Nan Guo.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

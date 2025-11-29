@@ -10,7 +10,27 @@ class Dialect(ABC):
         """The character used to quote identifiers."""
 
     def quote(self, identifier: str) -> str:
-        """Quote an identifier."""
+        """Quote an identifier with mandatory validation.
+
+        Args:
+            identifier: The identifier to quote (table name, column name, etc.)
+
+        Returns:
+            Quoted identifier
+
+        Raises:
+            ValueError: If identifier contains invalid characters
+        """
+        # Import here to avoid circular dependency
+        from ..security import validate_identifier
+
+        if not validate_identifier(identifier, allow_dot=True):
+            raise ValueError(
+                f"Invalid identifier '{identifier}'. "
+                "Identifiers must contain only letters, numbers, underscores, "
+                "and dots. Use Raw() for SQL functions or expressions."
+            )
+
         if "." in identifier:
             parts = identifier.split(".")
             return ".".join(

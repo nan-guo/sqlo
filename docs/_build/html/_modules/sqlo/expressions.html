@@ -1,0 +1,697 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>sqlo.expressions &mdash; sqlo Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=01f34227"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            sqlo
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../getting-started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../security.html">Security Guide</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Query Types</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../select.html">SELECT Queries</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../insert.html">INSERT Queries</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../update.html">UPDATE Queries</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../delete.html">DELETE Queries</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Advanced Topics</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../conditions.html">Condition Objects</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../expressions.html">Expressions &amp; Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../joins.html">JOIN Operations</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../reference.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">sqlo</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">sqlo.expressions</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for sqlo.expressions</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">.constants</span><span class="w"> </span><span class="kn">import</span> <span class="n">COMPACT_PATTERN</span>
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">.query.select</span><span class="w"> </span><span class="kn">import</span> <span class="n">SelectQuery</span>
+
+
+<div class="viewcode-block" id="Expression">
+<a class="viewcode-back" href="../../reference.html#sqlo.Expression">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Expression</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Base class for SQL expressions.&quot;&quot;&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="Raw">
+<a class="viewcode-back" href="../../reference.html#sqlo.Raw">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Raw</span><span class="p">(</span><span class="n">Expression</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Raw SQL fragment.</span>
+
+<span class="sd">    WARNING: Raw SQL bypasses parameter binding and can be vulnerable to SQL injection.</span>
+<span class="sd">    Only use Raw() with trusted input or when you need to reference columns/functions.</span>
+
+<span class="sd">    For dynamic user input, always use parameterized queries instead.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">sql</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">params</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sql</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Raw SQL must be a string&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sql</span> <span class="o">=</span> <span class="n">sql</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">params</span> <span class="o">=</span> <span class="n">params</span> <span class="ow">or</span> <span class="p">[]</span></div>
+
+
+
+<div class="viewcode-block" id="Func">
+<a class="viewcode-back" href="../../reference.html#sqlo.Func">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Func</span><span class="p">(</span><span class="n">Expression</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Represents a SQL function call.</span>
+
+<span class="sd">    This class allows you to wrap any SQL function (e.g., COUNT, MAX, AVG, custom functions)</span>
+<span class="sd">    and use it within your queries. It supports arguments and aliasing.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        name (str): The name of the SQL function (e.g., &quot;COUNT&quot;).</span>
+<span class="sd">        *args (Any): Arguments to pass to the function.</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        &gt;&gt;&gt; f = Func(&quot;COUNT&quot;, &quot;*&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; f.as_(&quot;total&quot;)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="n">args</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">alias</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="Func.as_">
+<a class="viewcode-back" href="../../reference.html#sqlo.Func.as_">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">as_</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">alias</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Func&quot;</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">alias</span> <span class="o">=</span> <span class="n">alias</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="FunctionFactory">
+<a class="viewcode-back" href="../../reference.html#sqlo.FunctionFactory">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">FunctionFactory</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Factory for creating SQL function expressions.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">):</span>
+            <span class="c1"># Avoid private attributes</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&#39; object has no attribute &#39;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39;&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">_create</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Func</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Func</span><span class="p">(</span><span class="n">name</span><span class="o">.</span><span class="n">upper</span><span class="p">(),</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">_create</span>
+
+<div class="viewcode-block" id="FunctionFactory.count">
+<a class="viewcode-back" href="../../reference.html#sqlo.FunctionFactory.count">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">count</span><span class="p">(</span><span class="n">expression</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;*&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Func</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">Func</span><span class="p">(</span><span class="s2">&quot;COUNT&quot;</span><span class="p">,</span> <span class="n">expression</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="FunctionFactory.sum">
+<a class="viewcode-back" href="../../reference.html#sqlo.FunctionFactory.sum">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">sum</span><span class="p">(</span><span class="n">expression</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Func</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">Func</span><span class="p">(</span><span class="s2">&quot;SUM&quot;</span><span class="p">,</span> <span class="n">expression</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="FunctionFactory.avg">
+<a class="viewcode-back" href="../../reference.html#sqlo.FunctionFactory.avg">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">avg</span><span class="p">(</span><span class="n">expression</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Func</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">Func</span><span class="p">(</span><span class="s2">&quot;AVG&quot;</span><span class="p">,</span> <span class="n">expression</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="FunctionFactory.min">
+<a class="viewcode-back" href="../../reference.html#sqlo.FunctionFactory.min">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">min</span><span class="p">(</span><span class="n">expression</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Func</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">Func</span><span class="p">(</span><span class="s2">&quot;MIN&quot;</span><span class="p">,</span> <span class="n">expression</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="FunctionFactory.max">
+<a class="viewcode-back" href="../../reference.html#sqlo.FunctionFactory.max">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">max</span><span class="p">(</span><span class="n">expression</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Func</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">Func</span><span class="p">(</span><span class="s2">&quot;MAX&quot;</span><span class="p">,</span> <span class="n">expression</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="Condition">
+<a class="viewcode-back" href="../../reference.html#sqlo.Condition">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Condition</span><span class="p">(</span><span class="n">Expression</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Represents a SQL condition for use in WHERE or HAVING clauses.</span>
+
+<span class="sd">    This class allows you to build simple or complex conditions with support for</span>
+<span class="sd">    compact operator syntax (e.g., &quot;age&gt;&quot;) and standard syntax (e.g., &quot;age &gt;&quot;).</span>
+<span class="sd">    Conditions can be combined using bitwise operators (&amp; and \|) or static methods.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        column (str, optional): Column name with optional operator (e.g., &quot;age&gt;=&quot; or &quot;age &gt;=&quot;).</span>
+<span class="sd">        value (Any, optional): The value to compare against. Can be a list for IN operator.</span>
+<span class="sd">        operator (str, optional): The comparison operator if not included in column. Defaults to &quot;=&quot;.</span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">        &gt;&gt;&gt; # Simple condition</span>
+<span class="sd">        &gt;&gt;&gt; c = Condition(&quot;age&gt;=&quot;, 18)</span>
+<span class="sd">        &gt;&gt;&gt; sql, params = c.build()</span>
+<span class="sd">        &gt;&gt;&gt;</span>
+<span class="sd">        &gt;&gt;&gt; # IN operator</span>
+<span class="sd">        &gt;&gt;&gt; c = Condition(&quot;status&quot;, [&quot;pending&quot;, &quot;done&quot;], operator=&quot;IN&quot;)</span>
+<span class="sd">        &gt;&gt;&gt;</span>
+<span class="sd">        &gt;&gt;&gt; # IS NULL</span>
+<span class="sd">        &gt;&gt;&gt; c = Condition(&quot;deleted_at&quot;, operator=&quot;IS NULL&quot;)</span>
+<span class="sd">        &gt;&gt;&gt;</span>
+<span class="sd">        &gt;&gt;&gt; # Static factory methods</span>
+<span class="sd">        &gt;&gt;&gt; c = Condition.null(&quot;deleted_at&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; c = Condition.in_(&quot;status&quot;, [&quot;pending&quot;, &quot;done&quot;])</span>
+<span class="sd">        &gt;&gt;&gt; c = Condition.exists(subquery)</span>
+<span class="sd">        &gt;&gt;&gt;</span>
+<span class="sd">        &gt;&gt;&gt; # Combining conditions</span>
+<span class="sd">        &gt;&gt;&gt; c1 = Condition(&quot;age&gt;=&quot;, 18)</span>
+<span class="sd">        &gt;&gt;&gt; c2 = Condition(&quot;country&quot;, &quot;US&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; combined = c1 &amp; c2  # AND</span>
+<span class="sd">        &gt;&gt;&gt; combined = c1 \| c2  # OR</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">column</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">value</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">operator</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;=&quot;</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">.dialects.mysql</span><span class="w"> </span><span class="kn">import</span> <span class="n">MySQLDialect</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">parts</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># (sql, params)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">connector</span> <span class="o">=</span> <span class="s2">&quot;AND&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dialect</span> <span class="o">=</span> <span class="n">MySQLDialect</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">column</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_add_condition</span><span class="p">(</span><span class="n">column</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">operator</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_add_condition</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">operator</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add a condition to this Condition object.&quot;&quot;&quot;</span>
+        <span class="n">col_name</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">op</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># Parse column for embedded operator (e.g., &quot;age&gt;=&quot;)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">column</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">if</span> <span class="s2">&quot; &quot;</span> <span class="ow">in</span> <span class="n">column</span><span class="p">:</span>
+                <span class="n">parts</span> <span class="o">=</span> <span class="n">column</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="n">col_name</span> <span class="o">=</span> <span class="n">parts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">op</span> <span class="o">=</span> <span class="n">parts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">match</span> <span class="o">=</span> <span class="n">COMPACT_PATTERN</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">column</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">match</span><span class="p">:</span>
+                    <span class="n">col_name</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+                    <span class="n">op</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+
+        <span class="c1"># Use parsed operator if found</span>
+        <span class="k">if</span> <span class="n">col_name</span> <span class="ow">and</span> <span class="n">op</span><span class="p">:</span>
+            <span class="n">column</span> <span class="o">=</span> <span class="n">col_name</span>
+            <span class="n">operator</span> <span class="o">=</span> <span class="n">op</span>
+
+        <span class="c1"># Handle IS NULL / IS NOT NULL</span>
+        <span class="k">if</span> <span class="n">operator</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;IS NULL&quot;</span><span class="p">,</span> <span class="s2">&quot;IS NOT NULL&quot;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="sa">f</span><span class="s2">&quot;`</span><span class="si">{</span><span class="n">column</span><span class="si">}</span><span class="s2">` </span><span class="si">{</span><span class="n">operator</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="p">[]))</span>
+            <span class="k">return</span>
+
+        <span class="c1"># Handle IS / IS NOT with None value</span>
+        <span class="k">if</span> <span class="n">operator</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;IS&quot;</span><span class="p">,</span> <span class="s2">&quot;IS NOT&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">null_op</span> <span class="o">=</span> <span class="s2">&quot;IS NULL&quot;</span> <span class="k">if</span> <span class="n">operator</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;IS&quot;</span> <span class="k">else</span> <span class="s2">&quot;IS NOT NULL&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="sa">f</span><span class="s2">&quot;`</span><span class="si">{</span><span class="n">column</span><span class="si">}</span><span class="s2">` </span><span class="si">{</span><span class="n">null_op</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="p">[]))</span>
+            <span class="k">return</span>
+
+        <span class="c1"># Handle IN / NOT IN operators</span>
+        <span class="k">if</span> <span class="n">operator</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;IN&quot;</span><span class="p">,</span> <span class="s2">&quot;NOT IN&quot;</span><span class="p">):</span>
+            <span class="c1"># Check if value is a subquery (has build method)</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="s2">&quot;build&quot;</span><span class="p">):</span>
+                <span class="n">sub_sql</span><span class="p">,</span> <span class="n">sub_params</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="p">(</span><span class="sa">f</span><span class="s2">&quot;`</span><span class="si">{</span><span class="n">column</span><span class="si">}</span><span class="s2">` </span><span class="si">{</span><span class="n">operator</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">sub_sql</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">sub_params</span><span class="p">))</span>
+                <span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+                <span class="n">ph</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dialect</span><span class="o">.</span><span class="n">parameter_placeholder</span><span class="p">()</span>
+                <span class="n">placeholders</span> <span class="o">=</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">ph</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="p">(</span><span class="sa">f</span><span class="s2">&quot;`</span><span class="si">{</span><span class="n">column</span><span class="si">}</span><span class="s2">` </span><span class="si">{</span><span class="n">operator</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">placeholders</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">operator</span><span class="si">}</span><span class="s2"> operator requires a list, tuple, or subquery&quot;</span>
+                <span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="c1"># Handle Raw values (e.g., Raw(&quot;users.id&quot;) for column references)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">Raw</span><span class="p">):</span>
+            <span class="c1"># Use raw SQL directly without placeholder</span>
+            <span class="n">sql_fragment</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;`</span><span class="si">{</span><span class="n">column</span><span class="si">}</span><span class="s2">` </span><span class="si">{</span><span class="n">operator</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">value</span><span class="o">.</span><span class="n">sql</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="c1"># Include Raw&#39;s params if any</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">sql_fragment</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">value</span><span class="o">.</span><span class="n">params</span><span class="p">)))</span>
+            <span class="k">return</span>
+
+        <span class="c1"># Handle standard operators with value</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;`</span><span class="si">{</span><span class="n">column</span><span class="si">}</span><span class="s2">` </span><span class="si">{</span><span class="n">operator</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_dialect</span><span class="o">.</span><span class="n">parameter_placeholder</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                    <span class="p">[</span><span class="n">value</span><span class="p">],</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+<div class="viewcode-block" id="Condition.build">
+<a class="viewcode-back" href="../../reference.html#sqlo.Condition.build">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dialect</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Build the condition and return (sql, params) tuple.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            dialect: Optional dialect to use for quoting. Defaults to MySQLDialect.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Tuple of (sql_string, params_tuple)</span>
+
+<span class="sd">        Example:</span>
+<span class="sd">            &gt;&gt;&gt; c = Condition(&quot;age&gt;=&quot;, 18)</span>
+<span class="sd">            &gt;&gt;&gt; sql, params = c.build()</span>
+<span class="sd">            &gt;&gt;&gt; assert sql == &quot;`age` &gt;= ?&quot;</span>
+<span class="sd">            &gt;&gt;&gt; assert params == (18,)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">parts</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="p">()</span>
+
+        <span class="n">parts_sql</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">sql</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">parts</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">sql</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;AND&quot;</span><span class="p">,</span> <span class="s2">&quot;OR&quot;</span><span class="p">):</span>
+                <span class="n">parts_sql</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sql</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">parts_sql</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sql</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">p</span><span class="p">:</span>
+                    <span class="n">params</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+
+        <span class="n">sql</span> <span class="o">=</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">parts_sql</span><span class="p">)</span>
+
+        <span class="c1"># Wrap in parentheses if multiple parts</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parts</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">sql</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="n">sql</span><span class="si">}</span><span class="s2">)&quot;</span>
+
+        <span class="k">return</span> <span class="n">sql</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">params</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__and__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s2">&quot;Condition&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Condition&quot;</span><span class="p">:</span>
+        <span class="n">new_cond</span> <span class="o">=</span> <span class="n">Condition</span><span class="p">()</span>
+        <span class="n">new_cond</span><span class="o">.</span><span class="n">parts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parts</span> <span class="o">+</span> <span class="p">[(</span><span class="s2">&quot;AND&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)]</span> <span class="o">+</span> <span class="n">other</span><span class="o">.</span><span class="n">parts</span>
+        <span class="k">return</span> <span class="n">new_cond</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__or__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s2">&quot;Condition&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;ComplexCondition&quot;</span><span class="p">:</span>
+        <span class="c1"># Use ComplexCondition for OR to properly handle precedence</span>
+        <span class="k">return</span> <span class="n">ComplexCondition</span><span class="p">(</span><span class="s2">&quot;OR&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+
+    <span class="c1"># Static factory methods</span>
+<div class="viewcode-block" id="Condition.null">
+<a class="viewcode-back" href="../../reference.html#sqlo.Condition.null">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">null</span><span class="p">(</span><span class="n">column</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Condition&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create an IS NULL condition.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            column: Column name to check for NULL</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Condition object</span>
+
+<span class="sd">        Example:</span>
+<span class="sd">            &gt;&gt;&gt; c = Condition.null(&quot;deleted_at&quot;)</span>
+<span class="sd">            &gt;&gt;&gt; sql, params = c.build()</span>
+<span class="sd">            &gt;&gt;&gt; # SQL: `deleted_at` IS NULL</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">Condition</span><span class="p">(</span><span class="n">column</span><span class="p">,</span> <span class="n">operator</span><span class="o">=</span><span class="s2">&quot;IS NULL&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Condition.not_null">
+<a class="viewcode-back" href="../../reference.html#sqlo.Condition.not_null">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">not_null</span><span class="p">(</span><span class="n">column</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Condition&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create an IS NOT NULL condition.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            column: Column name to check for NOT NULL</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Condition object</span>
+
+<span class="sd">        Example:</span>
+<span class="sd">            &gt;&gt;&gt; c = Condition.not_null(&quot;email&quot;)</span>
+<span class="sd">            &gt;&gt;&gt; sql, params = c.build()</span>
+<span class="sd">            &gt;&gt;&gt; # SQL: `email` IS NOT NULL</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">Condition</span><span class="p">(</span><span class="n">column</span><span class="p">,</span> <span class="n">operator</span><span class="o">=</span><span class="s2">&quot;IS NOT NULL&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Condition.in_">
+<a class="viewcode-back" href="../../reference.html#sqlo.Condition.in_">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">in_</span><span class="p">(</span>
+        <span class="n">column</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">values</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="s2">&quot;SelectQuery&quot;</span><span class="p">]</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Condition&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create an IN condition.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            column: Column name</span>
+<span class="sd">            values: List/tuple of values or a SelectQuery subquery</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Condition object</span>
+
+<span class="sd">        Example:</span>
+<span class="sd">            &gt;&gt;&gt; c = Condition.in_(&quot;status&quot;, [&quot;pending&quot;, &quot;done&quot;])</span>
+<span class="sd">            &gt;&gt;&gt; sql, params = c.build()</span>
+<span class="sd">            &gt;&gt;&gt; # SQL: `status` IN (?, ?)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">Condition</span><span class="p">(</span><span class="n">column</span><span class="p">,</span> <span class="n">values</span><span class="p">,</span> <span class="n">operator</span><span class="o">=</span><span class="s2">&quot;IN&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Condition.not_in">
+<a class="viewcode-back" href="../../reference.html#sqlo.Condition.not_in">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">not_in</span><span class="p">(</span>
+        <span class="n">column</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">values</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="s2">&quot;SelectQuery&quot;</span><span class="p">]</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Condition&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a NOT IN condition.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            column: Column name</span>
+<span class="sd">            values: List/tuple of values or a SelectQuery subquery</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Condition object</span>
+
+<span class="sd">        Example:</span>
+<span class="sd">            &gt;&gt;&gt; c = Condition.not_in(&quot;status&quot;, [&quot;canceled&quot;, &quot;failed&quot;])</span>
+<span class="sd">            &gt;&gt;&gt; sql, params = c.build()</span>
+<span class="sd">            &gt;&gt;&gt; # SQL: `status` NOT IN (?, ?)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">Condition</span><span class="p">(</span><span class="n">column</span><span class="p">,</span> <span class="n">values</span><span class="p">,</span> <span class="n">operator</span><span class="o">=</span><span class="s2">&quot;NOT IN&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Condition.exists">
+<a class="viewcode-back" href="../../reference.html#sqlo.Condition.exists">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">exists</span><span class="p">(</span><span class="n">subquery</span><span class="p">:</span> <span class="s2">&quot;SelectQuery&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Condition&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create an EXISTS condition with a subquery.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            subquery: SelectQuery object</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Condition object</span>
+
+<span class="sd">        Example:</span>
+<span class="sd">            &gt;&gt;&gt; subquery = Q.select(&quot;1&quot;).from_(&quot;orders&quot;).where(Condition(&quot;user_id&quot;, 123))</span>
+<span class="sd">            &gt;&gt;&gt; c = Condition.exists(subquery)</span>
+<span class="sd">            &gt;&gt;&gt; sql, params = c.build()</span>
+<span class="sd">            &gt;&gt;&gt; # SQL: EXISTS (SELECT 1 FROM `orders` WHERE `user_id` = ?)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cond</span> <span class="o">=</span> <span class="n">Condition</span><span class="p">()</span>
+        <span class="n">sub_sql</span><span class="p">,</span> <span class="n">sub_params</span> <span class="o">=</span> <span class="n">subquery</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+        <span class="n">cond</span><span class="o">.</span><span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="sa">f</span><span class="s2">&quot;EXISTS (</span><span class="si">{</span><span class="n">sub_sql</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">sub_params</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="n">cond</span></div>
+
+
+<div class="viewcode-block" id="Condition.not_exists">
+<a class="viewcode-back" href="../../reference.html#sqlo.Condition.not_exists">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">not_exists</span><span class="p">(</span><span class="n">subquery</span><span class="p">:</span> <span class="s2">&quot;SelectQuery&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Condition&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a NOT EXISTS condition with a subquery.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            subquery: SelectQuery object</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Condition object</span>
+
+<span class="sd">        Example:</span>
+<span class="sd">            &gt;&gt;&gt; subquery = Q.select(&quot;1&quot;).from_(&quot;orders&quot;).where(Condition(&quot;user_id&quot;, 123))</span>
+<span class="sd">            &gt;&gt;&gt; c = Condition.not_exists(subquery)</span>
+<span class="sd">            &gt;&gt;&gt; sql, params = c.build()</span>
+<span class="sd">            &gt;&gt;&gt; # SQL: NOT EXISTS (SELECT 1 FROM `orders` WHERE `user_id` = ?)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cond</span> <span class="o">=</span> <span class="n">Condition</span><span class="p">()</span>
+        <span class="n">sub_sql</span><span class="p">,</span> <span class="n">sub_params</span> <span class="o">=</span> <span class="n">subquery</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+        <span class="n">cond</span><span class="o">.</span><span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="sa">f</span><span class="s2">&quot;NOT EXISTS (</span><span class="si">{</span><span class="n">sub_sql</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">sub_params</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="n">cond</span></div>
+
+
+<div class="viewcode-block" id="Condition.and_">
+<a class="viewcode-back" href="../../reference.html#sqlo.Condition.and_">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">and_</span><span class="p">(</span><span class="o">*</span><span class="n">conditions</span><span class="p">:</span> <span class="s2">&quot;Condition&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Condition&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Combine multiple conditions with AND logic.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            *conditions: Variable number of Condition objects</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Combined Condition object</span>
+
+<span class="sd">        Example:</span>
+<span class="sd">            &gt;&gt;&gt; c1 = Condition(&quot;age&gt;=&quot;, 18)</span>
+<span class="sd">            &gt;&gt;&gt; c2 = Condition(&quot;country&quot;, &quot;US&quot;)</span>
+<span class="sd">            &gt;&gt;&gt; c3 = Condition(&quot;verified&quot;, True)</span>
+<span class="sd">            &gt;&gt;&gt; combined = Condition.and_(c1, c2, c3)</span>
+<span class="sd">            &gt;&gt;&gt; # SQL: (`age` &gt;= ? AND `country` = ? AND `verified` = ?)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">conditions</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Condition</span><span class="p">()</span>
+
+        <span class="n">result</span> <span class="o">=</span> <span class="n">conditions</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">cond</span> <span class="ow">in</span> <span class="n">conditions</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">result</span> <span class="o">&amp;</span> <span class="n">cond</span>
+        <span class="k">return</span> <span class="n">result</span></div>
+
+
+<div class="viewcode-block" id="Condition.or_">
+<a class="viewcode-back" href="../../reference.html#sqlo.Condition.or_">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">or_</span><span class="p">(</span><span class="o">*</span><span class="n">conditions</span><span class="p">:</span> <span class="s2">&quot;Condition&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="s2">&quot;Condition&quot;</span><span class="p">,</span> <span class="s2">&quot;ComplexCondition&quot;</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Combine multiple conditions with OR logic.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            *conditions: Variable number of Condition objects</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            ComplexCondition object</span>
+
+<span class="sd">        Example:</span>
+<span class="sd">            &gt;&gt;&gt; c1 = Condition(&quot;status&quot;, &quot;pending&quot;)</span>
+<span class="sd">            &gt;&gt;&gt; c2 = Condition(&quot;status&quot;, &quot;processing&quot;)</span>
+<span class="sd">            &gt;&gt;&gt; combined = Condition.or_(c1, c2)</span>
+<span class="sd">            &gt;&gt;&gt; # SQL: (`status` = ? OR `status` = ?)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">conditions</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">ComplexCondition</span><span class="p">(</span><span class="s2">&quot;OR&quot;</span><span class="p">,</span> <span class="n">Condition</span><span class="p">(),</span> <span class="n">Condition</span><span class="p">())</span>
+
+        <span class="n">result</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Condition</span><span class="p">,</span> <span class="n">ComplexCondition</span><span class="p">]</span> <span class="o">=</span> <span class="n">conditions</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">cond</span> <span class="ow">in</span> <span class="n">conditions</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">result</span> <span class="o">|</span> <span class="n">cond</span>
+        <span class="k">return</span> <span class="n">result</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="ComplexCondition">
+<a class="viewcode-back" href="../../reference.html#sqlo.ComplexCondition">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ComplexCondition</span><span class="p">(</span><span class="n">Expression</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Represents a complex SQL condition combining multiple conditions with AND/OR logic.</span>
+
+<span class="sd">    This class is typically created automatically when using bitwise operators (&amp; or \|)</span>
+<span class="sd">    on Condition objects, or when using Condition.and_() / Condition.or_() static methods.</span>
+<span class="sd">    It properly handles operator precedence and nested conditions.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        operator (str): The logical operator (&quot;AND&quot; or &quot;OR&quot;).</span>
+<span class="sd">        left (Union[Condition, ComplexCondition]): The left-hand condition.</span>
+<span class="sd">        right (Union[Condition, ComplexCondition]): The right-hand condition.</span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">        &gt;&gt;&gt; c1 = Condition(&quot;age&gt;=&quot;, 18)</span>
+<span class="sd">        &gt;&gt;&gt; c2 = Condition(&quot;country&quot;, &quot;US&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; c3 = Condition(&quot;verified&quot;, True)</span>
+<span class="sd">        &gt;&gt;&gt;</span>
+<span class="sd">        &gt;&gt;&gt; # Creates ComplexCondition automatically</span>
+<span class="sd">        &gt;&gt;&gt; complex = (c1 &amp; c2) \| c3</span>
+<span class="sd">        &gt;&gt;&gt; # Represents: (age &gt;= 18 AND country = &#39;US&#39;) OR verified = True</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">operator</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">left</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Condition</span><span class="p">,</span> <span class="s2">&quot;ComplexCondition&quot;</span><span class="p">],</span>
+        <span class="n">right</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Condition</span><span class="p">,</span> <span class="s2">&quot;ComplexCondition&quot;</span><span class="p">],</span>
+    <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">operator</span> <span class="o">=</span> <span class="n">operator</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">left</span> <span class="o">=</span> <span class="n">left</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">right</span> <span class="o">=</span> <span class="n">right</span>
+
+<div class="viewcode-block" id="ComplexCondition.build">
+<a class="viewcode-back" href="../../reference.html#sqlo.ComplexCondition.build">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dialect</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Build the complex condition and return (sql, params) tuple.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            dialect: Optional dialect to use for quoting. Defaults to MySQLDialect.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Tuple of (sql_string, params_tuple)</span>
+
+<span class="sd">        Example:</span>
+<span class="sd">            &gt;&gt;&gt; c1 = Condition(&quot;age&gt;=&quot;, 18)</span>
+<span class="sd">            &gt;&gt;&gt; c2 = Condition(&quot;country&quot;, &quot;US&quot;)</span>
+<span class="sd">            &gt;&gt;&gt; complex = c1 \| c2</span>
+<span class="sd">            &gt;&gt;&gt; sql, params = complex.build()</span>
+<span class="sd">            &gt;&gt;&gt; # SQL: (`age` &gt;= ? OR `country` = ?)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Build left and right conditions</span>
+        <span class="n">left_sql</span><span class="p">,</span> <span class="n">left_params</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">left</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">dialect</span><span class="p">)</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">left</span><span class="p">,</span> <span class="s2">&quot;build&quot;</span><span class="p">)</span> <span class="k">else</span> <span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="p">())</span>
+        <span class="p">)</span>
+        <span class="n">right_sql</span><span class="p">,</span> <span class="n">right_params</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">right</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">dialect</span><span class="p">)</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">right</span><span class="p">,</span> <span class="s2">&quot;build&quot;</span><span class="p">)</span> <span class="k">else</span> <span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="p">())</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Combine with operator</span>
+        <span class="n">sql</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="n">left_sql</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">operator</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">right_sql</span><span class="si">}</span><span class="s2">)&quot;</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="n">left_params</span> <span class="o">+</span> <span class="n">right_params</span>
+
+        <span class="k">return</span> <span class="n">sql</span><span class="p">,</span> <span class="n">params</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__and__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">ComplexCondition</span><span class="p">(</span><span class="s2">&quot;AND&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__or__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">ComplexCondition</span><span class="p">(</span><span class="s2">&quot;OR&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span></div>
+
+
+
+<span class="n">func</span> <span class="o">=</span> <span class="n">FunctionFactory</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Nan Guo.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

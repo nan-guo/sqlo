@@ -1,0 +1,755 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>UPDATE Queries &mdash; sqlo Documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=01f34227"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="DELETE Queries" href="delete.html" />
+    <link rel="prev" title="INSERT Queries" href="insert.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            sqlo
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="getting-started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="security.html">Security Guide</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Query Types</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="select.html">SELECT Queries</a></li>
+<li class="toctree-l1"><a class="reference internal" href="insert.html">INSERT Queries</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">UPDATE Queries</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#basic-update">Basic UPDATE</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#simple-update">Simple Update</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#update-with-allow-all-rows">Update with allow_all_rows()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#update-with-where">Update with WHERE</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#set-clause">SET Clause</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#update-multiple-columns">Update Multiple Columns</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#increment-decrement-values">Increment/Decrement Values</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#using-expressions">Using Expressions</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#where-clause">WHERE Clause</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#basic-conditions">Basic Conditions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#or-conditions">OR Conditions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#in-clause">IN Clause</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#null-checks">NULL Checks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#complex-conditions">Complex Conditions</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#order-by">ORDER BY</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#limit">LIMIT</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#batch-updates-with-limit">Batch Updates with LIMIT</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#dynamic-update-building">Dynamic UPDATE Building</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#partial-updates">Partial Updates</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#advanced-examples">Advanced Examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#update-with-subquery">Update with Subquery</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#conditional-value-updates">Conditional Value Updates</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#update-multiple-tables-mysql">Update Multiple Tables (MySQL)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bulk-status-update">Bulk Status Update</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#increment-with-bounds">Increment with Bounds</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#safety-best-practices">Safety Best Practices</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#always-use-where">Always Use WHERE</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#validate-before-update">Validate Before Update</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#use-transactions">Use Transactions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#verify-row-count">Verify Row Count</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#performance-tips">Performance Tips</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#use-indexes">Use Indexes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#batch-updates">Batch Updates</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#use-limit-for-large-updates">Use LIMIT for Large Updates</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#common-patterns">Common Patterns</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#update-timestamp">Update Timestamp</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#toggle-boolean">Toggle Boolean</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#update-json-field">Update JSON Field</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#soft-delete">Soft Delete</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#see-also">See Also</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="delete.html">DELETE Queries</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Advanced Topics</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="conditions.html">Condition Objects</a></li>
+<li class="toctree-l1"><a class="reference internal" href="expressions.html">Expressions &amp; Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="joins.html">JOIN Operations</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="reference.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">sqlo</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">UPDATE Queries</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/update.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="update-queries">
+<h1>UPDATE Queries<a class="headerlink" href="#update-queries" title="Link to this heading"></a></h1>
+<p>Complete guide to UPDATE query building with sqlo.</p>
+<section id="basic-update">
+<h2>Basic UPDATE<a class="headerlink" href="#basic-update" title="Link to this heading"></a></h2>
+<section id="simple-update">
+<h3>Simple Update<a class="headerlink" href="#simple-update" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">sqlo</span><span class="w"> </span><span class="kn">import</span> <span class="n">Q</span>
+
+<span class="c1"># ❌ ERROR: UPDATE requires WHERE clause or explicit confirmation</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="n">query</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">set</span><span class="p">({</span><span class="s2">&quot;active&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">})</span>
+    <span class="n">sql</span><span class="p">,</span> <span class="n">params</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+<span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>  <span class="c1"># &quot;UPDATE without WHERE clause would affect all rows...&quot;</span>
+</pre></div>
+</div>
+<blockquote>
+<div><p>[!WARNING]
+<strong>UPDATE Safety</strong>: sqlo requires either a WHERE clause or explicit <code class="docutils literal notranslate"><span class="pre">.allow_all_rows()</span></code> to prevent accidental mass updates.</p>
+</div></blockquote>
+</section>
+<section id="update-with-allow-all-rows">
+<h3>Update with allow_all_rows()<a class="headerlink" href="#update-with-allow-all-rows" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Update ALL rows (requires explicit confirmation)</span>
+<span class="n">query</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">set</span><span class="p">({</span><span class="s2">&quot;active&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">})</span><span class="o">.</span><span class="n">allow_all_rows</span><span class="p">()</span>
+<span class="n">sql</span><span class="p">,</span> <span class="n">params</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+<span class="c1"># UPDATE `users` SET `active` = %s</span>
+<span class="c1"># Params: (False,)</span>
+</pre></div>
+</div>
+</section>
+<section id="update-with-where">
+<h3>Update with WHERE<a class="headerlink" href="#update-with-where" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Update specific rows (recommended)</span>
+<span class="n">query</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">Q</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">set</span><span class="p">({</span><span class="s2">&quot;active&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">})</span>
+    <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="mi">123</span><span class="p">)</span>
+<span class="p">)</span>
+
+<span class="n">sql</span><span class="p">,</span> <span class="n">params</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+<span class="c1"># UPDATE `users` SET `active` = %s WHERE `id` = %s</span>
+<span class="c1"># Params: (False, 123)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="set-clause">
+<h2>SET Clause<a class="headerlink" href="#set-clause" title="Link to this heading"></a></h2>
+<section id="update-multiple-columns">
+<h3>Update Multiple Columns<a class="headerlink" href="#update-multiple-columns" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">Q</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">set</span><span class="p">({</span>
+        <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Alice Smith&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;email&quot;</span><span class="p">:</span> <span class="s2">&quot;alice.smith@example.com&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;updated_at&quot;</span><span class="p">:</span> <span class="s2">&quot;NOW()&quot;</span>
+    <span class="p">})</span>
+    <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="mi">123</span><span class="p">)</span>
+<span class="p">)</span>
+
+<span class="c1"># UPDATE `users` SET `name` = %s, `email` = %s, `updated_at` = NOW() WHERE `id` = %s</span>
+</pre></div>
+</div>
+</section>
+<section id="increment-decrement-values">
+<h3>Increment/Decrement Values<a class="headerlink" href="#increment-decrement-values" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Increment a counter</span>
+<span class="n">query</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">Q</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">set</span><span class="p">({</span><span class="s2">&quot;login_count&quot;</span><span class="p">:</span> <span class="s2">&quot;login_count + 1&quot;</span><span class="p">})</span>
+    <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="mi">123</span><span class="p">)</span>
+<span class="p">)</span>
+
+<span class="c1"># UPDATE `users` SET `login_count` = login_count + 1 WHERE `id` = %s</span>
+
+<span class="c1"># Decrement a value</span>
+<span class="n">query</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">Q</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s2">&quot;products&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">set</span><span class="p">({</span><span class="s2">&quot;stock&quot;</span><span class="p">:</span> <span class="s2">&quot;stock - 1&quot;</span><span class="p">})</span>
+    <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="mi">456</span><span class="p">)</span>
+<span class="p">)</span>
+
+<span class="c1"># UPDATE `products` SET `stock` = stock - 1 WHERE `id` = %s</span>
+</pre></div>
+</div>
+</section>
+<section id="using-expressions">
+<h3>Using Expressions<a class="headerlink" href="#using-expressions" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">sqlo</span><span class="w"> </span><span class="kn">import</span> <span class="n">Raw</span>
+
+<span class="c1"># Use raw SQL expressions</span>
+<span class="n">query</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">Q</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">set</span><span class="p">({</span>
+        <span class="s2">&quot;full_name&quot;</span><span class="p">:</span> <span class="n">Raw</span><span class="p">(</span><span class="s2">&quot;CONCAT(first_name, &#39; &#39;, last_name)&quot;</span><span class="p">),</span>
+        <span class="s2">&quot;updated_at&quot;</span><span class="p">:</span> <span class="n">Raw</span><span class="p">(</span><span class="s2">&quot;NOW()&quot;</span><span class="p">)</span>
+    <span class="p">})</span>
+    <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="mi">123</span><span class="p">)</span>
+<span class="p">)</span>
+
+<span class="c1"># UPDATE `users` SET `full_name` = CONCAT(first_name, &#39; &#39;, last_name), `updated_at` = NOW() WHERE `id` = %s</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="where-clause">
+<h2>WHERE Clause<a class="headerlink" href="#where-clause" title="Link to this heading"></a></h2>
+<section id="basic-conditions">
+<h3>Basic Conditions<a class="headerlink" href="#basic-conditions" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Single condition</span>
+<span class="n">query</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">set</span><span class="p">({</span><span class="s2">&quot;active&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">})</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;email&quot;</span><span class="p">,</span> <span class="s2">&quot;test@example.com&quot;</span><span class="p">)</span>
+
+<span class="c1"># Multiple AND conditions</span>
+<span class="n">query</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">Q</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">set</span><span class="p">({</span><span class="s2">&quot;active&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">})</span>
+    <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;last_login &lt;&quot;</span><span class="p">,</span> <span class="s2">&quot;2020-01-01&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;email_verified&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="c1"># WHERE `last_login` &lt; %s AND `email_verified` = %s</span>
+</pre></div>
+</div>
+</section>
+<section id="or-conditions">
+<h3>OR Conditions<a class="headerlink" href="#or-conditions" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">Q</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">set</span><span class="p">({</span><span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="s2">&quot;inactive&quot;</span><span class="p">})</span>
+    <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;last_login &lt;&quot;</span><span class="p">,</span> <span class="s2">&quot;2020-01-01&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">or_where</span><span class="p">(</span><span class="s2">&quot;login_count&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="c1"># WHERE `last_login` &lt; %s OR `login_count` = %s</span>
+</pre></div>
+</div>
+</section>
+<section id="in-clause">
+<h3>IN Clause<a class="headerlink" href="#in-clause" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">Q</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">set</span><span class="p">({</span><span class="s2">&quot;group&quot;</span><span class="p">:</span> <span class="s2">&quot;premium&quot;</span><span class="p">})</span>
+    <span class="o">.</span><span class="n">where_in</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">])</span>
+<span class="p">)</span>
+<span class="c1"># WHERE `id` IN (%s, %s, %s, %s, %s)</span>
+</pre></div>
+</div>
+</section>
+<section id="null-checks">
+<h3>NULL Checks<a class="headerlink" href="#null-checks" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Update rows where column is NULL</span>
+<span class="n">query</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">Q</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">set</span><span class="p">({</span><span class="s2">&quot;email_verified_at&quot;</span><span class="p">:</span> <span class="s2">&quot;NOW()&quot;</span><span class="p">})</span>
+    <span class="o">.</span><span class="n">where_null</span><span class="p">(</span><span class="s2">&quot;email_verified_at&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;email_sent&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="c1"># WHERE `email_verified_at` IS NULL AND `email_sent` = %s</span>
+</pre></div>
+</div>
+</section>
+<section id="complex-conditions">
+<h3>Complex Conditions<a class="headerlink" href="#complex-conditions" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">sqlo</span><span class="w"> </span><span class="kn">import</span> <span class="n">Condition</span>
+
+<span class="c1"># Complex condition with AND/OR</span>
+<span class="n">condition</span> <span class="o">=</span> <span class="n">Condition</span><span class="o">.</span><span class="n">and_</span><span class="p">(</span>
+    <span class="n">Condition</span><span class="p">(</span><span class="s2">&quot;active&quot;</span><span class="p">,</span> <span class="s2">&quot;=&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span>
+    <span class="n">Condition</span><span class="o">.</span><span class="n">or_</span><span class="p">(</span>
+        <span class="n">Condition</span><span class="p">(</span><span class="s2">&quot;role&quot;</span><span class="p">,</span> <span class="s2">&quot;=&quot;</span><span class="p">,</span> <span class="s2">&quot;admin&quot;</span><span class="p">),</span>
+        <span class="n">Condition</span><span class="p">(</span><span class="s2">&quot;role&quot;</span><span class="p">,</span> <span class="s2">&quot;=&quot;</span><span class="p">,</span> <span class="s2">&quot;moderator&quot;</span><span class="p">)</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+
+<span class="n">query</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">Q</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">set</span><span class="p">({</span><span class="s2">&quot;permissions&quot;</span><span class="p">:</span> <span class="s2">&quot;elevated&quot;</span><span class="p">})</span>
+    <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">condition</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="c1"># WHERE (`active` = %s AND (`role` = %s OR `role` = %s))</span>
+</pre></div>
+</div>
+<p>See <a class="reference internal" href="conditions.html"><span class="std std-doc">Condition Objects</span></a> for more details.</p>
+</section>
+</section>
+<section id="order-by">
+<h2>ORDER BY<a class="headerlink" href="#order-by" title="Link to this heading"></a></h2>
+<p>Control the order in which rows are updated (useful with LIMIT):</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Update oldest records first</span>
+<span class="n">query</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">Q</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">set</span><span class="p">({</span><span class="s2">&quot;processed&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">})</span>
+    <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;processed&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="s2">&quot;created_at&quot;</span><span class="p">)</span>  <span class="c1"># Ascending order</span>
+    <span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="c1"># UPDATE `users` SET `processed` = %s WHERE `processed` = %s ORDER BY `created_at` ASC LIMIT 100</span>
+
+<span class="c1"># Update newest records first</span>
+<span class="n">query</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">Q</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">set</span><span class="p">({</span><span class="s2">&quot;priority&quot;</span><span class="p">:</span> <span class="s2">&quot;high&quot;</span><span class="p">})</span>
+    <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;status&quot;</span><span class="p">,</span> <span class="s2">&quot;pending&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="s2">&quot;-created_at&quot;</span><span class="p">)</span>  <span class="c1"># Descending order (prefix with -)</span>
+    <span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="mi">50</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="c1"># ORDER BY `created_at` DESC LIMIT 50</span>
+</pre></div>
+</div>
+</section>
+<section id="limit">
+<h2>LIMIT<a class="headerlink" href="#limit" title="Link to this heading"></a></h2>
+<p>Limit the number of rows to update:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Update only first 100 matching rows</span>
+<span class="n">query</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">Q</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">set</span><span class="p">({</span><span class="s2">&quot;active&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">})</span>
+    <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;last_login &lt;&quot;</span><span class="p">,</span> <span class="s2">&quot;2020-01-01&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="c1"># UPDATE `users` SET `active` = %s WHERE `last_login` &lt; %s LIMIT 100</span>
+</pre></div>
+</div>
+<section id="batch-updates-with-limit">
+<h3>Batch Updates with LIMIT<a class="headerlink" href="#batch-updates-with-limit" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">batch_update</span><span class="p">(</span><span class="n">condition_value</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">1000</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Update in batches to avoid locking too many rows&quot;&quot;&quot;</span>
+    <span class="n">query</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">Q</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">set</span><span class="p">({</span><span class="s2">&quot;migrated&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">})</span>
+        <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;migrated&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;created_at &lt;&quot;</span><span class="p">,</span> <span class="n">condition_value</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="n">batch_size</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">query</span>
+
+<span class="c1"># Execute in a loop until no more rows are affected</span>
+<span class="c1"># while True:</span>
+<span class="c1">#     query = batch_update(&quot;2023-01-01&quot;, batch_size=1000)</span>
+<span class="c1">#     sql, params = query.build()</span>
+<span class="c1">#     cursor.execute(sql, params)</span>
+<span class="c1">#     if cursor.rowcount == 0:</span>
+<span class="c1">#         break</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="dynamic-update-building">
+<h2>Dynamic UPDATE Building<a class="headerlink" href="#dynamic-update-building" title="Link to this heading"></a></h2>
+<section id="partial-updates">
+<h3>Partial Updates<a class="headerlink" href="#partial-updates" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">partial_update</span><span class="p">(</span><span class="n">table</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">id_value</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">updates</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Update only non-None values&quot;&quot;&quot;</span>
+    <span class="c1"># Filter out None values</span>
+    <span class="n">clean_updates</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">updates</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">}</span>
+    
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">clean_updates</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No values to update&quot;</span><span class="p">)</span>
+    
+    <span class="n">query</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">Q</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">table</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">clean_updates</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="n">id_value</span><span class="p">)</span>
+    <span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">query</span>
+
+<span class="c1"># Usage</span>
+<span class="n">query</span> <span class="o">=</span> <span class="n">partial_update</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">,</span> <span class="mi">123</span><span class="p">,</span> <span class="p">{</span>
+    <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Alice&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;email&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>  <span class="c1"># Will be excluded</span>
+    <span class="s2">&quot;age&quot;</span><span class="p">:</span> <span class="mi">25</span>
+<span class="p">})</span>
+<span class="c1"># UPDATE `users` SET `name` = %s, `age` = %s WHERE `id` = %s</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="advanced-examples">
+<h2>Advanced Examples<a class="headerlink" href="#advanced-examples" title="Link to this heading"></a></h2>
+<section id="update-with-subquery">
+<h3>Update with Subquery<a class="headerlink" href="#update-with-subquery" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Update based on aggregated data from another table</span>
+<span class="n">subquery</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;AVG(rating)&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;reviews&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;reviews.product_id = products.id&quot;</span><span class="p">)</span>
+<span class="p">)</span>
+
+<span class="n">query</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">Q</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s2">&quot;products&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">set</span><span class="p">({</span><span class="s2">&quot;avg_rating&quot;</span><span class="p">:</span> <span class="n">subquery</span><span class="p">})</span>
+    <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="mi">123</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="c1"># UPDATE `products` SET `avg_rating` = (SELECT AVG(rating) FROM `reviews` WHERE reviews.product_id = products.id) WHERE `id` = %s</span>
+</pre></div>
+</div>
+</section>
+<section id="conditional-value-updates">
+<h3>Conditional Value Updates<a class="headerlink" href="#conditional-value-updates" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Update with CASE-like logic using expressions</span>
+<span class="n">query</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">Q</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">set</span><span class="p">({</span>
+        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">Raw</span><span class="p">(</span><span class="s2">&quot;CASE WHEN login_count &gt; 100 THEN &#39;active&#39; WHEN login_count &gt; 10 THEN &#39;regular&#39; ELSE &#39;new&#39; END&quot;</span><span class="p">)</span>
+    <span class="p">})</span>
+    <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;status&quot;</span><span class="p">,</span> <span class="s2">&quot;pending&quot;</span><span class="p">)</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="update-multiple-tables-mysql">
+<h3>Update Multiple Tables (MySQL)<a class="headerlink" href="#update-multiple-tables-mysql" title="Link to this heading"></a></h3>
+<blockquote>
+<div><p>[!NOTE]
+Multi-table UPDATE is MySQL-specific and not supported by all databases.</p>
+</div></blockquote>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Update with JOIN</span>
+<span class="n">query</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">Q</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s2">&quot;users u&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;user_profiles p&quot;</span><span class="p">,</span> <span class="s2">&quot;p.user_id = u.id&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">set</span><span class="p">({</span>
+        <span class="s2">&quot;u.last_profile_update&quot;</span><span class="p">:</span> <span class="s2">&quot;NOW()&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;p.updated_at&quot;</span><span class="p">:</span> <span class="s2">&quot;NOW()&quot;</span>
+    <span class="p">})</span>
+    <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;p.bio&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="c1"># UPDATE `users` `u` INNER JOIN `user_profiles` `p` ON p.user_id = u.id</span>
+<span class="c1"># SET `u`.`last_profile_update` = NOW(), `p`.`updated_at` = NOW()</span>
+<span class="c1"># WHERE `p`.`bio` IS NULL</span>
+</pre></div>
+</div>
+</section>
+<section id="bulk-status-update">
+<h3>Bulk Status Update<a class="headerlink" href="#bulk-status-update" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">update_user_status</span><span class="p">(</span><span class="n">user_ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">new_status</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Update status for multiple users&quot;&quot;&quot;</span>
+    <span class="n">query</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">Q</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">set</span><span class="p">({</span>
+            <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">new_status</span><span class="p">,</span>
+            <span class="s2">&quot;updated_at&quot;</span><span class="p">:</span> <span class="s2">&quot;NOW()&quot;</span>
+        <span class="p">})</span>
+        <span class="o">.</span><span class="n">where_in</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="n">user_ids</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">query</span>
+
+<span class="c1"># Usage</span>
+<span class="n">query</span> <span class="o">=</span> <span class="n">update_user_status</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">],</span> <span class="s2">&quot;verified&quot;</span><span class="p">)</span>
+<span class="c1"># UPDATE `users` SET `status` = %s, `updated_at` = NOW() WHERE `id` IN (%s, %s, %s, %s, %s)</span>
+</pre></div>
+</div>
+</section>
+<section id="increment-with-bounds">
+<h3>Increment with Bounds<a class="headerlink" href="#increment-with-bounds" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Increment but don&#39;t exceed maximum</span>
+<span class="n">query</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">Q</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">set</span><span class="p">({</span><span class="s2">&quot;points&quot;</span><span class="p">:</span> <span class="n">Raw</span><span class="p">(</span><span class="s2">&quot;LEAST(points + 10, 1000)&quot;</span><span class="p">)})</span>  <span class="c1"># Max 1000 points</span>
+    <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="mi">123</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="c1"># UPDATE `users` SET `points` = LEAST(points + 10, 1000) WHERE `id` = %s</span>
+
+<span class="c1"># Decrement but don&#39;t go below minimum</span>
+<span class="n">query</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">Q</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s2">&quot;products&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">set</span><span class="p">({</span><span class="s2">&quot;stock&quot;</span><span class="p">:</span> <span class="n">Raw</span><span class="p">(</span><span class="s2">&quot;GREATEST(stock - 1, 0)&quot;</span><span class="p">)})</span>  <span class="c1"># Min 0 stock</span>
+    <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="mi">456</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="c1"># UPDATE `products` SET `stock` = GREATEST(stock - 1, 0) WHERE `id` = %s</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="safety-best-practices">
+<h2>Safety Best Practices<a class="headerlink" href="#safety-best-practices" title="Link to this heading"></a></h2>
+<section id="always-use-where">
+<h3>Always Use WHERE<a class="headerlink" href="#always-use-where" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># ❌ DANGEROUS: Updates ALL rows</span>
+<span class="n">query</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">set</span><span class="p">({</span><span class="s2">&quot;active&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">})</span>
+
+<span class="c1"># ✅ SAFE: Updates specific rows</span>
+<span class="n">query</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">set</span><span class="p">({</span><span class="s2">&quot;active&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">})</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="mi">123</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="validate-before-update">
+<h3>Validate Before Update<a class="headerlink" href="#validate-before-update" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">safe_update</span><span class="p">(</span><span class="n">table</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">updates</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">conditions</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Ensure WHERE clause is always present&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">conditions</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;UPDATE without WHERE clause is not allowed&quot;</span><span class="p">)</span>
+    
+    <span class="n">query</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">table</span><span class="p">)</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">updates</span><span class="p">)</span>
+    
+    <span class="k">for</span> <span class="n">column</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">conditions</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">query</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">column</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">query</span>
+
+<span class="c1"># Usage</span>
+<span class="n">query</span> <span class="o">=</span> <span class="n">safe_update</span><span class="p">(</span>
+    <span class="s2">&quot;users&quot;</span><span class="p">,</span>
+    <span class="n">updates</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;active&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
+    <span class="n">conditions</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="mi">123</span><span class="p">}</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="use-transactions">
+<h3>Use Transactions<a class="headerlink" href="#use-transactions" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># When updating related data, use transactions</span>
+<span class="c1"># (Note: Transaction handling is done at the database connection level)</span>
+
+<span class="c1"># Example:</span>
+<span class="c1"># with connection.transaction():</span>
+<span class="c1">#     # Update user</span>
+<span class="c1">#     query1 = Q.update(&quot;users&quot;).set({&quot;status&quot;: &quot;premium&quot;}).where(&quot;id&quot;, 123)</span>
+<span class="c1">#     cursor.execute(*query1.build())</span>
+<span class="c1">#     </span>
+<span class="c1">#     # Update user profile</span>
+<span class="c1">#     query2 = Q.update(&quot;user_profiles&quot;).set({&quot;tier&quot;: &quot;premium&quot;}).where(&quot;user_id&quot;, 123)</span>
+<span class="c1">#     cursor.execute(*query2.build())</span>
+</pre></div>
+</div>
+</section>
+<section id="verify-row-count">
+<h3>Verify Row Count<a class="headerlink" href="#verify-row-count" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># After executing UPDATE, check affected rows</span>
+<span class="c1"># query = Q.update(&quot;users&quot;).set({&quot;active&quot;: False}).where(&quot;id&quot;, 123)</span>
+<span class="c1"># sql, params = query.build()</span>
+<span class="c1"># cursor.execute(sql, params)</span>
+<span class="c1"># </span>
+<span class="c1"># if cursor.rowcount == 0:</span>
+<span class="c1">#     # No rows were updated - ID might not exist</span>
+<span class="c1">#     raise ValueError(f&quot;User with id {123} not found&quot;)</span>
+<span class="c1"># elif cursor.rowcount &gt; 1:</span>
+<span class="c1">#     # Multiple rows updated - might indicate a problem</span>
+<span class="c1">#     raise ValueError(f&quot;Expected to update 1 row, but updated {cursor.rowcount}&quot;)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="performance-tips">
+<h2>Performance Tips<a class="headerlink" href="#performance-tips" title="Link to this heading"></a></h2>
+<section id="use-indexes">
+<h3>Use Indexes<a class="headerlink" href="#use-indexes" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Ensure WHERE clause columns are indexed</span>
+<span class="n">query</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">Q</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">set</span><span class="p">({</span><span class="s2">&quot;last_seen&quot;</span><span class="p">:</span> <span class="s2">&quot;NOW()&quot;</span><span class="p">})</span>
+    <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;email&quot;</span><span class="p">,</span> <span class="s2">&quot;alice@example.com&quot;</span><span class="p">)</span>  <span class="c1"># Make sure &#39;email&#39; is indexed</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="batch-updates">
+<h3>Batch Updates<a class="headerlink" href="#batch-updates" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Instead of updating one row at a time in a loop</span>
+<span class="c1"># ❌ Bad: N queries</span>
+<span class="k">for</span> <span class="n">user_id</span> <span class="ow">in</span> <span class="n">user_ids</span><span class="p">:</span>
+    <span class="n">query</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">set</span><span class="p">({</span><span class="s2">&quot;active&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">})</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="n">user_id</span><span class="p">)</span>
+    <span class="c1"># Execute...</span>
+
+<span class="c1"># ✅ Good: 1 query</span>
+<span class="n">query</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">Q</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">set</span><span class="p">({</span><span class="s2">&quot;active&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">})</span>
+    <span class="o">.</span><span class="n">where_in</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="n">user_ids</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="c1"># Execute once</span>
+</pre></div>
+</div>
+</section>
+<section id="use-limit-for-large-updates">
+<h3>Use LIMIT for Large Updates<a class="headerlink" href="#use-limit-for-large-updates" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Update in smaller batches to reduce lock time</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">update_in_batches</span><span class="p">(</span><span class="n">batch_size</span><span class="o">=</span><span class="mi">1000</span><span class="p">):</span>
+    <span class="n">affected</span> <span class="o">=</span> <span class="n">batch_size</span>
+    <span class="n">total</span> <span class="o">=</span> <span class="mi">0</span>
+    
+    <span class="k">while</span> <span class="n">affected</span> <span class="o">==</span> <span class="n">batch_size</span><span class="p">:</span>
+        <span class="n">query</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">Q</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">set</span><span class="p">({</span><span class="s2">&quot;migrated&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">})</span>
+            <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;migrated&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="n">batch_size</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">sql</span><span class="p">,</span> <span class="n">params</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+        <span class="c1"># cursor.execute(sql, params)</span>
+        <span class="c1"># affected = cursor.rowcount</span>
+        <span class="n">total</span> <span class="o">+=</span> <span class="n">affected</span>
+    
+    <span class="k">return</span> <span class="n">total</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="common-patterns">
+<h2>Common Patterns<a class="headerlink" href="#common-patterns" title="Link to this heading"></a></h2>
+<section id="update-timestamp">
+<h3>Update Timestamp<a class="headerlink" href="#update-timestamp" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Always update &#39;updated_at&#39; timestamp</span>
+<span class="n">query</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">Q</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">set</span><span class="p">({</span>
+        <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Alice&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;updated_at&quot;</span><span class="p">:</span> <span class="s2">&quot;NOW()&quot;</span>
+    <span class="p">})</span>
+    <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="mi">123</span><span class="p">)</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="toggle-boolean">
+<h3>Toggle Boolean<a class="headerlink" href="#toggle-boolean" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Toggle a boolean value</span>
+<span class="n">query</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">Q</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">set</span><span class="p">({</span><span class="s2">&quot;active&quot;</span><span class="p">:</span> <span class="n">Raw</span><span class="p">(</span><span class="s2">&quot;NOT active&quot;</span><span class="p">)})</span>
+    <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="mi">123</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="c1"># UPDATE `users` SET `active` = NOT active WHERE `id` = %s</span>
+</pre></div>
+</div>
+</section>
+<section id="update-json-field">
+<h3>Update JSON Field<a class="headerlink" href="#update-json-field" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+
+<span class="c1"># Update JSON column</span>
+<span class="n">query</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">Q</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s2">&quot;settings&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">set</span><span class="p">({</span>
+        <span class="s2">&quot;preferences&quot;</span><span class="p">:</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">({</span><span class="s2">&quot;theme&quot;</span><span class="p">:</span> <span class="s2">&quot;dark&quot;</span><span class="p">,</span> <span class="s2">&quot;language&quot;</span><span class="p">:</span> <span class="s2">&quot;en&quot;</span><span class="p">})</span>
+    <span class="p">})</span>
+    <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;user_id&quot;</span><span class="p">,</span> <span class="mi">123</span><span class="p">)</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="soft-delete">
+<h3>Soft Delete<a class="headerlink" href="#soft-delete" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Implement soft delete pattern</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">soft_delete</span><span class="p">(</span><span class="n">table</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">id_value</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="n">Q</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">table</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">set</span><span class="p">({</span>
+            <span class="s2">&quot;deleted_at&quot;</span><span class="p">:</span> <span class="s2">&quot;NOW()&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;active&quot;</span><span class="p">:</span> <span class="kc">False</span>
+        <span class="p">})</span>
+        <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="n">id_value</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">where_null</span><span class="p">(</span><span class="s2">&quot;deleted_at&quot;</span><span class="p">)</span>  <span class="c1"># Only delete if not already deleted</span>
+    <span class="p">)</span>
+
+<span class="c1"># Usage</span>
+<span class="n">query</span> <span class="o">=</span> <span class="n">soft_delete</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">,</span> <span class="mi">123</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="select.html"><span class="std std-doc">SELECT Queries</span></a> - Querying data</p></li>
+<li><p><a class="reference internal" href="delete.html"><span class="std std-doc">DELETE Queries</span></a> - Deleting data</p></li>
+<li><p><a class="reference internal" href="conditions.html"><span class="std std-doc">Condition Objects</span></a> - Complex conditions</p></li>
+<li><p><a class="reference internal" href="expressions.html"><span class="std std-doc">Expressions &amp; Functions</span></a> - SQL expressions</p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="insert.html" class="btn btn-neutral float-left" title="INSERT Queries" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="delete.html" class="btn btn-neutral float-right" title="DELETE Queries" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Nan Guo.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
