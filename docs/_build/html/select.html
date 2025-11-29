@@ -97,7 +97,6 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#index-hints">Index Hints</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#optimizer-hints-mysql-8-0">Optimizer Hints (MySQL 8.0+)</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#legacy-index-hints-deprecated">Legacy Index Hints (Deprecated)</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#dynamic-query-building">Dynamic Query Building</a><ul>
@@ -543,24 +542,6 @@
     <span class="o">.</span><span class="n">optimizer_hint</span><span class="p">(</span><span class="s2">&quot;MAX_EXECUTION_TIME(1000)&quot;</span><span class="p">)</span>
 <span class="p">)</span>
 <span class="c1"># SELECT /*+ INDEX(users idx_email) MAX_EXECUTION_TIME(1000) */ * FROM `users`</span>
-</pre></div>
-</div>
-</section>
-<section id="legacy-index-hints-deprecated">
-<h3>Legacy Index Hints (Deprecated)<a class="headerlink" href="#legacy-index-hints-deprecated" title="Link to this heading"></a></h3>
-<blockquote>
-<div><p>[!WARNING]
-These methods are deprecated and may be removed in future versions. Use <code class="docutils literal notranslate"><span class="pre">optimizer_hint()</span></code> instead.</p>
-</div></blockquote>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># FORCE INDEX</span>
-<span class="n">query</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">force_index</span><span class="p">(</span><span class="s2">&quot;idx_email&quot;</span><span class="p">)</span>
-<span class="c1"># SELECT * FROM `users` FORCE INDEX (`idx_email`)</span>
-
-<span class="c1"># USE INDEX</span>
-<span class="n">query</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">use_index</span><span class="p">(</span><span class="s2">&quot;idx_name&quot;</span><span class="p">)</span>
-
-<span class="c1"># IGNORE INDEX</span>
-<span class="n">query</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">ignore_index</span><span class="p">(</span><span class="s2">&quot;idx_old&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>

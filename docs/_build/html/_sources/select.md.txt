@@ -383,23 +383,6 @@ query = (
 # SELECT /*+ INDEX(users idx_email) MAX_EXECUTION_TIME(1000) */ * FROM `users`
 ```
 
-### Legacy Index Hints (Deprecated)
-
-> [!WARNING]
-> These methods are deprecated and may be removed in future versions. Use `optimizer_hint()` instead.
-
-```python
-# FORCE INDEX
-query = Q.select("*").from_("users").force_index("idx_email")
-# SELECT * FROM `users` FORCE INDEX (`idx_email`)
-
-# USE INDEX
-query = Q.select("*").from_("users").use_index("idx_name")
-
-# IGNORE INDEX
-query = Q.select("*").from_("users").ignore_index("idx_old")
-```
-
 ## Dynamic Query Building
 
 ### Conditional Clauses with `when()`

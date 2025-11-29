@@ -49,7 +49,7 @@ Full documentation is available at **[https://nan-guo.github.io/sqlo/](https://n
 You can also browse the markdown files on GitHub:
 
 - [Getting Started](https://github.com/nan-guo/sqlo/blob/main/docs/getting-started.md)
-- [Security Guide](https://github.com/nan-guo/sqlo/blob/main/docs/security.md) ⭐
+- [Security Guide](https://github.com/nan-guo/sqlo/blob/main/docs/security.md)
 - [SELECT Queries](https://github.com/nan-guo/sqlo/blob/main/docs/select.md)
 - [INSERT Queries](https://github.com/nan-guo/sqlo/blob/main/docs/insert.md)
 - [UPDATE Queries](https://github.com/nan-guo/sqlo/blob/main/docs/update.md)
