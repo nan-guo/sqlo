@@ -1,0 +1,301 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>sqlo - Lightweight SQL Query Builder &mdash; sqlo Documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=01f34227"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Getting Started" href="getting-started.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="#" class="icon icon-home">
+            sqlo
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="getting-started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="security.html">Security Guide</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Query Types</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="select.html">SELECT Queries</a></li>
+<li class="toctree-l1"><a class="reference internal" href="insert.html">INSERT Queries</a></li>
+<li class="toctree-l1"><a class="reference internal" href="update.html">UPDATE Queries</a></li>
+<li class="toctree-l1"><a class="reference internal" href="delete.html">DELETE Queries</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Advanced Topics</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="conditions.html">Condition Objects</a></li>
+<li class="toctree-l1"><a class="reference internal" href="expressions.html">Expressions &amp; Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="joins.html">JOIN Operations</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="reference.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">sqlo</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="#" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">sqlo - Lightweight SQL Query Builder</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="sqlo-lightweight-sql-query-builder">
+<h1>sqlo - Lightweight SQL Query Builder<a class="headerlink" href="#sqlo-lightweight-sql-query-builder" title="Link to this heading"></a></h1>
+<p>A <strong>lightweight</strong> and <strong>simple</strong> SQL query builder for Python. Build SQL queries
+with a clean, intuitive API while staying safe from SQL injection.</p>
+<section id="features">
+<h2>Features<a class="headerlink" href="#features" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>🪶 <strong>Lightweight</strong>: Zero dependencies, minimal footprint</p></li>
+<li><p>✨ <strong>Simple</strong>: Intuitive fluent API, easy to learn</p></li>
+<li><p>🛡️ <strong>Secure by Default</strong>: Built-in SQL injection protection</p></li>
+<li><p>🐍 <strong>Pythonic</strong>: Fluent API design that feels natural to Python developers</p></li>
+<li><p>🧩 <strong>Composable</strong>: Build complex queries from reusable parts</p></li>
+</ul>
+</section>
+<section id="quick-example">
+<h2>Quick Example<a class="headerlink" href="#quick-example" title="Link to this heading"></a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">sqlo</span><span class="w"> </span><span class="kn">import</span> <span class="n">Q</span>
+
+<span class="c1"># SELECT query</span>
+<span class="n">query</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;active&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+<span class="n">sql</span><span class="p">,</span> <span class="n">params</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+<span class="c1"># SQL: SELECT `id`, `name` FROM `users` WHERE `active` = %s</span>
+<span class="c1"># Params: (True,)</span>
+</pre></div>
+</div>
+</section>
+<section id="documentation">
+<h2>Documentation<a class="headerlink" href="#documentation" title="Link to this heading"></a></h2>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="getting-started.html">Getting Started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="getting-started.html#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started.html#quick-examples">Quick Examples</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started.html#core-concepts">Core Concepts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started.html#next-steps">Next Steps</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="security.html">Security Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="security.html#security-features">Security Features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="security.html#identifier-validation">Identifier Validation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="security.html#parameter-binding">Parameter Binding</a></li>
+<li class="toctree-l2"><a class="reference internal" href="security.html#raw-sql-expressions">Raw SQL Expressions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="security.html#update-delete-safety">UPDATE/DELETE Safety</a></li>
+<li class="toctree-l2"><a class="reference internal" href="security.html#empty-list-handling">Empty List Handling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="security.html#null-value-handling">NULL Value Handling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="security.html#best-practices">Best Practices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="security.html#security-checklist">Security Checklist</a></li>
+<li class="toctree-l2"><a class="reference internal" href="security.html#common-vulnerabilities-and-prevention">Common Vulnerabilities and Prevention</a></li>
+<li class="toctree-l2"><a class="reference internal" href="security.html#migration-guide">Migration Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="security.html#additional-resources">Additional Resources</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">Query Types</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="select.html">SELECT Queries</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="select.html#basic-queries">Basic Queries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="select.html#where-clauses">WHERE Clauses</a></li>
+<li class="toctree-l2"><a class="reference internal" href="select.html#complex-conditions">Complex Conditions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="select.html#order-by">ORDER BY</a></li>
+<li class="toctree-l2"><a class="reference internal" href="select.html#limit-and-offset">LIMIT and OFFSET</a></li>
+<li class="toctree-l2"><a class="reference internal" href="select.html#group-by-and-having">GROUP BY and HAVING</a></li>
+<li class="toctree-l2"><a class="reference internal" href="select.html#distinct">DISTINCT</a></li>
+<li class="toctree-l2"><a class="reference internal" href="select.html#union">UNION</a></li>
+<li class="toctree-l2"><a class="reference internal" href="select.html#subqueries">Subqueries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="select.html#index-hints">Index Hints</a></li>
+<li class="toctree-l2"><a class="reference internal" href="select.html#dynamic-query-building">Dynamic Query Building</a></li>
+<li class="toctree-l2"><a class="reference internal" href="select.html#advanced-examples">Advanced Examples</a></li>
+<li class="toctree-l2"><a class="reference internal" href="select.html#performance-tips">Performance Tips</a></li>
+<li class="toctree-l2"><a class="reference internal" href="select.html#see-also">See Also</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="insert.html">INSERT Queries</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="insert.html#basic-insert">Basic INSERT</a></li>
+<li class="toctree-l2"><a class="reference internal" href="insert.html#column-handling">Column Handling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="insert.html#insert-ignore">INSERT IGNORE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="insert.html#on-duplicate-key-update">ON DUPLICATE KEY UPDATE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="insert.html#combining-insert-ignore-and-on-duplicate-key-update">Combining INSERT IGNORE and ON DUPLICATE KEY UPDATE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="insert.html#insert-with-subquery">INSERT with Subquery</a></li>
+<li class="toctree-l2"><a class="reference internal" href="insert.html#dynamic-insert-building">Dynamic INSERT Building</a></li>
+<li class="toctree-l2"><a class="reference internal" href="insert.html#advanced-examples">Advanced Examples</a></li>
+<li class="toctree-l2"><a class="reference internal" href="insert.html#performance-tips">Performance Tips</a></li>
+<li class="toctree-l2"><a class="reference internal" href="insert.html#common-patterns">Common Patterns</a></li>
+<li class="toctree-l2"><a class="reference internal" href="insert.html#error-handling">Error Handling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="insert.html#see-also">See Also</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="update.html">UPDATE Queries</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="update.html#basic-update">Basic UPDATE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="update.html#set-clause">SET Clause</a></li>
+<li class="toctree-l2"><a class="reference internal" href="update.html#where-clause">WHERE Clause</a></li>
+<li class="toctree-l2"><a class="reference internal" href="update.html#order-by">ORDER BY</a></li>
+<li class="toctree-l2"><a class="reference internal" href="update.html#limit">LIMIT</a></li>
+<li class="toctree-l2"><a class="reference internal" href="update.html#dynamic-update-building">Dynamic UPDATE Building</a></li>
+<li class="toctree-l2"><a class="reference internal" href="update.html#advanced-examples">Advanced Examples</a></li>
+<li class="toctree-l2"><a class="reference internal" href="update.html#safety-best-practices">Safety Best Practices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="update.html#performance-tips">Performance Tips</a></li>
+<li class="toctree-l2"><a class="reference internal" href="update.html#common-patterns">Common Patterns</a></li>
+<li class="toctree-l2"><a class="reference internal" href="update.html#see-also">See Also</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="delete.html">DELETE Queries</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="delete.html#basic-delete">Basic DELETE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="delete.html#where-clause">WHERE Clause</a></li>
+<li class="toctree-l2"><a class="reference internal" href="delete.html#order-by-and-limit">ORDER BY and LIMIT</a></li>
+<li class="toctree-l2"><a class="reference internal" href="delete.html#advanced-usage">Advanced Usage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="delete.html#safety-best-practices">Safety Best Practices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="delete.html#common-patterns">Common Patterns</a></li>
+<li class="toctree-l2"><a class="reference internal" href="delete.html#see-also">See Also</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">Advanced Topics</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="conditions.html">Condition Objects</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="conditions.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="conditions.html#the-condition-class">The Condition Class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="conditions.html#complex-combinations">Complex Combinations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="conditions.html#using-conditions-in-queries">Using Conditions in Queries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="conditions.html#dynamic-condition-building">Dynamic Condition Building</a></li>
+<li class="toctree-l2"><a class="reference internal" href="conditions.html#raw-sql-conditions">Raw SQL Conditions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="conditions.html#see-also">See Also</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="expressions.html">Expressions &amp; Functions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="expressions.html#raw-sql-expressions">Raw SQL Expressions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="expressions.html#sql-functions">SQL Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="expressions.html#safety-notes">Safety Notes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="expressions.html#see-also">See Also</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="joins.html">JOIN Operations</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="joins.html#basic-joins">Basic JOINs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="joins.html#advanced-join-features">Advanced JOIN Features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="joins.html#self-joins">Self Joins</a></li>
+<li class="toctree-l2"><a class="reference internal" href="joins.html#performance-tips">Performance Tips</a></li>
+<li class="toctree-l2"><a class="reference internal" href="joins.html#common-patterns">Common Patterns</a></li>
+<li class="toctree-l2"><a class="reference internal" href="joins.html#see-also">See Also</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="reference.html">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="reference.html#sqlo.Q"><code class="docutils literal notranslate"><span class="pre">Q</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference.html#sqlo.Raw"><code class="docutils literal notranslate"><span class="pre">Raw</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference.html#sqlo.Func"><code class="docutils literal notranslate"><span class="pre">Func</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference.html#sqlo.Condition"><code class="docutils literal notranslate"><span class="pre">Condition</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference.html#sqlo.query.select.SelectQuery"><code class="docutils literal notranslate"><span class="pre">SelectQuery</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference.html#sqlo.query.insert.InsertQuery"><code class="docutils literal notranslate"><span class="pre">InsertQuery</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference.html#sqlo.query.update.UpdateQuery"><code class="docutils literal notranslate"><span class="pre">UpdateQuery</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference.html#sqlo.query.delete.DeleteQuery"><code class="docutils literal notranslate"><span class="pre">DeleteQuery</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference.html#sqlo.expressions.Expression"><code class="docutils literal notranslate"><span class="pre">Expression</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference.html#sqlo.expressions.Raw"><code class="docutils literal notranslate"><span class="pre">Raw</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference.html#sqlo.expressions.Func"><code class="docutils literal notranslate"><span class="pre">Func</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference.html#sqlo.expressions.FunctionFactory"><code class="docutils literal notranslate"><span class="pre">FunctionFactory</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference.html#sqlo.expressions.Condition"><code class="docutils literal notranslate"><span class="pre">Condition</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference.html#sqlo.expressions.ComplexCondition"><code class="docutils literal notranslate"><span class="pre">ComplexCondition</span></code></a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+</section>
+<section id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Link to this heading"></a></h1>
+<ul class="simple">
+<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
+<li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
+<li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
+</ul>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="getting-started.html" class="btn btn-neutral float-right" title="Getting Started" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Nan Guo.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

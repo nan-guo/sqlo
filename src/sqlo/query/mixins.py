@@ -94,6 +94,8 @@ class WhereClauseMixin:
         not_in: bool = False,
     ):
         operator = "NOT IN" if not_in else "IN"
+
+        # Handle subquery
         if hasattr(values, "build"):  # Subquery
             sub_sql, sub_params = values.build()
             if hasattr(self, "_wheres"):
@@ -104,6 +106,12 @@ class WhereClauseMixin:
                         sub_params,
                     )
                 )
+        # Handle empty list edge case
+        # IN () is always false, NOT IN () is always true
+        elif len(values) == 0:
+            bool_value = "TRUE" if not_in else "FALSE"
+            if hasattr(self, "_wheres"):
+                self._wheres.append((connector, bool_value, []))
         else:
             count = len(values)
             ph = self._dialect.parameter_placeholder()

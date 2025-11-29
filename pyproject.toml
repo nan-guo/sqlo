@@ -1,6 +1,6 @@
 [project]
 name = "sqlo"
-version = "0.0.1"
+version = "0.1.0"
 description = "A modern, type-safe, and extensible SQL query builder for Python."
 license = {text = "MIT"}
 readme = "README.md"
@@ -36,6 +36,9 @@ dev = [
     "pre-commit>=3.0.0",
     "xenon>=0.9.0",
     "bandit>=1.7.0",
+    "sphinx>=7.0.0",
+    "sphinx-rtd-theme>=2.0.0",
+    "myst-parser>=2.0.0",
 ]
 
 [build-system]
@@ -68,6 +71,7 @@ ignore = [
     "PLC0415", # import outside top-level (needed to avoid circular imports)
     "PLR0912", # too many branches (acceptable for query builders)
     "PLW2901", # loop variable overwritten (intentional for string stripping)
+    "PLR2004", # magic values in comparisons (acceptable in tests)
 ]
 
 [tool.ruff.lint.isort]

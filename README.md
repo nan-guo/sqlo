@@ -5,15 +5,18 @@
 [![License](https://img.shields.io/github/license/nan-guo/sqlo)](LICENSE)
 
 
-**sqlo** is a modern, type-safe, and extensible SQL query builder for Python. It allows you to construct complex SQL queries using a fluent, Pythonic API while ensuring safety against SQL injection.
+A **lightweight** and **simple** SQL query builder for Python. Build SQL queries with a clean, intuitive API while staying safe from SQL injection.
 
-## Features
+## Why sqlo?
 
-- 🛡️ **Safe**: Automatic parameter binding prevents SQL injection.
-- 🐍 **Pythonic**: Fluent API design that feels natural to Python developers.
-- 🧩 **Composable**: Build complex queries from reusable parts.
-- 🚀 **Extensible**: Support for custom dialects and functions.
-- 🔍 **Type-Safe**: Designed with type hints for better IDE support.
+- 🪶 **Lightweight**: Zero dependencies, minimal footprint
+- ✨ **Simple**: Intuitive fluent API, easy to learn
+- 🛡️ **Secure by Default**: Built-in SQL injection protection
+- 🐍 **Pythonic**: Fluent API design that feels natural to Python developers
+- 🧩 **Composable**: Build complex queries from reusable parts
+- 🚀 **Extensible**: Support for custom dialects and functions
+- 🔍 **Type-Safe**: Designed with type hints for better IDE support
+- ✅ **Well-Tested**: 99% code coverage with comprehensive security tests
 
 ## Installation
 
@@ -41,16 +44,17 @@ sql, params = query.build()
 
 ## Documentation
 
-Full documentation is available in the [docs](docs/) directory.
+Full documentation is available on GitHub:
 
-- [Getting Started](docs/getting-started.md)
-- [SELECT Queries](docs/select.md)
-- [INSERT Queries](docs/insert.md)
-- [UPDATE Queries](docs/update.md)
-- [DELETE Queries](docs/delete.md)
-- [JOIN Operations](docs/joins.md)
-- [Condition Objects](docs/conditions.md)
-- [Expressions & Functions](docs/expressions.md)
+- [Getting Started](https://github.com/nan-guo/sqlo/blob/main/docs/getting-started.md)
+- [Security Guide](https://github.com/nan-guo/sqlo/blob/main/docs/security.md) ⭐
+- [SELECT Queries](https://github.com/nan-guo/sqlo/blob/main/docs/select.md)
+- [INSERT Queries](https://github.com/nan-guo/sqlo/blob/main/docs/insert.md)
+- [UPDATE Queries](https://github.com/nan-guo/sqlo/blob/main/docs/update.md)
+- [DELETE Queries](https://github.com/nan-guo/sqlo/blob/main/docs/delete.md)
+- [JOIN Operations](https://github.com/nan-guo/sqlo/blob/main/docs/joins.md)
+- [Condition Objects](https://github.com/nan-guo/sqlo/blob/main/docs/conditions.md)
+- [Expressions & Functions](https://github.com/nan-guo/sqlo/blob/main/docs/expressions.md)
 
 ## License
 

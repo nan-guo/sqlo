@@ -1,0 +1,353 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JOIN Operations &mdash; sqlo Documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=01f34227"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="API Reference" href="reference.html" />
+    <link rel="prev" title="Expressions &amp; Functions" href="expressions.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            sqlo
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="getting-started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="security.html">Security Guide</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Query Types</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="select.html">SELECT Queries</a></li>
+<li class="toctree-l1"><a class="reference internal" href="insert.html">INSERT Queries</a></li>
+<li class="toctree-l1"><a class="reference internal" href="update.html">UPDATE Queries</a></li>
+<li class="toctree-l1"><a class="reference internal" href="delete.html">DELETE Queries</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Advanced Topics</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="conditions.html">Condition Objects</a></li>
+<li class="toctree-l1"><a class="reference internal" href="expressions.html">Expressions &amp; Functions</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">JOIN Operations</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#basic-joins">Basic JOINs</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#inner-join">INNER JOIN</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#left-join">LEFT JOIN</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#right-join">RIGHT JOIN</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#cross-join">CROSS JOIN</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#advanced-join-features">Advanced JOIN Features</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#table-aliases">Table Aliases</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#multiple-joins">Multiple JOINs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#complex-join-conditions">Complex JOIN Conditions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#joining-subqueries">Joining Subqueries</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#self-joins">Self Joins</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#performance-tips">Performance Tips</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#common-patterns">Common Patterns</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#filtering-by-related-existence">Filtering by Related Existence</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#aggregating-related-data">Aggregating Related Data</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#see-also">See Also</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="reference.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">sqlo</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">JOIN Operations</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/joins.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="join-operations">
+<h1>JOIN Operations<a class="headerlink" href="#join-operations" title="Link to this heading"></a></h1>
+<p>Complete guide to JOIN operations with sqlo.</p>
+<section id="basic-joins">
+<h2>Basic JOINs<a class="headerlink" href="#basic-joins" title="Link to this heading"></a></h2>
+<section id="inner-join">
+<h3>INNER JOIN<a class="headerlink" href="#inner-join" title="Link to this heading"></a></h3>
+<p>The default <code class="docutils literal notranslate"><span class="pre">join()</span></code> method creates an INNER JOIN.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">sqlo</span><span class="w"> </span><span class="kn">import</span> <span class="n">Q</span>
+
+<span class="n">query</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;users.name&quot;</span><span class="p">,</span> <span class="s2">&quot;orders.total&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;orders&quot;</span><span class="p">,</span> <span class="s2">&quot;orders.user_id = users.id&quot;</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="c1"># SELECT `users`.`name`, `orders`.`total` </span>
+<span class="c1"># FROM `users` </span>
+<span class="c1"># INNER JOIN `orders` ON orders.user_id = users.id</span>
+</pre></div>
+</div>
+</section>
+<section id="left-join">
+<h3>LEFT JOIN<a class="headerlink" href="#left-join" title="Link to this heading"></a></h3>
+<p>Use <code class="docutils literal notranslate"><span class="pre">left_join()</span></code> to include all rows from the left table, even if there are no matches in the right table.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;users.name&quot;</span><span class="p">,</span> <span class="s2">&quot;orders.total&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">left_join</span><span class="p">(</span><span class="s2">&quot;orders&quot;</span><span class="p">,</span> <span class="s2">&quot;orders.user_id = users.id&quot;</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="c1"># SELECT `users`.`name`, `orders`.`total` </span>
+<span class="c1"># FROM `users` </span>
+<span class="c1"># LEFT JOIN `orders` ON orders.user_id = users.id</span>
+</pre></div>
+</div>
+</section>
+<section id="right-join">
+<h3>RIGHT JOIN<a class="headerlink" href="#right-join" title="Link to this heading"></a></h3>
+<p>Use <code class="docutils literal notranslate"><span class="pre">right_join()</span></code> to include all rows from the right table.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;users.name&quot;</span><span class="p">,</span> <span class="s2">&quot;orders.total&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">right_join</span><span class="p">(</span><span class="s2">&quot;orders&quot;</span><span class="p">,</span> <span class="s2">&quot;orders.user_id = users.id&quot;</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="c1"># SELECT `users`.`name`, `orders`.`total` </span>
+<span class="c1"># FROM `users` </span>
+<span class="c1"># RIGHT JOIN `orders` ON orders.user_id = users.id</span>
+</pre></div>
+</div>
+</section>
+<section id="cross-join">
+<h3>CROSS JOIN<a class="headerlink" href="#cross-join" title="Link to this heading"></a></h3>
+<p>Use <code class="docutils literal notranslate"><span class="pre">cross_join()</span></code> to create a Cartesian product of rows from both tables.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;sizes.name&quot;</span><span class="p">,</span> <span class="s2">&quot;colors.name&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;sizes&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">cross_join</span><span class="p">(</span><span class="s2">&quot;colors&quot;</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="c1"># SELECT `sizes`.`name`, `colors`.`name` </span>
+<span class="c1"># FROM `sizes` </span>
+<span class="c1"># CROSS JOIN `colors`</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="advanced-join-features">
+<h2>Advanced JOIN Features<a class="headerlink" href="#advanced-join-features" title="Link to this heading"></a></h2>
+<section id="table-aliases">
+<h3>Table Aliases<a class="headerlink" href="#table-aliases" title="Link to this heading"></a></h3>
+<p>It is highly recommended to use aliases for readability and to avoid ambiguity.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;u.name&quot;</span><span class="p">,</span> <span class="s2">&quot;o.total&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users AS u&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;orders AS o&quot;</span><span class="p">,</span> <span class="s2">&quot;o.user_id = u.id&quot;</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="c1"># SELECT `u`.`name`, `o`.`total` </span>
+<span class="c1"># FROM `users` AS `u` </span>
+<span class="c1"># INNER JOIN `orders` AS `o` ON o.user_id = u.id</span>
+</pre></div>
+</div>
+</section>
+<section id="multiple-joins">
+<h3>Multiple JOINs<a class="headerlink" href="#multiple-joins" title="Link to this heading"></a></h3>
+<p>You can chain multiple JOINs to connect several tables.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;u.name&quot;</span><span class="p">,</span> <span class="s2">&quot;p.title&quot;</span><span class="p">,</span> <span class="s2">&quot;c.name as category&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users AS u&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;posts AS p&quot;</span><span class="p">,</span> <span class="s2">&quot;p.user_id = u.id&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">left_join</span><span class="p">(</span><span class="s2">&quot;categories AS c&quot;</span><span class="p">,</span> <span class="s2">&quot;c.id = p.category_id&quot;</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="c1"># SELECT `u`.`name`, `p`.`title`, `c`.`name` as category</span>
+<span class="c1"># FROM `users` AS `u`</span>
+<span class="c1"># INNER JOIN `posts` AS `p` ON p.user_id = u.id</span>
+<span class="c1"># LEFT JOIN `categories` AS `c` ON c.id = p.category_id</span>
+</pre></div>
+</div>
+</section>
+<section id="complex-join-conditions">
+<h3>Complex JOIN Conditions<a class="headerlink" href="#complex-join-conditions" title="Link to this heading"></a></h3>
+<p>For complex ON clauses, you can pass a string with multiple conditions.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Join with multiple conditions</span>
+<span class="n">query</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users AS u&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;subscriptions AS s&quot;</span><span class="p">,</span> <span class="s2">&quot;s.user_id = u.id AND s.status = &#39;active&#39;&quot;</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="c1"># INNER JOIN `subscriptions` AS `s` ON s.user_id = u.id AND s.status = &#39;active&#39;</span>
+</pre></div>
+</div>
+</section>
+<section id="joining-subqueries">
+<h3>Joining Subqueries<a class="headerlink" href="#joining-subqueries" title="Link to this heading"></a></h3>
+<p>You can join a subquery by treating it as a derived table.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create a subquery</span>
+<span class="n">latest_orders</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;user_id&quot;</span><span class="p">,</span> <span class="s2">&quot;MAX(created_at) as last_order_date&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;orders&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">group_by</span><span class="p">(</span><span class="s2">&quot;user_id&quot;</span><span class="p">)</span>
+<span class="p">)</span>
+
+<span class="c1"># Join the subquery</span>
+<span class="n">query</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;u.name&quot;</span><span class="p">,</span> <span class="s2">&quot;lo.last_order_date&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users AS u&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">latest_orders</span><span class="o">.</span><span class="n">as_</span><span class="p">(</span><span class="s2">&quot;lo&quot;</span><span class="p">),</span> <span class="s2">&quot;lo.user_id = u.id&quot;</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="c1"># SELECT `u`.`name`, `lo`.`last_order_date`</span>
+<span class="c1"># FROM `users` AS `u`</span>
+<span class="c1"># INNER JOIN (SELECT `user_id`, MAX(created_at) as last_order_date FROM `orders` GROUP BY `user_id`) AS `lo` </span>
+<span class="c1"># ON lo.user_id = u.id</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="self-joins">
+<h2>Self Joins<a class="headerlink" href="#self-joins" title="Link to this heading"></a></h2>
+<p>You can join a table to itself using aliases.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Find employees and their managers</span>
+<span class="n">query</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;e.name as employee&quot;</span><span class="p">,</span> <span class="s2">&quot;m.name as manager&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;employees AS e&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">left_join</span><span class="p">(</span><span class="s2">&quot;employees AS m&quot;</span><span class="p">,</span> <span class="s2">&quot;m.id = e.manager_id&quot;</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="c1"># SELECT `e`.`name` as employee, `m`.`name` as manager</span>
+<span class="c1"># FROM `employees` AS `e`</span>
+<span class="c1"># LEFT JOIN `employees` AS `m` ON m.id = e.manager_id</span>
+</pre></div>
+</div>
+</section>
+<section id="performance-tips">
+<h2>Performance Tips<a class="headerlink" href="#performance-tips" title="Link to this heading"></a></h2>
+<ol class="arabic simple">
+<li><p><strong>Index Foreign Keys</strong>: Ensure columns used in ON clauses are indexed.</p></li>
+<li><p><strong>Filter Early</strong>: Use WHERE clauses to reduce the number of rows before joining if possible (though the optimizer usually handles this).</p></li>
+<li><p><strong>Select Specific Columns</strong>: Avoid <code class="docutils literal notranslate"><span class="pre">SELECT</span> <span class="pre">*</span></code> when joining multiple tables to prevent fetching unnecessary data.</p></li>
+<li><p><strong>Use EXPLAIN</strong>: Use the <code class="docutils literal notranslate"><span class="pre">explain()</span></code> method to check if your JOINs are using indexes efficiently.</p></li>
+</ol>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;orders&quot;</span><span class="p">,</span> <span class="s2">&quot;orders.user_id = users.id&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">query</span><span class="o">.</span><span class="n">explain</span><span class="p">())</span>
+</pre></div>
+</div>
+</section>
+<section id="common-patterns">
+<h2>Common Patterns<a class="headerlink" href="#common-patterns" title="Link to this heading"></a></h2>
+<section id="filtering-by-related-existence">
+<h3>Filtering by Related Existence<a class="headerlink" href="#filtering-by-related-existence" title="Link to this heading"></a></h3>
+<p>Find users who have at least one order (INNER JOIN):</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;DISTINCT u.*&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users AS u&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;orders AS o&quot;</span><span class="p">,</span> <span class="s2">&quot;o.user_id = u.id&quot;</span><span class="p">)</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Find users who have NO orders (LEFT JOIN + WHERE NULL):</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;u.*&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users AS u&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">left_join</span><span class="p">(</span><span class="s2">&quot;orders AS o&quot;</span><span class="p">,</span> <span class="s2">&quot;o.user_id = u.id&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">where_null</span><span class="p">(</span><span class="s2">&quot;o.id&quot;</span><span class="p">)</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="aggregating-related-data">
+<h3>Aggregating Related Data<a class="headerlink" href="#aggregating-related-data" title="Link to this heading"></a></h3>
+<p>Get user details with their order count:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;u.id&quot;</span><span class="p">,</span> <span class="s2">&quot;u.name&quot;</span><span class="p">,</span> <span class="s2">&quot;COUNT(o.id) as order_count&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users AS u&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">left_join</span><span class="p">(</span><span class="s2">&quot;orders AS o&quot;</span><span class="p">,</span> <span class="s2">&quot;o.user_id = u.id&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">group_by</span><span class="p">(</span><span class="s2">&quot;u.id&quot;</span><span class="p">,</span> <span class="s2">&quot;u.name&quot;</span><span class="p">)</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="select.html"><span class="std std-doc">SELECT Queries</span></a> - Basic SELECT usage</p></li>
+<li><p><a class="reference internal" href="select.html#subqueries"><span class="std std-ref">Subqueries</span></a> - Using subqueries</p></li>
+<li><p><a class="reference internal" href="update.html#update-multiple-tables-mysql"><span class="std std-ref">UPDATE Queries</span></a> - Multi-table updates</p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="expressions.html" class="btn btn-neutral float-left" title="Expressions &amp; Functions" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="reference.html" class="btn btn-neutral float-right" title="API Reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Nan Guo.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,336 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Condition Objects &mdash; sqlo Documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=01f34227"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Expressions &amp; Functions" href="expressions.html" />
+    <link rel="prev" title="DELETE Queries" href="delete.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            sqlo
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="getting-started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="security.html">Security Guide</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Query Types</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="select.html">SELECT Queries</a></li>
+<li class="toctree-l1"><a class="reference internal" href="insert.html">INSERT Queries</a></li>
+<li class="toctree-l1"><a class="reference internal" href="update.html">UPDATE Queries</a></li>
+<li class="toctree-l1"><a class="reference internal" href="delete.html">DELETE Queries</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Advanced Topics</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Condition Objects</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#the-condition-class">The Condition Class</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#supported-operators">Supported Operators</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#null-handling-factory-methods">NULL Handling Factory Methods</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#complex-combinations">Complex Combinations</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#using-static-methods-recommended">Using Static Methods (Recommended)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#nesting-conditions">Nesting Conditions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#using-bitwise-operators">Using Bitwise Operators</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#using-conditions-in-queries">Using Conditions in Queries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#dynamic-condition-building">Dynamic Condition Building</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#raw-sql-conditions">Raw SQL Conditions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#see-also">See Also</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="expressions.html">Expressions &amp; Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="joins.html">JOIN Operations</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="reference.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">sqlo</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Condition Objects</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/conditions.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="condition-objects">
+<h1>Condition Objects<a class="headerlink" href="#condition-objects" title="Link to this heading"></a></h1>
+<p>Guide to using <code class="docutils literal notranslate"><span class="pre">Condition</span></code> and <code class="docutils literal notranslate"><span class="pre">ComplexCondition</span></code> objects for advanced query filtering.</p>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading"></a></h2>
+<p>While simple <code class="docutils literal notranslate"><span class="pre">where()</span></code> calls are sufficient for most queries, <code class="docutils literal notranslate"><span class="pre">Condition</span></code> objects provide a powerful way to build complex, nested logical expressions with mixed AND/OR logic.</p>
+</section>
+<section id="the-condition-class">
+<h2>The Condition Class<a class="headerlink" href="#the-condition-class" title="Link to this heading"></a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">Condition</span></code> class represents a single SQL condition.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">sqlo</span><span class="w"> </span><span class="kn">import</span> <span class="n">Condition</span>
+
+<span class="c1"># Create a condition (Standard)</span>
+<span class="n">c</span> <span class="o">=</span> <span class="n">Condition</span><span class="p">(</span><span class="s2">&quot;age&quot;</span><span class="p">,</span> <span class="s2">&quot;&gt;=&quot;</span><span class="p">,</span> <span class="mi">18</span><span class="p">)</span>
+<span class="c1"># Represents: `age` &gt;= %s</span>
+
+<span class="c1"># Create a condition (Compact)</span>
+<span class="n">c</span> <span class="o">=</span> <span class="n">Condition</span><span class="p">(</span><span class="s2">&quot;age&gt;=&quot;</span><span class="p">,</span> <span class="mi">18</span><span class="p">)</span>
+<span class="c1"># Represents: `age` &gt;= %s</span>
+</pre></div>
+</div>
+<section id="supported-operators">
+<h3>Supported Operators<a class="headerlink" href="#supported-operators" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Standard: <code class="docutils literal notranslate"><span class="pre">=</span></code>, <code class="docutils literal notranslate"><span class="pre">!=</span></code>, <code class="docutils literal notranslate"><span class="pre">&gt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&lt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&gt;=</span></code>, <code class="docutils literal notranslate"><span class="pre">&lt;=</span></code></p></li>
+<li><p>SQL specific: <code class="docutils literal notranslate"><span class="pre">LIKE</span></code>, <code class="docutils literal notranslate"><span class="pre">NOT</span> <span class="pre">LIKE</span></code>, <code class="docutils literal notranslate"><span class="pre">IN</span></code>, <code class="docutils literal notranslate"><span class="pre">NOT</span> <span class="pre">IN</span></code>, <code class="docutils literal notranslate"><span class="pre">IS</span></code>, <code class="docutils literal notranslate"><span class="pre">IS</span> <span class="pre">NOT</span></code></p></li>
+<li><p>Custom: Any string operator</p></li>
+</ul>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">Condition</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="s2">&quot;LIKE&quot;</span><span class="p">,</span> <span class="s2">&quot;A%&quot;</span><span class="p">)</span>
+<span class="n">Condition</span><span class="p">(</span><span class="s2">&quot;status&quot;</span><span class="p">,</span> <span class="s2">&quot;IN&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;active&quot;</span><span class="p">,</span> <span class="s2">&quot;pending&quot;</span><span class="p">])</span>
+<span class="n">Condition</span><span class="p">(</span><span class="s2">&quot;deleted_at&quot;</span><span class="p">,</span> <span class="s2">&quot;IS&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="null-handling-factory-methods">
+<h3>NULL Handling Factory Methods<a class="headerlink" href="#null-handling-factory-methods" title="Link to this heading"></a></h3>
+<p>For NULL checks, use the dedicated factory methods:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">sqlo</span><span class="w"> </span><span class="kn">import</span> <span class="n">Condition</span>
+
+<span class="c1"># IS NULL</span>
+<span class="n">Condition</span><span class="o">.</span><span class="n">null</span><span class="p">(</span><span class="s2">&quot;email&quot;</span><span class="p">)</span>
+<span class="c1"># Represents: `email` IS NULL</span>
+
+<span class="c1"># IS NOT NULL  </span>
+<span class="n">Condition</span><span class="o">.</span><span class="n">not_null</span><span class="p">(</span><span class="s2">&quot;email&quot;</span><span class="p">)</span>
+<span class="c1"># Represents: `email` IS NOT NULL</span>
+
+<span class="c1"># Use in queries</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlo</span><span class="w"> </span><span class="kn">import</span> <span class="n">Q</span>
+
+<span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">Condition</span><span class="o">.</span><span class="n">null</span><span class="p">(</span><span class="s2">&quot;deleted_at&quot;</span><span class="p">))</span>
+<span class="c1"># SELECT * FROM `users` WHERE (`deleted_at` IS NULL)</span>
+</pre></div>
+</div>
+<blockquote>
+<div><p>[!TIP]
+For simple NULL checks, use the shorthand methods:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Q.select(&quot;*&quot;).from_(&quot;users&quot;).where_null(&quot;email&quot;)</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Q.select(&quot;*&quot;).from_(&quot;users&quot;).where_not_null(&quot;email&quot;)</span></code></p></li>
+</ul>
+</div></blockquote>
+</section>
+</section>
+<section id="complex-combinations">
+<h2>Complex Combinations<a class="headerlink" href="#complex-combinations" title="Link to this heading"></a></h2>
+<p>You can combine conditions using <code class="docutils literal notranslate"><span class="pre">and_()</span></code> and <code class="docutils literal notranslate"><span class="pre">or_()</span></code> static methods or bitwise operators.</p>
+<section id="using-static-methods-recommended">
+<h3>Using Static Methods (Recommended)<a class="headerlink" href="#using-static-methods-recommended" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># (age &gt;= 18 AND country = &#39;US&#39;)</span>
+<span class="n">c</span> <span class="o">=</span> <span class="n">Condition</span><span class="o">.</span><span class="n">and_</span><span class="p">(</span>
+    <span class="n">Condition</span><span class="p">(</span><span class="s2">&quot;age&quot;</span><span class="p">,</span> <span class="s2">&quot;&gt;=&quot;</span><span class="p">,</span> <span class="mi">18</span><span class="p">),</span>
+    <span class="n">Condition</span><span class="p">(</span><span class="s2">&quot;country&quot;</span><span class="p">,</span> <span class="s2">&quot;=&quot;</span><span class="p">,</span> <span class="s2">&quot;US&quot;</span><span class="p">)</span>
+<span class="p">)</span>
+
+<span class="c1"># (status = &#39;active&#39; OR status = &#39;pending&#39;)</span>
+<span class="n">c</span> <span class="o">=</span> <span class="n">Condition</span><span class="o">.</span><span class="n">or_</span><span class="p">(</span>
+    <span class="n">Condition</span><span class="p">(</span><span class="s2">&quot;status&quot;</span><span class="p">,</span> <span class="s2">&quot;=&quot;</span><span class="p">,</span> <span class="s2">&quot;active&quot;</span><span class="p">),</span>
+    <span class="n">Condition</span><span class="p">(</span><span class="s2">&quot;status&quot;</span><span class="p">,</span> <span class="s2">&quot;=&quot;</span><span class="p">,</span> <span class="s2">&quot;pending&quot;</span><span class="p">)</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="nesting-conditions">
+<h3>Nesting Conditions<a class="headerlink" href="#nesting-conditions" title="Link to this heading"></a></h3>
+<p>You can nest <code class="docutils literal notranslate"><span class="pre">and_</span></code> and <code class="docutils literal notranslate"><span class="pre">or_</span></code> to create arbitrarily complex logic.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># (active = 1 AND (role = &#39;admin&#39; OR (role = &#39;user&#39; AND points &gt; 100)))</span>
+<span class="n">c</span> <span class="o">=</span> <span class="n">Condition</span><span class="o">.</span><span class="n">and_</span><span class="p">(</span>
+    <span class="n">Condition</span><span class="p">(</span><span class="s2">&quot;active&quot;</span><span class="p">,</span> <span class="s2">&quot;=&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span>
+    <span class="n">Condition</span><span class="o">.</span><span class="n">or_</span><span class="p">(</span>
+        <span class="n">Condition</span><span class="p">(</span><span class="s2">&quot;role&quot;</span><span class="p">,</span> <span class="s2">&quot;=&quot;</span><span class="p">,</span> <span class="s2">&quot;admin&quot;</span><span class="p">),</span>
+        <span class="n">Condition</span><span class="o">.</span><span class="n">and_</span><span class="p">(</span>
+            <span class="n">Condition</span><span class="p">(</span><span class="s2">&quot;role&quot;</span><span class="p">,</span> <span class="s2">&quot;=&quot;</span><span class="p">,</span> <span class="s2">&quot;user&quot;</span><span class="p">),</span>
+            <span class="n">Condition</span><span class="p">(</span><span class="s2">&quot;points&quot;</span><span class="p">,</span> <span class="s2">&quot;&gt;&quot;</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="using-bitwise-operators">
+<h3>Using Bitwise Operators<a class="headerlink" href="#using-bitwise-operators" title="Link to this heading"></a></h3>
+<p>You can also use <code class="docutils literal notranslate"><span class="pre">&amp;</span></code> (AND) and <code class="docutils literal notranslate"><span class="pre">|</span></code> (OR) operators, but be careful with operator precedence (always use parentheses).</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">c1</span> <span class="o">=</span> <span class="n">Condition</span><span class="p">(</span><span class="s2">&quot;age&quot;</span><span class="p">,</span> <span class="s2">&quot;&gt;=&quot;</span><span class="p">,</span> <span class="mi">18</span><span class="p">)</span>
+<span class="n">c2</span> <span class="o">=</span> <span class="n">Condition</span><span class="p">(</span><span class="s2">&quot;country&quot;</span><span class="p">,</span> <span class="s2">&quot;=&quot;</span><span class="p">,</span> <span class="s2">&quot;US&quot;</span><span class="p">)</span>
+
+<span class="c1"># AND combination</span>
+<span class="n">combined</span> <span class="o">=</span> <span class="n">c1</span> <span class="o">&amp;</span> <span class="n">c2</span>
+
+<span class="c1"># OR combination</span>
+<span class="n">combined</span> <span class="o">=</span> <span class="n">c1</span> <span class="o">|</span> <span class="n">c2</span>
+
+<span class="c1"># Complex combination</span>
+<span class="n">combined</span> <span class="o">=</span> <span class="n">c1</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">c2</span> <span class="o">|</span> <span class="n">Condition</span><span class="p">(</span><span class="s2">&quot;country&quot;</span><span class="p">,</span> <span class="s2">&quot;=&quot;</span><span class="p">,</span> <span class="s2">&quot;CA&quot;</span><span class="p">))</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="using-conditions-in-queries">
+<h2>Using Conditions in Queries<a class="headerlink" href="#using-conditions-in-queries" title="Link to this heading"></a></h2>
+<p>Pass the condition object directly to <code class="docutils literal notranslate"><span class="pre">where()</span></code> or <code class="docutils literal notranslate"><span class="pre">having()</span></code>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">sqlo</span><span class="w"> </span><span class="kn">import</span> <span class="n">Q</span><span class="p">,</span> <span class="n">Condition</span>
+
+<span class="c1"># Define complex logic</span>
+<span class="n">is_eligible</span> <span class="o">=</span> <span class="n">Condition</span><span class="o">.</span><span class="n">or_</span><span class="p">(</span>
+    <span class="n">Condition</span><span class="p">(</span><span class="s2">&quot;age&quot;</span><span class="p">,</span> <span class="s2">&quot;&gt;=&quot;</span><span class="p">,</span> <span class="mi">21</span><span class="p">),</span>
+    <span class="n">Condition</span><span class="o">.</span><span class="n">and_</span><span class="p">(</span>
+        <span class="n">Condition</span><span class="p">(</span><span class="s2">&quot;age&quot;</span><span class="p">,</span> <span class="s2">&quot;&gt;=&quot;</span><span class="p">,</span> <span class="mi">18</span><span class="p">),</span>
+        <span class="n">Condition</span><span class="p">(</span><span class="s2">&quot;has_consent&quot;</span><span class="p">,</span> <span class="s2">&quot;=&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+
+<span class="c1"># Use in query</span>
+<span class="n">query</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">is_eligible</span><span class="p">)</span>
+<span class="c1"># WHERE (`age` &gt;= %s OR (`age` &gt;= %s AND `has_consent` = %s))</span>
+</pre></div>
+</div>
+</section>
+<section id="dynamic-condition-building">
+<h2>Dynamic Condition Building<a class="headerlink" href="#dynamic-condition-building" title="Link to this heading"></a></h2>
+<p>Condition objects are excellent for building filters dynamically.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">build_filter</span><span class="p">(</span><span class="n">filters</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+    <span class="n">conditions</span> <span class="o">=</span> <span class="p">[]</span>
+    
+    <span class="k">if</span> <span class="s2">&quot;status&quot;</span> <span class="ow">in</span> <span class="n">filters</span><span class="p">:</span>
+        <span class="n">conditions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Condition</span><span class="p">(</span><span class="s2">&quot;status&quot;</span><span class="p">,</span> <span class="s2">&quot;=&quot;</span><span class="p">,</span> <span class="n">filters</span><span class="p">[</span><span class="s2">&quot;status&quot;</span><span class="p">]))</span>
+        
+    <span class="k">if</span> <span class="s2">&quot;min_price&quot;</span> <span class="ow">in</span> <span class="n">filters</span><span class="p">:</span>
+        <span class="n">conditions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Condition</span><span class="p">(</span><span class="s2">&quot;price&quot;</span><span class="p">,</span> <span class="s2">&quot;&gt;=&quot;</span><span class="p">,</span> <span class="n">filters</span><span class="p">[</span><span class="s2">&quot;min_price&quot;</span><span class="p">]))</span>
+        
+    <span class="k">if</span> <span class="s2">&quot;search&quot;</span> <span class="ow">in</span> <span class="n">filters</span><span class="p">:</span>
+        <span class="n">term</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;%</span><span class="si">{</span><span class="n">filters</span><span class="p">[</span><span class="s1">&#39;search&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">%&quot;</span>
+        <span class="n">conditions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Condition</span><span class="o">.</span><span class="n">or_</span><span class="p">(</span>
+            <span class="n">Condition</span><span class="p">(</span><span class="s2">&quot;title&quot;</span><span class="p">,</span> <span class="s2">&quot;LIKE&quot;</span><span class="p">,</span> <span class="n">term</span><span class="p">),</span>
+            <span class="n">Condition</span><span class="p">(</span><span class="s2">&quot;description&quot;</span><span class="p">,</span> <span class="s2">&quot;LIKE&quot;</span><span class="p">,</span> <span class="n">term</span><span class="p">)</span>
+        <span class="p">))</span>
+    
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">conditions</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+        
+    <span class="c1"># Combine all with AND</span>
+    <span class="k">return</span> <span class="n">Condition</span><span class="o">.</span><span class="n">and_</span><span class="p">(</span><span class="o">*</span><span class="n">conditions</span><span class="p">)</span>
+
+<span class="c1"># Usage</span>
+<span class="n">filters</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="s2">&quot;active&quot;</span><span class="p">,</span> <span class="s2">&quot;search&quot;</span><span class="p">:</span> <span class="s2">&quot;python&quot;</span><span class="p">}</span>
+<span class="n">where_clause</span> <span class="o">=</span> <span class="n">build_filter</span><span class="p">(</span><span class="n">filters</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="n">where_clause</span><span class="p">:</span>
+    <span class="n">query</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;products&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">where_clause</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="raw-sql-conditions">
+<h2>Raw SQL Conditions<a class="headerlink" href="#raw-sql-conditions" title="Link to this heading"></a></h2>
+<p>For conditions that can’t be expressed with standard operators, use <code class="docutils literal notranslate"><span class="pre">Raw</span></code>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">sqlo</span><span class="w"> </span><span class="kn">import</span> <span class="n">Raw</span>
+
+<span class="c1"># Raw SQL condition</span>
+<span class="n">c</span> <span class="o">=</span> <span class="n">Condition</span><span class="p">(</span><span class="n">Raw</span><span class="p">(</span><span class="s2">&quot;LENGTH(password)&quot;</span><span class="p">),</span> <span class="s2">&quot;&gt;&quot;</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span>
+<span class="c1"># LENGTH(password) &gt; %s</span>
+
+<span class="c1"># Completely raw condition</span>
+<span class="n">c</span> <span class="o">=</span> <span class="n">Condition</span><span class="p">(</span><span class="n">Raw</span><span class="p">(</span><span class="s2">&quot;MATCH(title, body) AGAINST(  </span><span class="si">%s</span><span class="s2">)&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;search term&quot;</span><span class="p">]))</span>
+</pre></div>
+</div>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="select.html#where-clauses"><span class="std std-ref">SELECT Queries</span></a> - Basic WHERE usage</p></li>
+<li><p><a class="reference internal" href="expressions.html"><span class="std std-doc">Expressions &amp; Functions</span></a> - Using raw SQL and functions</p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="delete.html" class="btn btn-neutral float-left" title="DELETE Queries" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="expressions.html" class="btn btn-neutral float-right" title="Expressions &amp; Functions" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Nan Guo.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

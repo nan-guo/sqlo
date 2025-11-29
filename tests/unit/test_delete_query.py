@@ -80,7 +80,7 @@ def test_delete_left_join():
 
 def test_delete_order_by_desc():
     """DELETE with ORDER BY DESC"""
-    query = Q.delete_from("logs").order_by("-created_at")
+    query = Q.delete_from("logs").order_by("-created_at").allow_all_rows()
     sql, _ = query.build()
     assert "ORDER BY `created_at` DESC" in sql
 
@@ -91,6 +91,7 @@ def test_delete_multiple_joins():
         Q.delete_from("t1")
         .join("t2", "t1.id = t2.t1_id")
         .left_join("t3", "t2.id = t3.t2_id")
+        .allow_all_rows()
     )
     sql, _ = query.build()
     assert "INNER JOIN t2" in sql

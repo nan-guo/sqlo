@@ -11,13 +11,21 @@ class Expression:
 
 
 class Raw(Expression):
-    """Raw SQL fragment."""
+    """Raw SQL fragment.
+
+    WARNING: Raw SQL bypasses parameter binding and can be vulnerable to SQL injection.
+    Only use Raw() with trusted input or when you need to reference columns/functions.
+
+    For dynamic user input, always use parameterized queries instead.
+    """
 
     def __init__(
         self,
         sql: str,
         params: Optional[Union[list[Any], tuple[Any, ...]]] = None,
     ):
+        if not isinstance(sql, str):
+            raise TypeError("Raw SQL must be a string")
         self.sql = sql
         self.params = params or []
 
@@ -88,12 +96,12 @@ class FunctionFactory:
 
 
 class Condition(Expression):
-    """
+    r"""
     Represents a SQL condition for use in WHERE or HAVING clauses.
 
     This class allows you to build simple or complex conditions with support for
     compact operator syntax (e.g., "age>") and standard syntax (e.g., "age >").
-    Conditions can be combined using bitwise operators (&, |) or static methods.
+    Conditions can be combined using bitwise operators (& and \|) or static methods.
 
     Args:
         column (str, optional): Column name with optional operator (e.g., "age>=" or "age >=").
@@ -120,7 +128,7 @@ class Condition(Expression):
         >>> c1 = Condition("age>=", 18)
         >>> c2 = Condition("country", "US")
         >>> combined = c1 & c2  # AND
-        >>> combined = c1 | c2  # OR
+        >>> combined = c1 \| c2  # OR
     """
 
     def __init__(
@@ -431,10 +439,10 @@ class Condition(Expression):
 
 
 class ComplexCondition(Expression):
-    """
+    r"""
     Represents a complex SQL condition combining multiple conditions with AND/OR logic.
 
-    This class is typically created automatically when using bitwise operators (& or |)
+    This class is typically created automatically when using bitwise operators (& or \|)
     on Condition objects, or when using Condition.and_() / Condition.or_() static methods.
     It properly handles operator precedence and nested conditions.
 
@@ -449,7 +457,7 @@ class ComplexCondition(Expression):
         >>> c3 = Condition("verified", True)
         >>>
         >>> # Creates ComplexCondition automatically
-        >>> complex = (c1 & c2) | c3
+        >>> complex = (c1 & c2) \| c3
         >>> # Represents: (age >= 18 AND country = 'US') OR verified = True
     """
 
@@ -464,7 +472,7 @@ class ComplexCondition(Expression):
         self.right = right
 
     def build(self, dialect=None) -> tuple[str, tuple[Any, ...]]:
-        """
+        r"""
         Build the complex condition and return (sql, params) tuple.
 
         Args:
@@ -476,7 +484,7 @@ class ComplexCondition(Expression):
         Example:
             >>> c1 = Condition("age>=", 18)
             >>> c2 = Condition("country", "US")
-            >>> complex = c1 | c2
+            >>> complex = c1 \| c2
             >>> sql, params = complex.build()
             >>> # SQL: (`age` >= ? OR `country` = ?)
         """

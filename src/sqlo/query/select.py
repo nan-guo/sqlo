@@ -7,9 +7,6 @@ from .mixins import WhereClauseMixin
 if TYPE_CHECKING:
     from ..expressions import ComplexCondition, Condition
 
-# Cache for IN clause placeholders
-_PLACEHOLDER_CACHE = {}
-
 
 class SelectQuery(WhereClauseMixin, Query):
     __slots__ = (
@@ -64,6 +61,13 @@ class SelectQuery(WhereClauseMixin, Query):
     def join(
         self, table: str, on: Optional[str] = None, join_type: str = "INNER"
     ) -> "SelectQuery":
+        # Validate table name (unless it's a subquery)
+        if not isinstance(table, SelectQuery):
+            # Extract table name from "table_name alias" format
+            # e.g., "orders o" -> validate "orders"
+            table_name = table.split()[0] if " " in table else table
+            # This will raise ValueError if invalid
+            self._dialect.quote(table_name)
         self._joins.append((join_type, table, on))
         return self
 
@@ -92,30 +96,14 @@ class SelectQuery(WhereClauseMixin, Query):
     def where_in(
         self, column: str, values: Union[list[Any], "SelectQuery"]
     ) -> "SelectQuery":
-        if hasattr(values, "build"):  # Subquery
-            sub_sql, sub_params = values.build()
-            self._wheres.append(
-                (
-                    "AND",
-                    f"{self._dialect.quote(column)} IN ({sub_sql})",
-                    sub_params,
-                )
-            )
-        else:
-            count = len(values)
-            # Use cached placeholders for common sizes
-            if count not in _PLACEHOLDER_CACHE:
-                ph = self._dialect.parameter_placeholder()
-                _PLACEHOLDER_CACHE[count] = ", ".join([ph] * count)
-            placeholders = _PLACEHOLDER_CACHE[count]
-            self._wheres.append(
-                (
-                    "AND",
-                    f"{self._dialect.quote(column)} IN ({placeholders})",
-                    tuple(values),
-                )
-            )
-        return self
+        """Add an IN WHERE condition."""
+        return self._where_in_internal(column, values, connector="AND", not_in=False)
+
+    def where_not_in(
+        self, column: str, values: Union[list[Any], "SelectQuery"]
+    ) -> "SelectQuery":
+        """Add a NOT IN WHERE condition."""
+        return self._where_in_internal(column, values, connector="AND", not_in=True)
 
     def or_where(
         self,
@@ -126,34 +114,6 @@ class SelectQuery(WhereClauseMixin, Query):
         """Add an OR WHERE condition."""
         connector, sql, params = self._build_where_clause(column, value, operator)
         self._wheres.append(("OR", sql, params))
-        return self
-
-    def where_not_in(
-        self, column: str, values: Union[list[Any], "SelectQuery"]
-    ) -> "SelectQuery":
-        """Add a NOT IN WHERE condition."""
-        if hasattr(values, "build"):  # Subquery
-            sub_sql, sub_params = values.build()
-            self._wheres.append(
-                (
-                    "AND",
-                    f"{self._dialect.quote(column)} NOT IN ({sub_sql})",
-                    sub_params,
-                )
-            )
-        else:
-            count = len(values)
-            if count not in _PLACEHOLDER_CACHE:
-                ph = self._dialect.parameter_placeholder()
-                _PLACEHOLDER_CACHE[count] = ", ".join([ph] * count)
-            placeholders = _PLACEHOLDER_CACHE[count]
-            self._wheres.append(
-                (
-                    "AND",
-                    f"{self._dialect.quote(column)} NOT IN ({placeholders})",
-                    tuple(values),
-                )
-            )
         return self
 
     def where_null(self, column: str) -> "SelectQuery":
@@ -297,8 +257,11 @@ class SelectQuery(WhereClauseMixin, Query):
                 params.extend(col.params)
             elif isinstance(col, Func):
                 parts.append(f"{col.name}({', '.join(map(str, col.args))})")
+            # Allow * and numeric literals without validation
+            elif col == "*" or (isinstance(col, str) and col.isdigit()):
+                parts.append(col)
             else:
-                parts.append(self._dialect.quote(col) if col != "*" else "*")
+                parts.append(self._dialect.quote(col))
 
     def _build_from_clause(self, parts: list[str], params: list[Any]) -> None:
         """Build FROM clause."""

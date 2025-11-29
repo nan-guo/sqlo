@@ -14,6 +14,7 @@ class UpdateQuery(WhereClauseMixin, Query):
         "_order_bys",
         "_joins",
         "_dialect",
+        "_allow_all_rows",
     )
 
     def __init__(self, table: str, dialect=None):
@@ -24,6 +25,7 @@ class UpdateQuery(WhereClauseMixin, Query):
         self._limit: Optional[int] = None
         self._order_bys: list[str] = []
         self._joins: list[tuple[str, str, Optional[str]]] = []  # (type, table, on)
+        self._allow_all_rows: bool = False
 
     def set(self, values: dict[str, Any]) -> "UpdateQuery":
         self._values.update(values)
@@ -63,11 +65,33 @@ class UpdateQuery(WhereClauseMixin, Query):
             self._order_bys.append(f"{self._dialect.quote(col)} {direction}")
         return self
 
+    def allow_all_rows(self) -> "UpdateQuery":
+        """Allow UPDATE without WHERE clause (updates all rows).
+
+        This is a safety feature to prevent accidental mass updates.
+        You must call this method explicitly if you want to update all rows.
+
+        Returns:
+            Self for method chaining
+
+        Example:
+            >>> Q.update("users").set({"active": False}).allow_all_rows().build()
+        """
+        self._allow_all_rows = True
+        return self
+
     def build(self) -> tuple[str, tuple[Any, ...]]:
         if not self._table:
             raise ValueError("No table specified")
         if not self._values:
             raise ValueError("No values to update")
+
+        # Safety check: UPDATE without WHERE
+        if not self._wheres and not self._allow_all_rows:
+            raise ValueError(
+                "UPDATE without WHERE clause would affect all rows. "
+                "If this is intentional, call .allow_all_rows() first."
+            )
 
         parts: list[str] = []
         params: list[Any] = []

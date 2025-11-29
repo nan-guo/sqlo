@@ -1,0 +1,611 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>INSERT Queries &mdash; sqlo Documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=01f34227"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="UPDATE Queries" href="update.html" />
+    <link rel="prev" title="SELECT Queries" href="select.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            sqlo
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="getting-started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="security.html">Security Guide</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Query Types</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="select.html">SELECT Queries</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">INSERT Queries</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#basic-insert">Basic INSERT</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#single-row-insert">Single Row Insert</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#batch-insert">Batch Insert</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#column-handling">Column Handling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#explicit-column-order">Explicit Column Order</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#partial-columns">Partial Columns</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#insert-ignore">INSERT IGNORE</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#use-cases-for-insert-ignore">Use Cases for INSERT IGNORE</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#on-duplicate-key-update">ON DUPLICATE KEY UPDATE</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#basic-usage">Basic Usage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#update-multiple-columns">Update Multiple Columns</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#using-values-reference">Using VALUES() Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#combining-insert-ignore-and-on-duplicate-key-update">Combining INSERT IGNORE and ON DUPLICATE KEY UPDATE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#insert-with-subquery">INSERT with Subquery</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#with-column-mapping">With Column Mapping</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#dynamic-insert-building">Dynamic INSERT Building</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#conditional-values">Conditional Values</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#batch-insert-with-validation">Batch Insert with Validation</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#advanced-examples">Advanced Examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#upsert-pattern">Upsert Pattern</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bulk-insert-with-chunking">Bulk Insert with Chunking</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#insert-with-default-values">Insert with Default Values</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#performance-tips">Performance Tips</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#batch-inserts">Batch Inserts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#optimal-batch-size">Optimal Batch Size</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#use-transactions">Use Transactions</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#common-patterns">Common Patterns</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#insert-and-get-id">Insert and Get ID</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#insert-with-timestamp">Insert with Timestamp</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#insert-with-json-data">Insert with JSON Data</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#error-handling">Error Handling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#validation-before-insert">Validation Before Insert</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#see-also">See Also</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="update.html">UPDATE Queries</a></li>
+<li class="toctree-l1"><a class="reference internal" href="delete.html">DELETE Queries</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Advanced Topics</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="conditions.html">Condition Objects</a></li>
+<li class="toctree-l1"><a class="reference internal" href="expressions.html">Expressions &amp; Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="joins.html">JOIN Operations</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="reference.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">sqlo</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">INSERT Queries</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/insert.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="insert-queries">
+<h1>INSERT Queries<a class="headerlink" href="#insert-queries" title="Link to this heading"></a></h1>
+<p>Complete guide to INSERT query building with sqlo.</p>
+<section id="basic-insert">
+<h2>Basic INSERT<a class="headerlink" href="#basic-insert" title="Link to this heading"></a></h2>
+<section id="single-row-insert">
+<h3>Single Row Insert<a class="headerlink" href="#single-row-insert" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">sqlo</span><span class="w"> </span><span class="kn">import</span> <span class="n">Q</span>
+
+<span class="c1"># Insert a single row</span>
+<span class="n">query</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">insert_into</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">([</span>
+    <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Alice&quot;</span><span class="p">,</span> <span class="s2">&quot;email&quot;</span><span class="p">:</span> <span class="s2">&quot;alice@example.com&quot;</span><span class="p">,</span> <span class="s2">&quot;age&quot;</span><span class="p">:</span> <span class="mi">25</span><span class="p">}</span>
+<span class="p">])</span>
+
+<span class="n">sql</span><span class="p">,</span> <span class="n">params</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+<span class="c1"># INSERT INTO `users` (`name`, `email`, `age`) VALUES (%s, %s, %s)</span>
+<span class="c1"># Params: (&#39;Alice&#39;, &#39;alice@example.com&#39;, 25)</span>
+</pre></div>
+</div>
+</section>
+<section id="batch-insert">
+<h3>Batch Insert<a class="headerlink" href="#batch-insert" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Insert multiple rows</span>
+<span class="n">query</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">insert_into</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">([</span>
+    <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Alice&quot;</span><span class="p">,</span> <span class="s2">&quot;email&quot;</span><span class="p">:</span> <span class="s2">&quot;alice@example.com&quot;</span><span class="p">,</span> <span class="s2">&quot;age&quot;</span><span class="p">:</span> <span class="mi">25</span><span class="p">},</span>
+    <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Bob&quot;</span><span class="p">,</span> <span class="s2">&quot;email&quot;</span><span class="p">:</span> <span class="s2">&quot;bob@example.com&quot;</span><span class="p">,</span> <span class="s2">&quot;age&quot;</span><span class="p">:</span> <span class="mi">30</span><span class="p">},</span>
+    <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Charlie&quot;</span><span class="p">,</span> <span class="s2">&quot;email&quot;</span><span class="p">:</span> <span class="s2">&quot;charlie@example.com&quot;</span><span class="p">,</span> <span class="s2">&quot;age&quot;</span><span class="p">:</span> <span class="mi">35</span><span class="p">}</span>
+<span class="p">])</span>
+
+<span class="n">sql</span><span class="p">,</span> <span class="n">params</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+<span class="c1"># INSERT INTO `users` (`name`, `email`, `age`) VALUES (%s, %s, %s), (%s, %s, %s), (%s, %s, %s)</span>
+<span class="c1"># Params: (&#39;Alice&#39;, &#39;alice@example.com&#39;, 25, &#39;Bob&#39;, &#39;bob@example.com&#39;, 30, &#39;Charlie&#39;, &#39;charlie@example.com&#39;, 35)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="column-handling">
+<h2>Column Handling<a class="headerlink" href="#column-handling" title="Link to this heading"></a></h2>
+<section id="explicit-column-order">
+<h3>Explicit Column Order<a class="headerlink" href="#explicit-column-order" title="Link to this heading"></a></h3>
+<p>The library automatically handles column ordering based on the first row:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">insert_into</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">([</span>
+    <span class="p">{</span><span class="s2">&quot;email&quot;</span><span class="p">:</span> <span class="s2">&quot;alice@example.com&quot;</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Alice&quot;</span><span class="p">,</span> <span class="s2">&quot;age&quot;</span><span class="p">:</span> <span class="mi">25</span><span class="p">},</span>
+    <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Bob&quot;</span><span class="p">,</span> <span class="s2">&quot;age&quot;</span><span class="p">:</span> <span class="mi">30</span><span class="p">,</span> <span class="s2">&quot;email&quot;</span><span class="p">:</span> <span class="s2">&quot;bob@example.com&quot;</span><span class="p">}</span>  <span class="c1"># Different order, same columns</span>
+<span class="p">])</span>
+
+<span class="c1"># Columns are ordered consistently based on first row</span>
+<span class="c1"># INSERT INTO `users` (`email`, `name`, `age`) VALUES (%s, %s, %s), (%s, %s, %s)</span>
+</pre></div>
+</div>
+</section>
+<section id="partial-columns">
+<h3>Partial Columns<a class="headerlink" href="#partial-columns" title="Link to this heading"></a></h3>
+<p>All rows must have the same columns. Missing columns will cause an error:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># ❌ This will raise an error</span>
+<span class="n">query</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">insert_into</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">([</span>
+    <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Alice&quot;</span><span class="p">,</span> <span class="s2">&quot;email&quot;</span><span class="p">:</span> <span class="s2">&quot;alice@example.com&quot;</span><span class="p">},</span>
+    <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Bob&quot;</span><span class="p">}</span>  <span class="c1"># Missing &#39;email&#39; column</span>
+<span class="p">])</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="insert-ignore">
+<h2>INSERT IGNORE<a class="headerlink" href="#insert-ignore" title="Link to this heading"></a></h2>
+<p>Ignore duplicate key errors:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">insert_into</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">ignore</span><span class="p">()</span><span class="o">.</span><span class="n">values</span><span class="p">([</span>
+    <span class="p">{</span><span class="s2">&quot;email&quot;</span><span class="p">:</span> <span class="s2">&quot;alice@example.com&quot;</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Alice&quot;</span><span class="p">}</span>
+<span class="p">])</span>
+
+<span class="n">sql</span><span class="p">,</span> <span class="n">params</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+<span class="c1"># INSERT IGNORE INTO `users` (`email`, `name`) VALUES (%s, %s)</span>
+</pre></div>
+</div>
+<section id="use-cases-for-insert-ignore">
+<h3>Use Cases for INSERT IGNORE<a class="headerlink" href="#use-cases-for-insert-ignore" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Avoid errors when inserting potentially duplicate records</span>
+<span class="n">query</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">insert_into</span><span class="p">(</span><span class="s2">&quot;user_tags&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">ignore</span><span class="p">()</span><span class="o">.</span><span class="n">values</span><span class="p">([</span>
+    <span class="p">{</span><span class="s2">&quot;user_id&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;tag_id&quot;</span><span class="p">:</span> <span class="mi">10</span><span class="p">},</span>
+    <span class="p">{</span><span class="s2">&quot;user_id&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;tag_id&quot;</span><span class="p">:</span> <span class="mi">11</span><span class="p">},</span>
+    <span class="p">{</span><span class="s2">&quot;user_id&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;tag_id&quot;</span><span class="p">:</span> <span class="mi">10</span><span class="p">}</span>  <span class="c1"># Duplicate, will be ignored</span>
+<span class="p">])</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="on-duplicate-key-update">
+<h2>ON DUPLICATE KEY UPDATE<a class="headerlink" href="#on-duplicate-key-update" title="Link to this heading"></a></h2>
+<p>Update existing rows when a duplicate key is encountered:</p>
+<section id="basic-usage">
+<h3>Basic Usage<a class="headerlink" href="#basic-usage" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">Q</span><span class="o">.</span><span class="n">insert_into</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">values</span><span class="p">([{</span><span class="s2">&quot;email&quot;</span><span class="p">:</span> <span class="s2">&quot;alice@example.com&quot;</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Alice&quot;</span><span class="p">,</span> <span class="s2">&quot;login_count&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">}])</span>
+    <span class="o">.</span><span class="n">on_duplicate_key_update</span><span class="p">({</span><span class="s2">&quot;login_count&quot;</span><span class="p">:</span> <span class="s2">&quot;login_count + 1&quot;</span><span class="p">})</span>
+<span class="p">)</span>
+
+<span class="n">sql</span><span class="p">,</span> <span class="n">params</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+<span class="c1"># INSERT INTO `users` (`email`, `name`, `login_count`) VALUES (%s, %s, %s)</span>
+<span class="c1"># ON DUPLICATE KEY UPDATE `login_count` = login_count + 1</span>
+</pre></div>
+</div>
+</section>
+<section id="update-multiple-columns">
+<h3>Update Multiple Columns<a class="headerlink" href="#update-multiple-columns" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">Q</span><span class="o">.</span><span class="n">insert_into</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">values</span><span class="p">([{</span><span class="s2">&quot;email&quot;</span><span class="p">:</span> <span class="s2">&quot;alice@example.com&quot;</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Alice&quot;</span><span class="p">,</span> <span class="s2">&quot;last_login&quot;</span><span class="p">:</span> <span class="s2">&quot;2023-11-23&quot;</span><span class="p">}])</span>
+    <span class="o">.</span><span class="n">on_duplicate_key_update</span><span class="p">({</span>
+        <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Alice Updated&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;last_login&quot;</span><span class="p">:</span> <span class="s2">&quot;2023-11-23&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;updated_at&quot;</span><span class="p">:</span> <span class="s2">&quot;NOW()&quot;</span>
+    <span class="p">})</span>
+<span class="p">)</span>
+
+<span class="c1"># ON DUPLICATE KEY UPDATE `name` = %s, `last_login` = %s, `updated_at` = NOW()</span>
+</pre></div>
+</div>
+</section>
+<section id="using-values-reference">
+<h3>Using VALUES() Reference<a class="headerlink" href="#using-values-reference" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Reference the value from INSERT</span>
+<span class="n">query</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">Q</span><span class="o">.</span><span class="n">insert_into</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">values</span><span class="p">([{</span><span class="s2">&quot;email&quot;</span><span class="p">:</span> <span class="s2">&quot;alice@example.com&quot;</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Alice&quot;</span><span class="p">,</span> <span class="s2">&quot;login_count&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">}])</span>
+    <span class="o">.</span><span class="n">on_duplicate_key_update</span><span class="p">({</span>
+        <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;VALUES(name)&quot;</span><span class="p">,</span>  <span class="c1"># Use the name from INSERT</span>
+        <span class="s2">&quot;login_count&quot;</span><span class="p">:</span> <span class="s2">&quot;login_count + VALUES(login_count)&quot;</span>
+    <span class="p">})</span>
+<span class="p">)</span>
+
+<span class="c1"># ON DUPLICATE KEY UPDATE `name` = VALUES(name), `login_count` = login_count + VALUES(login_count)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="combining-insert-ignore-and-on-duplicate-key-update">
+<h2>Combining INSERT IGNORE and ON DUPLICATE KEY UPDATE<a class="headerlink" href="#combining-insert-ignore-and-on-duplicate-key-update" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p>[!WARNING]
+You cannot use both <code class="docutils literal notranslate"><span class="pre">INSERT</span> <span class="pre">IGNORE</span></code> and <code class="docutils literal notranslate"><span class="pre">ON</span> <span class="pre">DUPLICATE</span> <span class="pre">KEY</span> <span class="pre">UPDATE</span></code> together. They are mutually exclusive.</p>
+</div></blockquote>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># ❌ This will raise an error</span>
+<span class="n">query</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">Q</span><span class="o">.</span><span class="n">insert_into</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">ignore</span><span class="p">()</span>
+    <span class="o">.</span><span class="n">values</span><span class="p">([{</span><span class="s2">&quot;email&quot;</span><span class="p">:</span> <span class="s2">&quot;alice@example.com&quot;</span><span class="p">}])</span>
+    <span class="o">.</span><span class="n">on_duplicate_key_update</span><span class="p">({</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Updated&quot;</span><span class="p">})</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Choose one based on your needs:</p>
+<ul class="simple">
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">INSERT</span> <span class="pre">IGNORE</span></code> when you want to silently skip duplicates</p></li>
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">ON</span> <span class="pre">DUPLICATE</span> <span class="pre">KEY</span> <span class="pre">UPDATE</span></code> when you want to update existing rows</p></li>
+</ul>
+</section>
+<section id="insert-with-subquery">
+<h2>INSERT with Subquery<a class="headerlink" href="#insert-with-subquery" title="Link to this heading"></a></h2>
+<p>Insert data from a SELECT query:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Select data from one table and insert into another</span>
+<span class="n">select_query</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="s2">&quot;email&quot;</span><span class="p">,</span> <span class="s2">&quot;created_at&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;temp_users&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;verified&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+<span class="p">)</span>
+
+<span class="n">query</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">insert_into</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_select</span><span class="p">(</span>
+    <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="s2">&quot;email&quot;</span><span class="p">,</span> <span class="s2">&quot;created_at&quot;</span><span class="p">],</span>
+    <span class="n">select_query</span><span class="o">=</span><span class="n">select_query</span>
+<span class="p">)</span>
+
+<span class="n">sql</span><span class="p">,</span> <span class="n">params</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+<span class="c1"># INSERT INTO `users` (`name`, `email`, `created_at`)</span>
+<span class="c1"># SELECT `name`, `email`, `created_at` FROM `temp_users` WHERE `verified` = %s</span>
+</pre></div>
+</div>
+<section id="with-column-mapping">
+<h3>With Column Mapping<a class="headerlink" href="#with-column-mapping" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Map columns from SELECT to INSERT</span>
+<span class="n">select_query</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;full_name&quot;</span><span class="p">,</span> <span class="s2">&quot;email_address&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;import_data&quot;</span><span class="p">)</span>
+
+<span class="n">query</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">insert_into</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_select</span><span class="p">(</span>
+    <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="s2">&quot;email&quot;</span><span class="p">],</span>  <span class="c1"># Target columns</span>
+    <span class="n">select_query</span><span class="o">=</span><span class="n">select_query</span>    <span class="c1"># Source has different column names</span>
+<span class="p">)</span>
+
+<span class="c1"># INSERT INTO `users` (`name`, `email`)</span>
+<span class="c1"># SELECT `full_name`, `email_address` FROM `import_data`</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="dynamic-insert-building">
+<h2>Dynamic INSERT Building<a class="headerlink" href="#dynamic-insert-building" title="Link to this heading"></a></h2>
+<section id="conditional-values">
+<h3>Conditional Values<a class="headerlink" href="#conditional-values" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">create_user</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build INSERT query dynamically based on provided data&quot;&quot;&quot;</span>
+    <span class="c1"># Filter out None values</span>
+    <span class="n">values</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">}</span>
+    
+    <span class="n">query</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">insert_into</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">([</span><span class="n">values</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">query</span>
+
+<span class="c1"># Usage</span>
+<span class="n">query</span> <span class="o">=</span> <span class="n">create_user</span><span class="p">({</span>
+    <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Alice&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;email&quot;</span><span class="p">:</span> <span class="s2">&quot;alice@example.com&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;phone&quot;</span><span class="p">:</span> <span class="kc">None</span>  <span class="c1"># Will be excluded</span>
+<span class="p">})</span>
+<span class="c1"># INSERT INTO `users` (`name`, `email`) VALUES (%s, %s)</span>
+</pre></div>
+</div>
+</section>
+<section id="batch-insert-with-validation">
+<h3>Batch Insert with Validation<a class="headerlink" href="#batch-insert-with-validation" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">batch_insert_users</span><span class="p">(</span><span class="n">users</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Insert multiple users with validation&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">users</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No users to insert&quot;</span><span class="p">)</span>
+    
+    <span class="c1"># Ensure all users have required fields</span>
+    <span class="n">required_fields</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="s2">&quot;email&quot;</span><span class="p">}</span>
+    <span class="k">for</span> <span class="n">user</span> <span class="ow">in</span> <span class="n">users</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">required_fields</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span><span class="n">user</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Missing required fields: </span><span class="si">{</span><span class="n">required_fields</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">user</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    
+    <span class="n">query</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">insert_into</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">(</span><span class="n">users</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">query</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="advanced-examples">
+<h2>Advanced Examples<a class="headerlink" href="#advanced-examples" title="Link to this heading"></a></h2>
+<section id="upsert-pattern">
+<h3>Upsert Pattern<a class="headerlink" href="#upsert-pattern" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Insert or update user profile</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">upsert_user_profile</span><span class="p">(</span><span class="n">user_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">profile_data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+    <span class="n">query</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">Q</span><span class="o">.</span><span class="n">insert_into</span><span class="p">(</span><span class="s2">&quot;user_profiles&quot;</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">values</span><span class="p">([{</span>
+            <span class="s2">&quot;user_id&quot;</span><span class="p">:</span> <span class="n">user_id</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">profile_data</span><span class="p">,</span>
+            <span class="s2">&quot;created_at&quot;</span><span class="p">:</span> <span class="s2">&quot;NOW()&quot;</span>
+        <span class="p">}])</span>
+        <span class="o">.</span><span class="n">on_duplicate_key_update</span><span class="p">({</span>
+            <span class="o">**</span><span class="n">profile_data</span><span class="p">,</span>
+            <span class="s2">&quot;updated_at&quot;</span><span class="p">:</span> <span class="s2">&quot;NOW()&quot;</span>
+        <span class="p">})</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">query</span>
+
+<span class="c1"># Usage</span>
+<span class="n">query</span> <span class="o">=</span> <span class="n">upsert_user_profile</span><span class="p">(</span><span class="mi">123</span><span class="p">,</span> <span class="p">{</span>
+    <span class="s2">&quot;bio&quot;</span><span class="p">:</span> <span class="s2">&quot;Software developer&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;location&quot;</span><span class="p">:</span> <span class="s2">&quot;San Francisco&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;website&quot;</span><span class="p">:</span> <span class="s2">&quot;https://example.com&quot;</span>
+<span class="p">})</span>
+</pre></div>
+</div>
+</section>
+<section id="bulk-insert-with-chunking">
+<h3>Bulk Insert with Chunking<a class="headerlink" href="#bulk-insert-with-chunking" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">bulk_insert_chunked</span><span class="p">(</span><span class="n">table</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">],</span> <span class="n">chunk_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Insert large datasets in chunks to avoid query size limits&quot;&quot;&quot;</span>
+    <span class="n">queries</span> <span class="o">=</span> <span class="p">[]</span>
+    
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">),</span> <span class="n">chunk_size</span><span class="p">):</span>
+        <span class="n">chunk</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span> <span class="o">+</span> <span class="n">chunk_size</span><span class="p">]</span>
+        <span class="n">query</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">insert_into</span><span class="p">(</span><span class="n">table</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span>
+        <span class="n">queries</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">queries</span>
+
+<span class="c1"># Usage</span>
+<span class="n">large_dataset</span> <span class="o">=</span> <span class="p">[{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;User</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;email&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;user</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">@example.com&quot;</span><span class="p">}</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10000</span><span class="p">)]</span>
+<span class="n">queries</span> <span class="o">=</span> <span class="n">bulk_insert_chunked</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">,</span> <span class="n">large_dataset</span><span class="p">,</span> <span class="n">chunk_size</span><span class="o">=</span><span class="mi">500</span><span class="p">)</span>
+<span class="c1"># Returns 20 queries, each inserting 500 rows</span>
+</pre></div>
+</div>
+</section>
+<section id="insert-with-default-values">
+<h3>Insert with Default Values<a class="headerlink" href="#insert-with-default-values" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Add default values to all rows</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">insert_with_defaults</span><span class="p">(</span><span class="n">table</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">],</span> <span class="n">defaults</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Add default values to all rows before inserting&quot;&quot;&quot;</span>
+    <span class="n">enriched_data</span> <span class="o">=</span> <span class="p">[{</span><span class="o">**</span><span class="n">defaults</span><span class="p">,</span> <span class="o">**</span><span class="n">row</span><span class="p">}</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">data</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">Q</span><span class="o">.</span><span class="n">insert_into</span><span class="p">(</span><span class="n">table</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">(</span><span class="n">enriched_data</span><span class="p">)</span>
+
+<span class="c1"># Usage</span>
+<span class="n">query</span> <span class="o">=</span> <span class="n">insert_with_defaults</span><span class="p">(</span>
+    <span class="s2">&quot;users&quot;</span><span class="p">,</span>
+    <span class="p">[</span>
+        <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Alice&quot;</span><span class="p">,</span> <span class="s2">&quot;email&quot;</span><span class="p">:</span> <span class="s2">&quot;alice@example.com&quot;</span><span class="p">},</span>
+        <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Bob&quot;</span><span class="p">,</span> <span class="s2">&quot;email&quot;</span><span class="p">:</span> <span class="s2">&quot;bob@example.com&quot;</span><span class="p">}</span>
+    <span class="p">],</span>
+    <span class="n">defaults</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">&quot;active&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="s2">&quot;role&quot;</span><span class="p">:</span> <span class="s2">&quot;user&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;created_at&quot;</span><span class="p">:</span> <span class="s2">&quot;NOW()&quot;</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+<span class="c1"># Each row will have active, role, and created_at fields</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="performance-tips">
+<h2>Performance Tips<a class="headerlink" href="#performance-tips" title="Link to this heading"></a></h2>
+<section id="batch-inserts">
+<h3>Batch Inserts<a class="headerlink" href="#batch-inserts" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># ✅ Good: Batch insert (single query)</span>
+<span class="n">query</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">insert_into</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">([</span>
+    <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Alice&quot;</span><span class="p">,</span> <span class="s2">&quot;email&quot;</span><span class="p">:</span> <span class="s2">&quot;alice@example.com&quot;</span><span class="p">},</span>
+    <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Bob&quot;</span><span class="p">,</span> <span class="s2">&quot;email&quot;</span><span class="p">:</span> <span class="s2">&quot;bob@example.com&quot;</span><span class="p">},</span>
+    <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Charlie&quot;</span><span class="p">,</span> <span class="s2">&quot;email&quot;</span><span class="p">:</span> <span class="s2">&quot;charlie@example.com&quot;</span><span class="p">}</span>
+<span class="p">])</span>
+<span class="c1"># 1 query, 3 rows</span>
+
+<span class="c1"># ❌ Bad: Individual inserts (multiple queries)</span>
+<span class="k">for</span> <span class="n">user</span> <span class="ow">in</span> <span class="n">users</span><span class="p">:</span>
+    <span class="n">query</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">insert_into</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">([</span><span class="n">user</span><span class="p">])</span>
+    <span class="c1"># Execute...</span>
+<span class="c1"># 3 queries, 1 row each</span>
+</pre></div>
+</div>
+</section>
+<section id="optimal-batch-size">
+<h3>Optimal Batch Size<a class="headerlink" href="#optimal-batch-size" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Balance between query size and number of queries</span>
+<span class="n">OPTIMAL_BATCH_SIZE</span> <span class="o">=</span> <span class="mi">1000</span>  <span class="c1"># Adjust based on your data and database</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">insert_optimized</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]):</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">OPTIMAL_BATCH_SIZE</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">Q</span><span class="o">.</span><span class="n">insert_into</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">(</span><span class="n">data</span><span class="p">)]</span>
+    
+    <span class="c1"># Split into chunks</span>
+    <span class="k">return</span> <span class="n">bulk_insert_chunked</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">OPTIMAL_BATCH_SIZE</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="use-transactions">
+<h3>Use Transactions<a class="headerlink" href="#use-transactions" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># When inserting multiple batches, use transactions</span>
+<span class="c1"># (Note: Transaction handling is done at the database connection level)</span>
+
+<span class="c1"># Example with your database library:</span>
+<span class="c1"># with connection.transaction():</span>
+<span class="c1">#     for query in queries:</span>
+<span class="c1">#         sql, params = query.build()</span>
+<span class="c1">#         cursor.execute(sql, params)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="common-patterns">
+<h2>Common Patterns<a class="headerlink" href="#common-patterns" title="Link to this heading"></a></h2>
+<section id="insert-and-get-id">
+<h3>Insert and Get ID<a class="headerlink" href="#insert-and-get-id" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Build the query</span>
+<span class="n">query</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">insert_into</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">([</span>
+    <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Alice&quot;</span><span class="p">,</span> <span class="s2">&quot;email&quot;</span><span class="p">:</span> <span class="s2">&quot;alice@example.com&quot;</span><span class="p">}</span>
+<span class="p">])</span>
+
+<span class="n">sql</span><span class="p">,</span> <span class="n">params</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+
+<span class="c1"># Execute and get last insert ID (database-specific)</span>
+<span class="c1"># cursor.execute(sql, params)</span>
+<span class="c1"># user_id = cursor.lastrowid  # MySQL/SQLite</span>
+</pre></div>
+</div>
+</section>
+<section id="insert-with-timestamp">
+<h3>Insert with Timestamp<a class="headerlink" href="#insert-with-timestamp" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span>
+
+<span class="n">query</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">insert_into</span><span class="p">(</span><span class="s2">&quot;posts&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">([{</span>
+    <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;My Post&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="s2">&quot;Post content&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;created_at&quot;</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+    <span class="s2">&quot;updated_at&quot;</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span>
+<span class="p">}])</span>
+</pre></div>
+</div>
+</section>
+<section id="insert-with-json-data">
+<h3>Insert with JSON Data<a class="headerlink" href="#insert-with-json-data" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+
+<span class="n">query</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">insert_into</span><span class="p">(</span><span class="s2">&quot;settings&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">([{</span>
+    <span class="s2">&quot;user_id&quot;</span><span class="p">:</span> <span class="mi">123</span><span class="p">,</span>
+    <span class="s2">&quot;preferences&quot;</span><span class="p">:</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">({</span><span class="s2">&quot;theme&quot;</span><span class="p">:</span> <span class="s2">&quot;dark&quot;</span><span class="p">,</span> <span class="s2">&quot;language&quot;</span><span class="p">:</span> <span class="s2">&quot;en&quot;</span><span class="p">}),</span>
+    <span class="s2">&quot;created_at&quot;</span><span class="p">:</span> <span class="s2">&quot;NOW()&quot;</span>
+<span class="p">}])</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="error-handling">
+<h2>Error Handling<a class="headerlink" href="#error-handling" title="Link to this heading"></a></h2>
+<section id="validation-before-insert">
+<h3>Validation Before Insert<a class="headerlink" href="#validation-before-insert" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">safe_insert</span><span class="p">(</span><span class="n">table</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Validate data before building INSERT query&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">data</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cannot insert empty data&quot;</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Data must be a list of dictionaries&quot;</span><span class="p">)</span>
+    
+    <span class="c1"># Check all rows have same columns</span>
+    <span class="n">first_keys</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">start</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">set</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="o">!=</span> <span class="n">first_keys</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Row </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> has different columns than row 0&quot;</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">Q</span><span class="o">.</span><span class="n">insert_into</span><span class="p">(</span><span class="n">table</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="update.html"><span class="std std-doc">UPDATE Queries</span></a> - Updating existing data</p></li>
+<li><p><a class="reference internal" href="select.html"><span class="std std-doc">SELECT Queries</span></a> - Querying data</p></li>
+<li><p><a class="reference internal" href="getting-started.html"><span class="std std-doc">Getting Started</span></a> - Basic concepts</p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="select.html" class="btn btn-neutral float-left" title="SELECT Queries" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="update.html" class="btn btn-neutral float-right" title="UPDATE Queries" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Nan Guo.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
