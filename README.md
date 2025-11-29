@@ -2,8 +2,8 @@
 
 [![CI](https://github.com/nan-guo/sqlo/actions/workflows/ci.yml/badge.svg)](https://github.com/nan-guo/sqlo/actions/workflows/ci.yml)
 [![PyPI](https://img.shields.io/pypi/v/sqlo)](https://pypi.org/project/sqlo/)
+[![Documentation](https://img.shields.io/badge/docs-github%20pages-blue)](https://nan-guo.github.io/sqlo/)
 [![License](https://img.shields.io/github/license/nan-guo/sqlo)](LICENSE)
-
 
 A **lightweight** and **simple** SQL query builder for Python. Build SQL queries with a clean, intuitive API while staying safe from SQL injection.
 
@@ -44,7 +44,9 @@ sql, params = query.build()
 
 ## Documentation
 
-Full documentation is available on GitHub:
+Full documentation is available at **[https://nan-guo.github.io/sqlo/](https://nan-guo.github.io/sqlo/)**.
+
+You can also browse the markdown files on GitHub:
 
 - [Getting Started](https://github.com/nan-guo/sqlo/blob/main/docs/getting-started.md)
 - [Security Guide](https://github.com/nan-guo/sqlo/blob/main/docs/security.md) ⭐
