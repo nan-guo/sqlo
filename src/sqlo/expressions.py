@@ -9,6 +9,13 @@ if TYPE_CHECKING:
 class Expression:
     """Base class for SQL expressions."""
 
+    alias: Optional[str] = None
+
+    def as_(self, alias: str) -> "Expression":
+        """Set an alias for the expression."""
+        self.alias = alias
+        return self
+
 
 class Raw(Expression):
     """Raw SQL fragment.
@@ -50,10 +57,6 @@ class Func(Expression):
         self.name = name
         self.args = args
         self.alias: Optional[str] = None
-
-    def as_(self, alias: str) -> "Func":
-        self.alias = alias
-        return self
 
 
 class FunctionFactory:
@@ -510,3 +513,27 @@ class ComplexCondition(Expression):
 
 
 func = FunctionFactory()
+
+
+class JSONPath(Expression):
+    """Represents a JSON path extraction."""
+
+    def __init__(self, column: str, path: str):
+        self.column = column
+        self.path = path
+
+
+class JSON(Expression):
+    """
+    Represents a JSON column.
+
+    Example:
+        >>> JSON("data").extract("name")
+    """
+
+    def __init__(self, column: str):
+        self.column = column
+
+    def extract(self, path: str) -> JSONPath:
+        """Extract a value from the JSON column."""
+        return JSONPath(self.column, path)

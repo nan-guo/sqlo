@@ -130,6 +130,35 @@ Q.set_dialect(MySQLDialect())
 query = Q.select("*").from_("users")
 ```
 
+## Debugging Queries
+
+### Global Debug Mode
+Enable debug mode to automatically print all queries:
+```python
+from sqlo import Q
+# Enable debug mode globally
+Q.set_debug(True)
+query = Q.select("*").from_("users").where("id", 1)
+sql, params = query.build()
+# Automatically prints:
+# [sqlo DEBUG] SELECT * FROM `users` WHERE `id` = %s
+# [sqlo DEBUG] Params: (1,)
+# Disable debug mode
+Q.set_debug(False)
+```
+
+### Query Debug Mode
+
+You can also enable debug mode for a specific query:
+```python
+from sqlo import Q
+query = Q.select("*").from_("users").where("id", 1).debug()
+sql, params = query.build(
+# Prints debug output for this query only
+# [sqlo DEBUG] SELECT * FROM `users` WHERE `id` = %s
+# [sqlo DEBUG] Params: (1,)
+```
+
 ## Next Steps
 
 - [SELECT Queries](select.md)

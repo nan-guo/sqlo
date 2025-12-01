@@ -6,6 +6,7 @@ from sqlo.query.mixins import WhereClauseMixin
 class MockQuery(WhereClauseMixin):
     def __init__(self):
         self._dialect = MySQLDialect()
+        self._ph = self._dialect.parameter_placeholder()
         self._wheres = []
 
     def where(self, column, value=None, operator="="):

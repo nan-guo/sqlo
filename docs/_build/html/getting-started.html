@@ -63,6 +63,11 @@
 </li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#debugging-queries">Debugging Queries</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#global-debug-mode">Global Debug Mode</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#query-debug-mode">Query Debug Mode</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#next-steps">Next Steps</a></li>
 </ul>
 </li>
@@ -238,6 +243,37 @@
 </pre></div>
 </div>
 </section>
+</section>
+</section>
+<section id="debugging-queries">
+<h2>Debugging Queries<a class="headerlink" href="#debugging-queries" title="Link to this heading"></a></h2>
+<section id="global-debug-mode">
+<h3>Global Debug Mode<a class="headerlink" href="#global-debug-mode" title="Link to this heading"></a></h3>
+<p>Enable debug mode to automatically print all queries:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">sqlo</span><span class="w"> </span><span class="kn">import</span> <span class="n">Q</span>
+<span class="c1"># Enable debug mode globally</span>
+<span class="n">Q</span><span class="o">.</span><span class="n">set_debug</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">query</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">sql</span><span class="p">,</span> <span class="n">params</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+<span class="c1"># Automatically prints:</span>
+<span class="c1"># [sqlo DEBUG] SELECT * FROM `users` WHERE `id` = %s</span>
+<span class="c1"># [sqlo DEBUG] Params: (1,)</span>
+<span class="c1"># Disable debug mode</span>
+<span class="n">Q</span><span class="o">.</span><span class="n">set_debug</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="query-debug-mode">
+<h3>Query Debug Mode<a class="headerlink" href="#query-debug-mode" title="Link to this heading"></a></h3>
+<p>You can also enable debug mode for a specific query:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">sqlo</span><span class="w"> </span><span class="kn">import</span> <span class="n">Q</span>
+<span class="n">query</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">debug</span><span class="p">()</span>
+<span class="n">sql</span><span class="p">,</span> <span class="n">params</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
+<span class="c1"># Prints debug output for this query only</span>
+<span class="c1"># [sqlo DEBUG] SELECT * FROM `users` WHERE `id` = %s</span>
+<span class="c1"># [sqlo DEBUG] Params: (1,)</span>
+</pre></div>
+</div>
 </section>
 </section>
 <section id="next-steps">

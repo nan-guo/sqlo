@@ -12,6 +12,12 @@ class Q:
     """Query Builder Factory."""
 
     _default_dialect = MySQLDialect()
+    _debug = False
+
+    @classmethod
+    def set_debug(cls, debug: bool = True):
+        """Enable or disable debug mode (prints SQL to stdout)."""
+        cls._debug = debug
 
     @classmethod
     def set_dialect(cls, dialect):
@@ -24,20 +30,20 @@ class Q:
         return cls._default_dialect
 
     @staticmethod
-    def select(*columns: Union[str, Raw, Func]) -> SelectQuery:
-        return SelectQuery(*columns, dialect=Q._default_dialect)
+    def select(*columns: Union[str, Raw, Func]) -> SelectQuery[Any]:
+        return SelectQuery(*columns, dialect=Q._default_dialect, debug=Q._debug)
 
     @staticmethod
     def insert_into(table: str) -> InsertQuery:
-        return InsertQuery(table, dialect=Q._default_dialect)
+        return InsertQuery(table, dialect=Q._default_dialect, debug=Q._debug)
 
     @staticmethod
     def update(table: str) -> UpdateQuery:
-        return UpdateQuery(table, dialect=Q._default_dialect)
+        return UpdateQuery(table, dialect=Q._default_dialect, debug=Q._debug)
 
     @staticmethod
     def delete_from(table: str) -> DeleteQuery:
-        return DeleteQuery(table, dialect=Q._default_dialect)
+        return DeleteQuery(table, dialect=Q._default_dialect, debug=Q._debug)
 
     @staticmethod
     def raw(sql: str, params: Any = None) -> Raw:

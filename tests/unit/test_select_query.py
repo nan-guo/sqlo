@@ -301,3 +301,41 @@ def test_select_as():
     """Test as_ method"""
     q = Q.select("*").from_("users").as_("u")
     assert q._alias == "u"
+
+
+def test_select_with_list():
+    """SELECT with columns as a list"""
+    columns = ["id", "name", "email"]
+    query = Q.select(columns).from_("users")
+    sql, _ = query.build()
+    assert sql == "SELECT `id`, `name`, `email` FROM `users`"
+
+
+def test_select_with_list_and_alias():
+    """SELECT with list of columns and table alias"""
+    columns = ["u.id", "u.name"]
+    query = Q.select(columns).from_("users", alias="u")
+    sql, _ = query.build()
+    assert "SELECT `u`.`id`, `u`.`name`" in sql
+    assert "FROM `users` u" in sql
+
+
+def test_select_with_empty_list():
+    """SELECT with empty list defaults to *"""
+    query = Q.select([]).from_("users")
+    sql, _ = query.build()
+    assert sql == "SELECT * FROM `users`"
+
+
+def test_select_list_vs_unpacked():
+    """Verify list and unpacked arguments produce same SQL"""
+    # Using list
+    q1 = Q.select(["id", "name"]).from_("users")
+    sql1, params1 = q1.build()
+
+    # Using unpacked arguments
+    q2 = Q.select("id", "name").from_("users")
+    sql2, params2 = q2.build()
+
+    assert sql1 == sql2
+    assert params1 == params2

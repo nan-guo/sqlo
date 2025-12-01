@@ -12,7 +12,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=01f34227"></script>
+      <script src="../../../_static/documentation_options.js?v=a58bc63e"></script>
       <script src="../../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/js/theme.js"></script>
@@ -87,19 +87,21 @@
            <div itemprop="articleBody">
              
   <h1>Source code for sqlo.query.select</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Generic</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">TypeVar</span><span class="p">,</span> <span class="n">Union</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">..expressions</span><span class="w"> </span><span class="kn">import</span> <span class="n">Func</span><span class="p">,</span> <span class="n">Raw</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">..expressions</span><span class="w"> </span><span class="kn">import</span> <span class="n">Func</span><span class="p">,</span> <span class="n">JSONPath</span><span class="p">,</span> <span class="n">Raw</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">Query</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.mixins</span><span class="w"> </span><span class="kn">import</span> <span class="n">WhereClauseMixin</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">..expressions</span><span class="w"> </span><span class="kn">import</span> <span class="n">ComplexCondition</span><span class="p">,</span> <span class="n">Condition</span>
 
+<span class="n">T</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;T&quot;</span><span class="p">)</span>
+
 
 <div class="viewcode-block" id="SelectQuery">
 <a class="viewcode-back" href="../../../reference.html#sqlo.query.select.SelectQuery">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">SelectQuery</span><span class="p">(</span><span class="n">WhereClauseMixin</span><span class="p">,</span> <span class="n">Query</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SelectQuery</span><span class="p">(</span><span class="n">WhereClauseMixin</span><span class="p">,</span> <span class="n">Query</span><span class="p">,</span> <span class="n">Generic</span><span class="p">[</span><span class="n">T</span><span class="p">]):</span>
     <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span>
         <span class="s2">&quot;_columns&quot;</span><span class="p">,</span>
         <span class="s2">&quot;_table&quot;</span><span class="p">,</span>
@@ -119,9 +121,15 @@
         <span class="s2">&quot;_optimizer_hints&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">columns</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Raw</span><span class="p">,</span> <span class="n">Func</span><span class="p">],</span> <span class="n">dialect</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">dialect</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_columns</span> <span class="o">=</span> <span class="n">columns</span> <span class="k">if</span> <span class="n">columns</span> <span class="k">else</span> <span class="p">[</span><span class="s2">&quot;*&quot;</span><span class="p">]</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">columns</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Raw</span><span class="p">,</span> <span class="n">Func</span><span class="p">,</span> <span class="nb">list</span><span class="p">],</span> <span class="n">dialect</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">debug</span><span class="o">=</span><span class="kc">False</span>
+    <span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">dialect</span><span class="p">,</span> <span class="n">debug</span><span class="p">)</span>
+        <span class="c1"># Support both Q.select(&quot;a&quot;, &quot;b&quot;) and Q.select([&quot;a&quot;, &quot;b&quot;])</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">columns</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">columns</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_columns</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">columns</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="k">if</span> <span class="n">columns</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">else</span> <span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">,)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_columns</span> <span class="o">=</span> <span class="n">columns</span> <span class="k">if</span> <span class="n">columns</span> <span class="k">else</span> <span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">,)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_table</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">SelectQuery</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_alias</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_joins</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># (type, table, on)</span>
@@ -170,25 +178,25 @@
 
 <div class="viewcode-block" id="SelectQuery.inner_join">
 <a class="viewcode-back" href="../../../reference.html#sqlo.query.select.SelectQuery.inner_join">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">inner_join</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">table</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">on</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;SelectQuery&quot;</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">inner_join</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">table</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">on</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;SelectQuery[T]&quot;</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="n">on</span><span class="p">,</span> <span class="n">join_type</span><span class="o">=</span><span class="s2">&quot;INNER&quot;</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="SelectQuery.left_join">
 <a class="viewcode-back" href="../../../reference.html#sqlo.query.select.SelectQuery.left_join">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">left_join</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">table</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">on</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;SelectQuery&quot;</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">left_join</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">table</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">on</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;SelectQuery[T]&quot;</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="n">on</span><span class="p">,</span> <span class="n">join_type</span><span class="o">=</span><span class="s2">&quot;LEFT&quot;</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="SelectQuery.right_join">
 <a class="viewcode-back" href="../../../reference.html#sqlo.query.select.SelectQuery.right_join">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">right_join</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">table</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">on</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;SelectQuery&quot;</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">right_join</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">table</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">on</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;SelectQuery[T]&quot;</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="n">on</span><span class="p">,</span> <span class="n">join_type</span><span class="o">=</span><span class="s2">&quot;RIGHT&quot;</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="SelectQuery.cross_join">
 <a class="viewcode-back" href="../../../reference.html#sqlo.query.select.SelectQuery.cross_join">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">cross_join</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">table</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;SelectQuery&quot;</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">cross_join</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">table</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;SelectQuery[T]&quot;</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">join_type</span><span class="o">=</span><span class="s2">&quot;CROSS&quot;</span><span class="p">)</span></div>
 
 
@@ -199,7 +207,7 @@
         <span class="n">column</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Raw</span><span class="p">,</span> <span class="s2">&quot;Condition&quot;</span><span class="p">,</span> <span class="s2">&quot;ComplexCondition&quot;</span><span class="p">],</span>
         <span class="n">value</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">operator</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;=&quot;</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;SelectQuery&quot;</span><span class="p">:</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;SelectQuery[T]&quot;</span><span class="p">:</span>
         <span class="n">connector</span><span class="p">,</span> <span class="n">sql</span><span class="p">,</span> <span class="n">params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_where_clause</span><span class="p">(</span><span class="n">column</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">operator</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_wheres</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">connector</span><span class="p">,</span> <span class="n">sql</span><span class="p">,</span> <span class="n">params</span><span class="p">))</span>
         <span class="k">return</span> <span class="bp">self</span></div>
@@ -209,7 +217,7 @@
 <a class="viewcode-back" href="../../../reference.html#sqlo.query.select.SelectQuery.where_in">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">where_in</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">column</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">values</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span> <span class="s2">&quot;SelectQuery&quot;</span><span class="p">]</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;SelectQuery&quot;</span><span class="p">:</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;SelectQuery[T]&quot;</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Add an IN WHERE condition.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_where_in_internal</span><span class="p">(</span><span class="n">column</span><span class="p">,</span> <span class="n">values</span><span class="p">,</span> <span class="n">connector</span><span class="o">=</span><span class="s2">&quot;AND&quot;</span><span class="p">,</span> <span class="n">not_in</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
 
@@ -218,7 +226,7 @@
 <a class="viewcode-back" href="../../../reference.html#sqlo.query.select.SelectQuery.where_not_in">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">where_not_in</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">column</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">values</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span> <span class="s2">&quot;SelectQuery&quot;</span><span class="p">]</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;SelectQuery&quot;</span><span class="p">:</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;SelectQuery[T]&quot;</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Add a NOT IN WHERE condition.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_where_in_internal</span><span class="p">(</span><span class="n">column</span><span class="p">,</span> <span class="n">values</span><span class="p">,</span> <span class="n">connector</span><span class="o">=</span><span class="s2">&quot;AND&quot;</span><span class="p">,</span> <span class="n">not_in</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
 
@@ -230,7 +238,7 @@
         <span class="n">column</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Raw</span><span class="p">,</span> <span class="s2">&quot;Condition&quot;</span><span class="p">,</span> <span class="s2">&quot;ComplexCondition&quot;</span><span class="p">],</span>
         <span class="n">value</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">operator</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;=&quot;</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;SelectQuery&quot;</span><span class="p">:</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;SelectQuery[T]&quot;</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Add an OR WHERE condition.&quot;&quot;&quot;</span>
         <span class="n">connector</span><span class="p">,</span> <span class="n">sql</span><span class="p">,</span> <span class="n">params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_where_clause</span><span class="p">(</span><span class="n">column</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">operator</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_wheres</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s2">&quot;OR&quot;</span><span class="p">,</span> <span class="n">sql</span><span class="p">,</span> <span class="n">params</span><span class="p">))</span>
@@ -239,7 +247,7 @@
 
 <div class="viewcode-block" id="SelectQuery.where_null">
 <a class="viewcode-back" href="../../../reference.html#sqlo.query.select.SelectQuery.where_null">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">where_null</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;SelectQuery&quot;</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">where_null</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;SelectQuery[T]&quot;</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Add an IS NULL WHERE condition.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_wheres</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s2">&quot;AND&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_dialect</span><span class="o">.</span><span class="n">quote</span><span class="p">(</span><span class="n">column</span><span class="p">)</span><span class="si">}</span><span class="s2"> IS NULL&quot;</span><span class="p">,</span> <span class="p">[]))</span>
         <span class="k">return</span> <span class="bp">self</span></div>
@@ -247,7 +255,7 @@
 
 <div class="viewcode-block" id="SelectQuery.where_not_null">
 <a class="viewcode-back" href="../../../reference.html#sqlo.query.select.SelectQuery.where_not_null">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">where_not_null</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;SelectQuery&quot;</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">where_not_null</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;SelectQuery[T]&quot;</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Add an IS NOT NULL WHERE condition.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_wheres</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s2">&quot;AND&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_dialect</span><span class="o">.</span><span class="n">quote</span><span class="p">(</span><span class="n">column</span><span class="p">)</span><span class="si">}</span><span class="s2"> IS NOT NULL&quot;</span><span class="p">,</span> <span class="p">[]))</span>
         <span class="k">return</span> <span class="bp">self</span></div>
@@ -255,9 +263,9 @@
 
 <div class="viewcode-block" id="SelectQuery.where_between">
 <a class="viewcode-back" href="../../../reference.html#sqlo.query.select.SelectQuery.where_between">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">where_between</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value1</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">value2</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;SelectQuery&quot;</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">where_between</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value1</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">value2</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;SelectQuery[T]&quot;</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Add a BETWEEN WHERE condition.&quot;&quot;&quot;</span>
-        <span class="n">ph</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dialect</span><span class="o">.</span><span class="n">parameter_placeholder</span><span class="p">()</span>
+        <span class="n">ph</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ph</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_wheres</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
             <span class="p">(</span>
                 <span class="s2">&quot;AND&quot;</span><span class="p">,</span>
@@ -270,9 +278,11 @@
 
 <div class="viewcode-block" id="SelectQuery.where_not_between">
 <a class="viewcode-back" href="../../../reference.html#sqlo.query.select.SelectQuery.where_not_between">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">where_not_between</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value1</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">value2</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;SelectQuery&quot;</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">where_not_between</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">column</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value1</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">value2</span><span class="p">:</span> <span class="n">Any</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;SelectQuery[T]&quot;</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Add a NOT BETWEEN WHERE condition.&quot;&quot;&quot;</span>
-        <span class="n">ph</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dialect</span><span class="o">.</span><span class="n">parameter_placeholder</span><span class="p">()</span>
+        <span class="n">ph</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ph</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_wheres</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
             <span class="p">(</span>
                 <span class="s2">&quot;AND&quot;</span><span class="p">,</span>
@@ -285,21 +295,21 @@
 
 <div class="viewcode-block" id="SelectQuery.where_like">
 <a class="viewcode-back" href="../../../reference.html#sqlo.query.select.SelectQuery.where_like">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">where_like</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">pattern</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;SelectQuery&quot;</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">where_like</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">pattern</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;SelectQuery[T]&quot;</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Add a LIKE WHERE condition.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">column</span><span class="p">,</span> <span class="n">pattern</span><span class="p">,</span> <span class="n">operator</span><span class="o">=</span><span class="s2">&quot;LIKE&quot;</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="SelectQuery.where_not_like">
 <a class="viewcode-back" href="../../../reference.html#sqlo.query.select.SelectQuery.where_not_like">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">where_not_like</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">pattern</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;SelectQuery&quot;</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">where_not_like</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">pattern</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;SelectQuery[T]&quot;</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Add a NOT LIKE WHERE condition.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">column</span><span class="p">,</span> <span class="n">pattern</span><span class="p">,</span> <span class="n">operator</span><span class="o">=</span><span class="s2">&quot;NOT LIKE&quot;</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="SelectQuery.order_by">
 <a class="viewcode-back" href="../../../reference.html#sqlo.query.select.SelectQuery.order_by">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">order_by</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">columns</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Raw</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s2">&quot;SelectQuery&quot;</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">order_by</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">columns</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Raw</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s2">&quot;SelectQuery[T]&quot;</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">columns</span><span class="p">:</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">col</span><span class="p">,</span> <span class="n">Raw</span><span class="p">):</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_orders</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">col</span><span class="o">.</span><span class="n">sql</span><span class="p">)</span>
@@ -314,21 +324,21 @@
 
 <div class="viewcode-block" id="SelectQuery.limit">
 <a class="viewcode-back" href="../../../reference.html#sqlo.query.select.SelectQuery.limit">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">limit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">limit</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;SelectQuery&quot;</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">limit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">limit</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;SelectQuery[T]&quot;</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_limit</span> <span class="o">=</span> <span class="n">limit</span>
         <span class="k">return</span> <span class="bp">self</span></div>
 
 
 <div class="viewcode-block" id="SelectQuery.offset">
 <a class="viewcode-back" href="../../../reference.html#sqlo.query.select.SelectQuery.offset">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">offset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">offset</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;SelectQuery&quot;</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">offset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">offset</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;SelectQuery[T]&quot;</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_offset</span> <span class="o">=</span> <span class="n">offset</span>
         <span class="k">return</span> <span class="bp">self</span></div>
 
 
 <div class="viewcode-block" id="SelectQuery.group_by">
 <a class="viewcode-back" href="../../../reference.html#sqlo.query.select.SelectQuery.group_by">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">group_by</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">columns</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;SelectQuery&quot;</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">group_by</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">columns</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;SelectQuery[T]&quot;</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_groups</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_dialect</span><span class="o">.</span><span class="n">quote</span><span class="p">,</span> <span class="n">columns</span><span class="p">))</span>
         <span class="k">return</span> <span class="bp">self</span></div>
 
@@ -336,8 +346,8 @@
 <div class="viewcode-block" id="SelectQuery.when">
 <a class="viewcode-back" href="../../../reference.html#sqlo.query.select.SelectQuery.when">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">when</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">condition</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">callback</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="s2">&quot;SelectQuery&quot;</span><span class="p">],</span> <span class="kc">None</span><span class="p">]</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;SelectQuery&quot;</span><span class="p">:</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">condition</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">callback</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="s2">&quot;SelectQuery[T]&quot;</span><span class="p">],</span> <span class="kc">None</span><span class="p">]</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;SelectQuery[T]&quot;</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">condition</span><span class="p">:</span>
             <span class="n">callback</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span></div>
@@ -410,14 +420,14 @@
 
 <div class="viewcode-block" id="SelectQuery.union">
 <a class="viewcode-back" href="../../../reference.html#sqlo.query.select.SelectQuery.union">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">union</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">:</span> <span class="s2">&quot;SelectQuery&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;SelectQuery&quot;</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">union</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">:</span> <span class="s2">&quot;SelectQuery&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;SelectQuery[T]&quot;</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_unions</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s2">&quot;UNION&quot;</span><span class="p">,</span> <span class="n">query</span><span class="p">))</span>
         <span class="k">return</span> <span class="bp">self</span></div>
 
 
 <div class="viewcode-block" id="SelectQuery.union_all">
 <a class="viewcode-back" href="../../../reference.html#sqlo.query.select.SelectQuery.union_all">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">union_all</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">:</span> <span class="s2">&quot;SelectQuery&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;SelectQuery&quot;</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">union_all</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">:</span> <span class="s2">&quot;SelectQuery&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;SelectQuery[T]&quot;</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_unions</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s2">&quot;UNION ALL&quot;</span><span class="p">,</span> <span class="n">query</span><span class="p">))</span>
         <span class="k">return</span> <span class="bp">self</span></div>
 
@@ -444,11 +454,17 @@
                 <span class="n">params</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">col</span><span class="o">.</span><span class="n">params</span><span class="p">)</span>
             <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">col</span><span class="p">,</span> <span class="n">Func</span><span class="p">):</span>
                 <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">col</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">(</span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span><span class="w"> </span><span class="n">col</span><span class="o">.</span><span class="n">args</span><span class="p">))</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">col</span><span class="p">,</span> <span class="n">JSONPath</span><span class="p">):</span>
+                <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_dialect</span><span class="o">.</span><span class="n">quote</span><span class="p">(</span><span class="n">col</span><span class="o">.</span><span class="n">column</span><span class="p">)</span><span class="si">}</span><span class="s2">-&gt;&gt;&#39;$.</span><span class="si">{</span><span class="n">col</span><span class="o">.</span><span class="n">path</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
             <span class="c1"># Allow * and numeric literals without validation</span>
             <span class="k">elif</span> <span class="n">col</span> <span class="o">==</span> <span class="s2">&quot;*&quot;</span> <span class="ow">or</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">col</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="n">col</span><span class="o">.</span><span class="n">isdigit</span><span class="p">()):</span>
                 <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">col</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_dialect</span><span class="o">.</span><span class="n">quote</span><span class="p">(</span><span class="n">col</span><span class="p">))</span>
+
+            <span class="c1"># Handle aliasing</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">col</span><span class="p">,</span> <span class="s2">&quot;alias&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">col</span><span class="o">.</span><span class="n">alias</span><span class="p">:</span>
+                <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; AS </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_dialect</span><span class="o">.</span><span class="n">quote</span><span class="p">(</span><span class="n">col</span><span class="o">.</span><span class="n">alias</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_build_from_clause</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parts</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">params</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Build FROM clause.&quot;&quot;&quot;</span>
@@ -513,6 +529,9 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_explain</span><span class="p">:</span>
             <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;EXPLAIN &quot;</span><span class="p">)</span>
 
+        <span class="c1"># CTEs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_build_ctes</span><span class="p">(</span><span class="n">parts</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+
         <span class="c1"># SELECT</span>
         <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;SELECT&quot;</span><span class="p">)</span>
 
@@ -561,7 +580,10 @@
                 <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; </span><span class="si">{</span><span class="n">type_</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">union_sql</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
                 <span class="n">params</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">union_params</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">parts</span><span class="p">),</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">params</span><span class="p">)</span></div>
+        <span class="n">sql</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span>
+        <span class="n">params_tuple</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_print_debug</span><span class="p">(</span><span class="n">sql</span><span class="p">,</span> <span class="n">params_tuple</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">sql</span><span class="p">,</span> <span class="n">params_tuple</span></div>
 </div>
 
 </pre></div>

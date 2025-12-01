@@ -1,14 +1,16 @@
-from typing import TYPE_CHECKING, Any, Callable, Optional, Union
+from typing import TYPE_CHECKING, Any, Callable, Generic, Optional, TypeVar, Union
 
-from ..expressions import Func, Raw
+from ..expressions import Func, JSONPath, Raw
 from .base import Query
 from .mixins import WhereClauseMixin
 
 if TYPE_CHECKING:
     from ..expressions import ComplexCondition, Condition
 
+T = TypeVar("T")
 
-class SelectQuery(WhereClauseMixin, Query):
+
+class SelectQuery(WhereClauseMixin, Query, Generic[T]):
     __slots__ = (
         "_columns",
         "_table",
@@ -28,9 +30,15 @@ class SelectQuery(WhereClauseMixin, Query):
         "_optimizer_hints",
     )
 
-    def __init__(self, *columns: Union[str, Raw, Func], dialect=None):
-        super().__init__(dialect)
-        self._columns = columns if columns else ["*"]
+    def __init__(
+        self, *columns: Union[str, Raw, Func, list], dialect=None, debug=False
+    ):
+        super().__init__(dialect, debug)
+        # Support both Q.select("a", "b") and Q.select(["a", "b"])
+        if len(columns) == 1 and isinstance(columns[0], list):
+            self._columns = tuple(columns[0]) if columns[0] else ("*",)
+        else:
+            self._columns = columns if columns else ("*",)
         self._table: Optional[Union[str, SelectQuery]] = None
         self._alias: Optional[str] = None
         self._joins: list[tuple[str, str, Optional[str]]] = []  # (type, table, on)
@@ -71,16 +79,16 @@ class SelectQuery(WhereClauseMixin, Query):
         self._joins.append((join_type, table, on))
         return self
 
-    def inner_join(self, table: str, on: Optional[str] = None) -> "SelectQuery":
+    def inner_join(self, table: str, on: Optional[str] = None) -> "SelectQuery[T]":
         return self.join(table, on, join_type="INNER")
 
-    def left_join(self, table: str, on: Optional[str] = None) -> "SelectQuery":
+    def left_join(self, table: str, on: Optional[str] = None) -> "SelectQuery[T]":
         return self.join(table, on, join_type="LEFT")
 
-    def right_join(self, table: str, on: Optional[str] = None) -> "SelectQuery":
+    def right_join(self, table: str, on: Optional[str] = None) -> "SelectQuery[T]":
         return self.join(table, on, join_type="RIGHT")
 
-    def cross_join(self, table: str) -> "SelectQuery":
+    def cross_join(self, table: str) -> "SelectQuery[T]":
         return self.join(table, on=None, join_type="CROSS")
 
     def where(
@@ -88,20 +96,20 @@ class SelectQuery(WhereClauseMixin, Query):
         column: Union[str, Raw, "Condition", "ComplexCondition"],
         value: Any = None,
         operator: str = "=",
-    ) -> "SelectQuery":
+    ) -> "SelectQuery[T]":
         connector, sql, params = self._build_where_clause(column, value, operator)
         self._wheres.append((connector, sql, params))
         return self
 
     def where_in(
         self, column: str, values: Union[list[Any], "SelectQuery"]
-    ) -> "SelectQuery":
+    ) -> "SelectQuery[T]":
         """Add an IN WHERE condition."""
         return self._where_in_internal(column, values, connector="AND", not_in=False)
 
     def where_not_in(
         self, column: str, values: Union[list[Any], "SelectQuery"]
-    ) -> "SelectQuery":
+    ) -> "SelectQuery[T]":
         """Add a NOT IN WHERE condition."""
         return self._where_in_internal(column, values, connector="AND", not_in=True)
 
@@ -110,25 +118,25 @@ class SelectQuery(WhereClauseMixin, Query):
         column: Union[str, Raw, "Condition", "ComplexCondition"],
         value: Any = None,
         operator: str = "=",
-    ) -> "SelectQuery":
+    ) -> "SelectQuery[T]":
         """Add an OR WHERE condition."""
         connector, sql, params = self._build_where_clause(column, value, operator)
         self._wheres.append(("OR", sql, params))
         return self
 
-    def where_null(self, column: str) -> "SelectQuery":
+    def where_null(self, column: str) -> "SelectQuery[T]":
         """Add an IS NULL WHERE condition."""
         self._wheres.append(("AND", f"{self._dialect.quote(column)} IS NULL", []))
         return self
 
-    def where_not_null(self, column: str) -> "SelectQuery":
+    def where_not_null(self, column: str) -> "SelectQuery[T]":
         """Add an IS NOT NULL WHERE condition."""
         self._wheres.append(("AND", f"{self._dialect.quote(column)} IS NOT NULL", []))
         return self
 
-    def where_between(self, column: str, value1: Any, value2: Any) -> "SelectQuery":
+    def where_between(self, column: str, value1: Any, value2: Any) -> "SelectQuery[T]":
         """Add a BETWEEN WHERE condition."""
-        ph = self._dialect.parameter_placeholder()
+        ph = self._ph
         self._wheres.append(
             (
                 "AND",
@@ -138,9 +146,11 @@ class SelectQuery(WhereClauseMixin, Query):
         )
         return self
 
-    def where_not_between(self, column: str, value1: Any, value2: Any) -> "SelectQuery":
+    def where_not_between(
+        self, column: str, value1: Any, value2: Any
+    ) -> "SelectQuery[T]":
         """Add a NOT BETWEEN WHERE condition."""
-        ph = self._dialect.parameter_placeholder()
+        ph = self._ph
         self._wheres.append(
             (
                 "AND",
@@ -150,15 +160,15 @@ class SelectQuery(WhereClauseMixin, Query):
         )
         return self
 
-    def where_like(self, column: str, pattern: str) -> "SelectQuery":
+    def where_like(self, column: str, pattern: str) -> "SelectQuery[T]":
         """Add a LIKE WHERE condition."""
         return self.where(column, pattern, operator="LIKE")
 
-    def where_not_like(self, column: str, pattern: str) -> "SelectQuery":
+    def where_not_like(self, column: str, pattern: str) -> "SelectQuery[T]":
         """Add a NOT LIKE WHERE condition."""
         return self.where(column, pattern, operator="NOT LIKE")
 
-    def order_by(self, *columns: Union[str, Raw]) -> "SelectQuery":
+    def order_by(self, *columns: Union[str, Raw]) -> "SelectQuery[T]":
         for col in columns:
             if isinstance(col, Raw):
                 self._orders.append(col.sql)
@@ -170,21 +180,21 @@ class SelectQuery(WhereClauseMixin, Query):
                 self._orders.append(f"{self._dialect.quote(col)} {direction}")
         return self
 
-    def limit(self, limit: int) -> "SelectQuery":
+    def limit(self, limit: int) -> "SelectQuery[T]":
         self._limit = limit
         return self
 
-    def offset(self, offset: int) -> "SelectQuery":
+    def offset(self, offset: int) -> "SelectQuery[T]":
         self._offset = offset
         return self
 
-    def group_by(self, *columns: str) -> "SelectQuery":
+    def group_by(self, *columns: str) -> "SelectQuery[T]":
         self._groups.extend(map(self._dialect.quote, columns))
         return self
 
     def when(
-        self, condition: Any, callback: Callable[["SelectQuery"], None]
-    ) -> "SelectQuery":
+        self, condition: Any, callback: Callable[["SelectQuery[T]"], None]
+    ) -> "SelectQuery[T]":
         if condition:
             callback(self)
         return self
@@ -230,11 +240,11 @@ class SelectQuery(WhereClauseMixin, Query):
         self._havings.append((connector, sql, params))
         return self
 
-    def union(self, query: "SelectQuery") -> "SelectQuery":
+    def union(self, query: "SelectQuery") -> "SelectQuery[T]":
         self._unions.append(("UNION", query))
         return self
 
-    def union_all(self, query: "SelectQuery") -> "SelectQuery":
+    def union_all(self, query: "SelectQuery") -> "SelectQuery[T]":
         self._unions.append(("UNION ALL", query))
         return self
 
@@ -257,11 +267,17 @@ class SelectQuery(WhereClauseMixin, Query):
                 params.extend(col.params)
             elif isinstance(col, Func):
                 parts.append(f"{col.name}({', '.join(map(str, col.args))})")
+            elif isinstance(col, JSONPath):
+                parts.append(f"{self._dialect.quote(col.column)}->>'$.{col.path}'")
             # Allow * and numeric literals without validation
             elif col == "*" or (isinstance(col, str) and col.isdigit()):
                 parts.append(col)
             else:
                 parts.append(self._dialect.quote(col))
+
+            # Handle aliasing
+            if hasattr(col, "alias") and col.alias:
+                parts.append(f" AS {self._dialect.quote(col.alias)}")
 
     def _build_from_clause(self, parts: list[str], params: list[Any]) -> None:
         """Build FROM clause."""
@@ -324,6 +340,9 @@ class SelectQuery(WhereClauseMixin, Query):
         if self._explain:
             parts.append("EXPLAIN ")
 
+        # CTEs
+        self._build_ctes(parts, params)
+
         # SELECT
         parts.append("SELECT")
 
@@ -372,4 +391,7 @@ class SelectQuery(WhereClauseMixin, Query):
                 parts.append(f" {type_} {union_sql}")
                 params.extend(union_params)
 
-        return "".join(parts), tuple(params)
+        sql = "".join(parts)
+        params_tuple = tuple(params)
+        self._print_debug(sql, params_tuple)
+        return sql, params_tuple
