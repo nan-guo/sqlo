@@ -113,6 +113,42 @@ query = Q.select("u.name", "uo.order_count") \
     .join("user_orders uo", "u.id = uo.user_id")
 ```
 
+## Window Functions
+Perform advanced analytics with window functions:
+```python
+from sqlo import Q, Window, func
+
+# Ranking within partitions
+query = Q.select(
+    "name",
+    "department",
+    "salary",
+    func.row_number().over(
+        Window.partition_by("department").and_order_by("-salary")
+    ).as_("rank")
+).from_("employees")
+# SQL: SELECT `name`, `department`, `salary`,
+#   ROW_NUMBER() OVER (PARTITION BY `department` ORDER BY `salary` DESC) AS `rank`
+# FROM `employees`
+
+# Running totals
+query = Q.select(
+    "date",
+    "amount",
+    func.sum("amount").over(
+        Window.order_by("date").rows_between("UNBOUNDED PRECEDING", "CURRENT ROW")
+    ).as_("running_total")
+).from_("transactions")
+
+# LAG and LEAD for time series
+query = Q.select(
+    "date",
+    "value",
+    func.lag("value", 1).over(Window.order_by("date")).as_("prev_value"),
+    func.lead("value", 1).over(Window.order_by("date")).as_("next_value")
+).from_("metrics")
+```
+
 ## Documentation
 
 Full documentation is available at **[https://nan-guo.github.io/sqlo/](https://nan-guo.github.io/sqlo/)**.

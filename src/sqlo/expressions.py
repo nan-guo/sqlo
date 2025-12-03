@@ -58,6 +58,23 @@ class Func(Expression):
         self.args = args
         self.alias: Optional[str] = None
 
+    def over(self, window: Optional[Any] = None) -> Any:
+        """
+        Create a window function with OVER clause.
+
+        Args:
+            window: Optional Window object for PARTITION BY / ORDER BY
+
+        Returns:
+            WindowFunc object
+
+        Example:
+            >>> func.row_number().over(Window.partition_by("dept"))
+        """
+        from .window import WindowFunc
+
+        return WindowFunc(self.name, self.args, window)
+
 
 class FunctionFactory:
     """Factory for creating SQL function expressions."""

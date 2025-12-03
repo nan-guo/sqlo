@@ -269,6 +269,9 @@ class SelectQuery(WhereClauseMixin, Query, Generic[T]):
                 parts.append(f"{col.name}({', '.join(map(str, col.args))})")
             elif isinstance(col, JSONPath):
                 parts.append(f"{self._dialect.quote(col.column)}->>'$.{col.path}'")
+            # Handle WindowFunc
+            elif hasattr(col, "build") and hasattr(col, "window"):
+                parts.append(col.build(self._dialect))
             # Allow * and numeric literals without validation
             elif col == "*" or (isinstance(col, str) and col.isdigit()):
                 parts.append(col)
