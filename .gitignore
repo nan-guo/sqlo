@@ -48,5 +48,8 @@ reports/
 *.swp
 *.swo
 
+# Documentation
+docs/_build/
+
 # MacOS
 .DS_Store
