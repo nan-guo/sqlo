@@ -16,8 +16,8 @@ class DeleteQuery(WhereClauseMixin, Query):
         "_allow_all_rows",
     )
 
-    def __init__(self, table: str, dialect=None):
-        super().__init__(dialect)
+    def __init__(self, table: str, dialect=None, debug=False):
+        super().__init__(dialect, debug)
         self._table = table
         self._wheres: list[tuple[str, str, Any]] = []
         self._limit: Optional[int] = None
@@ -88,6 +88,9 @@ class DeleteQuery(WhereClauseMixin, Query):
         parts: list[str] = []
         params: list[Any] = []
 
+        # CTEs
+        self._build_ctes(parts, params)
+
         # DELETE FROM
         parts.append("DELETE FROM ")
         parts.append(self._dialect.quote(self._table))
@@ -117,4 +120,7 @@ class DeleteQuery(WhereClauseMixin, Query):
         if self._limit:
             parts.append(f" LIMIT {self._limit}")
 
-        return "".join(parts), tuple(params)
+        sql = "".join(parts)
+        params_tuple = tuple(params)
+        self._print_debug(sql, params_tuple)
+        return sql, params_tuple

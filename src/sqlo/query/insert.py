@@ -18,8 +18,8 @@ class InsertQuery(Query):
         "_dialect",
     )
 
-    def __init__(self, table: str, dialect=None):
-        super().__init__(dialect)
+    def __init__(self, table: str, dialect=None, debug=False):
+        super().__init__(dialect, debug)
         self._table = table
         self._values: list[dict[str, Any]] = []
         self._ignore = False
@@ -55,7 +55,10 @@ class InsertQuery(Query):
     def build(self) -> tuple[str, tuple[Any, ...]]:
         parts: list[str] = []
         params: list[Any] = []
-        ph = self._dialect.parameter_placeholder()
+        ph = self._ph
+
+        # CTEs
+        self._build_ctes(parts, params)
 
         # Command
         parts.append("INSERT IGNORE" if self._ignore else "INSERT")
@@ -125,4 +128,7 @@ class InsertQuery(Query):
                     parts.append(ph)
                     params.append(val)
 
-        return "".join(parts), tuple(params)
+        sql = "".join(parts)
+        params_tuple = tuple(params)
+        self._print_debug(sql, params_tuple)
+        return sql, params_tuple

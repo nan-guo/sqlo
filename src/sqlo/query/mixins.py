@@ -5,7 +5,7 @@ Mixin classes for query builders to share common functionality.
 from typing import TYPE_CHECKING, Any, Optional, Union
 
 from ..constants import COMPACT_PATTERN
-from ..expressions import Raw
+from ..expressions import JSONPath, Raw
 
 if TYPE_CHECKING:
     from ..expressions import ComplexCondition, Condition
@@ -16,6 +16,7 @@ class WhereClauseMixin:
     """Mixin for queries that support WHERE clauses."""
 
     _dialect: Any  # Type hint for mixin - actual type defined in Query subclass
+    _ph: str
 
     @staticmethod
     def _parse_column_operator(column: str) -> Optional[tuple[str, str]]:
@@ -53,6 +54,15 @@ class WhereClauseMixin:
             sql, params = self._build_condition(column)
             return ("AND", f"({sql})", params)
 
+        # Handle JSONPath
+        if isinstance(column, JSONPath):
+            col_sql = f"{self._dialect.quote(column.column)}->>'$.{column.path}'"
+            return (
+                "AND",
+                f"{col_sql} {operator} {self._ph}",
+                [value],
+            )
+
         # Handle simple where: where("age >", 18) or where("age>", 18)
         if isinstance(column, str) and value is not None:
             parsed = self._parse_column_operator(column)
@@ -60,7 +70,7 @@ class WhereClauseMixin:
                 col_name, op = parsed
                 return (
                     "AND",
-                    f"{self._dialect.quote(col_name)} {op} {self._dialect.parameter_placeholder()}",
+                    f"{self._dialect.quote(col_name)} {op} {self._ph}",
                     [value],
                 )
 
@@ -68,7 +78,7 @@ class WhereClauseMixin:
         if value is not None:
             return (
                 "AND",
-                f"{self._dialect.quote(column)} {operator} {self._dialect.parameter_placeholder()}",
+                f"{self._dialect.quote(column)} {operator} {self._ph}",
                 [value],
             )
 
@@ -114,8 +124,7 @@ class WhereClauseMixin:
                 self._wheres.append((connector, bool_value, []))
         else:
             count = len(values)
-            ph = self._dialect.parameter_placeholder()
-            placeholders = ", ".join([ph] * count)
+            placeholders = ", ".join([self._ph] * count)
             if hasattr(self, "_wheres"):
                 self._wheres.append(
                     (
@@ -177,7 +186,7 @@ class WhereClauseMixin:
         not_between: bool = False,
     ):
         operator = "NOT BETWEEN" if not_between else "BETWEEN"
-        ph = self._dialect.parameter_placeholder()
+        ph = self._ph
         if hasattr(self, "_wheres"):
             self._wheres.append(
                 (
@@ -214,37 +223,33 @@ class WhereClauseMixin:
 
     def where_like(self, column: str, pattern: str):
         """Add a LIKE WHERE condition."""
-        ph = self._dialect.parameter_placeholder()
         if hasattr(self, "_wheres"):
             self._wheres.append(
-                ("AND", f"{self._dialect.quote(column)} LIKE {ph}", [pattern])
+                ("AND", f"{self._dialect.quote(column)} LIKE {self._ph}", [pattern])
             )
         return self
 
     def or_where_like(self, column: str, pattern: str):
         """Add an OR LIKE WHERE condition."""
-        ph = self._dialect.parameter_placeholder()
         if hasattr(self, "_wheres"):
             self._wheres.append(
-                ("OR", f"{self._dialect.quote(column)} LIKE {ph}", [pattern])
+                ("OR", f"{self._dialect.quote(column)} LIKE {self._ph}", [pattern])
             )
         return self
 
     def where_not_like(self, column: str, pattern: str):
         """Add a NOT LIKE WHERE condition."""
-        ph = self._dialect.parameter_placeholder()
         if hasattr(self, "_wheres"):
             self._wheres.append(
-                ("AND", f"{self._dialect.quote(column)} NOT LIKE {ph}", [pattern])
+                ("AND", f"{self._dialect.quote(column)} NOT LIKE {self._ph}", [pattern])
             )
         return self
 
     def or_where_not_like(self, column: str, pattern: str):
         """Add an OR NOT LIKE WHERE condition."""
-        ph = self._dialect.parameter_placeholder()
         if hasattr(self, "_wheres"):
             self._wheres.append(
-                ("OR", f"{self._dialect.quote(column)} NOT LIKE {ph}", [pattern])
+                ("OR", f"{self._dialect.quote(column)} NOT LIKE {self._ph}", [pattern])
             )
         return self
 

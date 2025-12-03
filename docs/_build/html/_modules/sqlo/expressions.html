@@ -12,7 +12,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=01f34227"></script>
+      <script src="../../_static/documentation_options.js?v=a58bc63e"></script>
       <script src="../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
@@ -98,7 +98,17 @@
 <div class="viewcode-block" id="Expression">
 <a class="viewcode-back" href="../../reference.html#sqlo.Expression">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">Expression</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Base class for SQL expressions.&quot;&quot;&quot;</span></div>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Base class for SQL expressions.&quot;&quot;&quot;</span>
+
+    <span class="n">alias</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="Expression.as_">
+<a class="viewcode-back" href="../../reference.html#sqlo.Expression.as_">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">as_</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">alias</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Expression&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set an alias for the expression.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">alias</span> <span class="o">=</span> <span class="n">alias</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+</div>
 
 
 
@@ -148,11 +158,24 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="n">args</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">alias</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
 
-<div class="viewcode-block" id="Func.as_">
-<a class="viewcode-back" href="../../reference.html#sqlo.Func.as_">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">as_</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">alias</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Func&quot;</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">alias</span> <span class="o">=</span> <span class="n">alias</span>
-        <span class="k">return</span> <span class="bp">self</span></div>
+<div class="viewcode-block" id="Func.over">
+<a class="viewcode-back" href="../../reference.html#sqlo.Func.over">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">over</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">window</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a window function with OVER clause.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            window: Optional Window object for PARTITION BY / ORDER BY</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            WindowFunc object</span>
+
+<span class="sd">        Example:</span>
+<span class="sd">            &gt;&gt;&gt; func.row_number().over(Window.partition_by(&quot;dept&quot;))</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">.window</span><span class="w"> </span><span class="kn">import</span> <span class="n">WindowFunc</span>
+
+        <span class="k">return</span> <span class="n">WindowFunc</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">,</span> <span class="n">window</span><span class="p">)</span></div>
 </div>
 
 
@@ -665,6 +688,39 @@
 
 
 <span class="n">func</span> <span class="o">=</span> <span class="n">FunctionFactory</span><span class="p">()</span>
+
+
+<div class="viewcode-block" id="JSONPath">
+<a class="viewcode-back" href="../../reference.html#sqlo.JSONPath">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">JSONPath</span><span class="p">(</span><span class="n">Expression</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Represents a JSON path extraction.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">column</span> <span class="o">=</span> <span class="n">column</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">path</span></div>
+
+
+
+<div class="viewcode-block" id="JSON">
+<a class="viewcode-back" href="../../reference.html#sqlo.JSON">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">JSON</span><span class="p">(</span><span class="n">Expression</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Represents a JSON column.</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        &gt;&gt;&gt; JSON(&quot;data&quot;).extract(&quot;name&quot;)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">column</span> <span class="o">=</span> <span class="n">column</span>
+
+<div class="viewcode-block" id="JSON.extract">
+<a class="viewcode-back" href="../../reference.html#sqlo.JSON.extract">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">extract</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">JSONPath</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Extract a value from the JSON column.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">JSONPath</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">column</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span></div>
+</div>
+
 </pre></div>
 
            </div>

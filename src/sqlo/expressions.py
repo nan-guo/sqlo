@@ -9,6 +9,13 @@ if TYPE_CHECKING:
 class Expression:
     """Base class for SQL expressions."""
 
+    alias: Optional[str] = None
+
+    def as_(self, alias: str) -> "Expression":
+        """Set an alias for the expression."""
+        self.alias = alias
+        return self
+
 
 class Raw(Expression):
     """Raw SQL fragment.
@@ -51,9 +58,22 @@ class Func(Expression):
         self.args = args
         self.alias: Optional[str] = None
 
-    def as_(self, alias: str) -> "Func":
-        self.alias = alias
-        return self
+    def over(self, window: Optional[Any] = None) -> Any:
+        """
+        Create a window function with OVER clause.
+
+        Args:
+            window: Optional Window object for PARTITION BY / ORDER BY
+
+        Returns:
+            WindowFunc object
+
+        Example:
+            >>> func.row_number().over(Window.partition_by("dept"))
+        """
+        from .window import WindowFunc
+
+        return WindowFunc(self.name, self.args, window)
 
 
 class FunctionFactory:
@@ -510,3 +530,27 @@ class ComplexCondition(Expression):
 
 
 func = FunctionFactory()
+
+
+class JSONPath(Expression):
+    """Represents a JSON path extraction."""
+
+    def __init__(self, column: str, path: str):
+        self.column = column
+        self.path = path
+
+
+class JSON(Expression):
+    """
+    Represents a JSON column.
+
+    Example:
+        >>> JSON("data").extract("name")
+    """
+
+    def __init__(self, column: str):
+        self.column = column
+
+    def extract(self, path: str) -> JSONPath:
+        """Extract a value from the JSON column."""
+        return JSONPath(self.column, path)

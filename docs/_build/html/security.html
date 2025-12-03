@@ -92,10 +92,6 @@
 <li class="toctree-l3"><a class="reference internal" href="#where-clause-injection">3. WHERE Clause Injection</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#migration-guide">Migration Guide</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#breaking-changes">Breaking Changes</a></li>
-</ul>
-</li>
 <li class="toctree-l2"><a class="reference internal" href="#additional-resources">Additional Resources</a></li>
 </ul>
 </li>
@@ -486,42 +482,6 @@
 <span class="c1"># Safe - malicious string is treated as a literal value</span>
 </pre></div>
 </div>
-</section>
-</section>
-<hr class="docutils" />
-<section id="migration-guide">
-<h2>Migration Guide<a class="headerlink" href="#migration-guide" title="Link to this heading"></a></h2>
-<p>If you’re upgrading from an older version:</p>
-<section id="breaking-changes">
-<h3>Breaking Changes<a class="headerlink" href="#breaking-changes" title="Link to this heading"></a></h3>
-<ol class="arabic">
-<li><p><strong>Identifier validation is now mandatory</strong></p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Before: This might have worked</span>
-<span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;COUNT(*)&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span>
-
-<span class="c1"># Now: Use Raw() for expressions</span>
-<span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">Raw</span><span class="p">(</span><span class="s2">&quot;COUNT(*)&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span>
-</pre></div>
-</div>
-</li>
-<li><p><strong>UPDATE/DELETE require WHERE or allow_all_rows()</strong></p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Before: This would work (dangerous!)</span>
-<span class="n">Q</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">set</span><span class="p">({</span><span class="s2">&quot;active&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">})</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
-
-<span class="c1"># Now: Add WHERE or call allow_all_rows()</span>
-<span class="n">Q</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">set</span><span class="p">({</span><span class="s2">&quot;active&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">})</span><span class="o">.</span><span class="n">allow_all_rows</span><span class="p">()</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
-</pre></div>
-</div>
-</li>
-<li><p><strong>Empty lists generate FALSE/TRUE</strong></p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Before: Might generate invalid SQL like &quot;WHERE id IN ()&quot;</span>
-<span class="n">Q</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">where_in</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="p">[])</span>
-
-<span class="c1"># Now: Generates valid SQL &quot;WHERE FALSE&quot;</span>
-</pre></div>
-</div>
-</li>
-</ol>
 </section>
 </section>
 <hr class="docutils" />

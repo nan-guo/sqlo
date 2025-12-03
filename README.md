@@ -5,7 +5,7 @@
 [![Documentation](https://img.shields.io/badge/docs-github%20pages-blue)](https://nan-guo.github.io/sqlo/)
 [![License](https://img.shields.io/github/license/nan-guo/sqlo)](LICENSE)
 
-A **lightweight** and **simple** SQL query builder for Python. Build SQL queries with a clean, intuitive API while staying safe from SQL injection.
+A **lightweight** and **powerful** SQL query builder for Python. Build SQL queries with a clean, intuitive API while staying safe from SQL injection. Support for JSON fields, CTEs, batch updates, and more!
 
 ## Why sqlo?
 
@@ -40,6 +40,113 @@ query = Q.insert_into("users").values([
     {"name": "Alice", "email": "alice@example.com"}
 ])
 sql, params = query.build()
+```
+
+## Debug Mode
+### Global Debug Mode
+Enable debug mode to automatically print all queries:
+```python
+from sqlo import Q
+# Enable debug mode globally
+Q.set_debug(True)
+query = Q.select("*").from_("users").where("id", 1)
+sql, params = query.build()
+# Automatically prints:
+# [sqlo DEBUG] SELECT * FROM `users` WHERE `id` = %s
+# [sqlo DEBUG] Params: (1,)
+# Disable debug mode
+Q.set_debug(False)
+```
+
+### Query Debug Mode
+
+You can also enable debug mode for a specific query:
+```python
+from sqlo import Q
+query = Q.select("*").from_("users").where("id", 1).debug()
+sql, params = query.build(
+# Prints debug output for this query only
+# [sqlo DEBUG] SELECT * FROM `users` WHERE `id` = %s
+# [sqlo DEBUG] Params: (1,)
+```
+
+## JSON Field Support
+Query JSON columns with ease:
+```python
+from sqlo import Q, JSON
+
+# Extract JSON fields in SELECT
+query = Q.select("id", JSON("data").extract("name").as_("name")).from_("users")
+# SQL: SELECT `id`, `data`->>'$.name' AS `name` FROM `users`
+
+# Filter by JSON fields
+query = Q.select("*").from_("users").where(JSON("data").extract("age"), 18, ">")
+# SQL: SELECT * FROM `users` WHERE `data`->>'$.age' > %s
+```
+
+## Batch Updates
+Efficiently update multiple rows with different values:
+```python
+values = [
+    {"id": 1, "name": "Alice", "status": "active"},
+    {"id": 2, "name": "Bob", "status": "inactive"},
+]
+query = Q.update("users").batch_update(values, key="id")
+# Generates optimized CASE WHEN SQL
+```
+
+## Common Table Expressions (CTE)
+Build complex queries with CTEs:
+```python
+from sqlo import Q, func
+
+# Define a CTE
+cte = Q.select("user_id", func.count("*").as_("order_count")) \
+    .from_("orders") \
+    .group_by("user_id") \
+    .as_("user_orders")
+
+# Use it in main query
+query = Q.select("u.name", "uo.order_count") \
+    .with_(cte) \
+    .from_("users", alias="u") \
+    .join("user_orders uo", "u.id = uo.user_id")
+```
+
+## Window Functions
+Perform advanced analytics with window functions:
+```python
+from sqlo import Q, Window, func
+
+# Ranking within partitions
+query = Q.select(
+    "name",
+    "department",
+    "salary",
+    func.row_number().over(
+        Window.partition_by("department").and_order_by("-salary")
+    ).as_("rank")
+).from_("employees")
+# SQL: SELECT `name`, `department`, `salary`,
+#   ROW_NUMBER() OVER (PARTITION BY `department` ORDER BY `salary` DESC) AS `rank`
+# FROM `employees`
+
+# Running totals
+query = Q.select(
+    "date",
+    "amount",
+    func.sum("amount").over(
+        Window.order_by("date").rows_between("UNBOUNDED PRECEDING", "CURRENT ROW")
+    ).as_("running_total")
+).from_("transactions")
+
+# LAG and LEAD for time series
+query = Q.select(
+    "date",
+    "value",
+    func.lag("value", 1).over(Window.order_by("date")).as_("prev_value"),
+    func.lead("value", 1).over(Window.order_by("date")).as_("next_value")
+).from_("metrics")
 ```
 
 ## Documentation

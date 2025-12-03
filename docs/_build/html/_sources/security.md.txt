@@ -358,40 +358,6 @@ Q.select("*").from_("users").where("name", malicious)
 
 ---
 
-## Migration Guide
-
-If you're upgrading from an older version:
-
-### Breaking Changes
-
-1. **Identifier validation is now mandatory**
-   ```python
-   # Before: This might have worked
-   Q.select("COUNT(*)").from_("users")
-   
-   # Now: Use Raw() for expressions
-   Q.select(Raw("COUNT(*)")).from_("users")
-   ```
-
-2. **UPDATE/DELETE require WHERE or allow_all_rows()**
-   ```python
-   # Before: This would work (dangerous!)
-   Q.update("users").set({"active": False}).build()
-   
-   # Now: Add WHERE or call allow_all_rows()
-   Q.update("users").set({"active": False}).allow_all_rows().build()
-   ```
-
-3. **Empty lists generate FALSE/TRUE**
-   ```python
-   # Before: Might generate invalid SQL like "WHERE id IN ()"
-   Q.select("*").from_("users").where_in("id", [])
-   
-   # Now: Generates valid SQL "WHERE FALSE"
-   ```
-
----
-
 ## Additional Resources
 
 - [OWASP SQL Injection Prevention](https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html)

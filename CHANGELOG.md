@@ -5,6 +5,46 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2025-12-03
+
+### Added
+- **Window Functions Support**: Full support for SQL window functions with `Window` class
+  - `ROW_NUMBER()`, `RANK()`, `DENSE_RANK()`, `NTILE()` ranking functions
+  - `LAG()`, `LEAD()`, `FIRST_VALUE()`, `LAST_VALUE()` value functions
+  - Aggregate functions with OVER clause: `SUM()`, `AVG()`, `COUNT()`, `MIN()`, `MAX()`
+  - `PARTITION BY` and `ORDER BY` clauses
+  - Frame clauses: `ROWS BETWEEN` and `RANGE BETWEEN`
+- **CTE (Common Table Expressions) Support**: Build complex queries with WITH clause
+  - `with_()` method for adding CTEs to any query type
+  - Support for recursive CTEs
+  - Multiple CTEs in a single query
+- **JSON Field Support**: Query and filter JSON columns
+  - `JSON` class for JSON column operations
+  - `JSONPath` for extracting JSON values with `->>'$.path'` syntax
+  - Support in both SELECT and WHERE clauses
+- **Batch UPDATE Optimization**: Efficient bulk updates using CASE WHEN
+  - `batch_update()` method for updating multiple rows with different values
+  - Automatic generation of optimized CASE WHEN SQL
+- **Debug Mode**: Print SQL queries and parameters for debugging
+  - `Q.set_debug(True)` to enable global debug mode
+  - `query.debug()` for per-query debugging
+- **Type Hints Improvements**: Enhanced IDE support with Generic types
+  - `SelectQuery[T]` for better type inference
+  - Improved autocomplete for query results
+
+### Performance
+- **Parameter Placeholder Caching**: Cache dialect parameter placeholders to reduce function calls
+
+### Changed
+- Exported `JSON`, `JSONPath`, and `Window` classes in main `__init__.py`
+- Updated `Func` class with `over()` method for window functions
+- Enhanced `SelectQuery` to handle `WindowFunc` and `JSONPath` expressions
+
+### Documentation
+- Added comprehensive examples for all new features in README
+- Created detailed walkthrough documentation
+- Added unit tests for all new features (17 new tests)
+
 ## [0.1.0] - 2025-11-29
 
 ### Security

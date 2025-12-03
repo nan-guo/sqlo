@@ -68,13 +68,14 @@
 <li class="toctree-l3"><a class="reference internal" href="#sqlo.Q.insert_into"><code class="docutils literal notranslate"><span class="pre">Q.insert_into()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#sqlo.Q.raw"><code class="docutils literal notranslate"><span class="pre">Q.raw()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#sqlo.Q.select"><code class="docutils literal notranslate"><span class="pre">Q.select()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#sqlo.Q.set_debug"><code class="docutils literal notranslate"><span class="pre">Q.set_debug()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#sqlo.Q.set_dialect"><code class="docutils literal notranslate"><span class="pre">Q.set_dialect()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#sqlo.Q.update"><code class="docutils literal notranslate"><span class="pre">Q.update()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#sqlo.Raw"><code class="docutils literal notranslate"><span class="pre">Raw</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#sqlo.Func"><code class="docutils literal notranslate"><span class="pre">Func</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#sqlo.Func.as_"><code class="docutils literal notranslate"><span class="pre">Func.as_()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#sqlo.Func.over"><code class="docutils literal notranslate"><span class="pre">Func.over()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#sqlo.Condition"><code class="docutils literal notranslate"><span class="pre">Condition</span></code></a><ul>
@@ -87,6 +88,21 @@
 <li class="toctree-l3"><a class="reference internal" href="#sqlo.Condition.not_null"><code class="docutils literal notranslate"><span class="pre">Condition.not_null()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#sqlo.Condition.null"><code class="docutils literal notranslate"><span class="pre">Condition.null()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#sqlo.Condition.or_"><code class="docutils literal notranslate"><span class="pre">Condition.or_()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#sqlo.JSON"><code class="docutils literal notranslate"><span class="pre">JSON</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#sqlo.JSON.extract"><code class="docutils literal notranslate"><span class="pre">JSON.extract()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#sqlo.JSONPath"><code class="docutils literal notranslate"><span class="pre">JSONPath</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#sqlo.Window"><code class="docutils literal notranslate"><span class="pre">Window</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#sqlo.Window.and_order_by"><code class="docutils literal notranslate"><span class="pre">Window.and_order_by()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#sqlo.Window.and_partition_by"><code class="docutils literal notranslate"><span class="pre">Window.and_partition_by()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#sqlo.Window.build"><code class="docutils literal notranslate"><span class="pre">Window.build()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#sqlo.Window.order_by"><code class="docutils literal notranslate"><span class="pre">Window.order_by()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#sqlo.Window.partition_by"><code class="docutils literal notranslate"><span class="pre">Window.partition_by()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#sqlo.Window.range_between"><code class="docutils literal notranslate"><span class="pre">Window.range_between()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#sqlo.Window.rows_between"><code class="docutils literal notranslate"><span class="pre">Window.rows_between()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#sqlo.query.select.SelectQuery"><code class="docutils literal notranslate"><span class="pre">SelectQuery</span></code></a><ul>
@@ -141,6 +157,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#sqlo.query.update.UpdateQuery.limit"><code class="docutils literal notranslate"><span class="pre">UpdateQuery.limit()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#sqlo.query.update.UpdateQuery.order_by"><code class="docutils literal notranslate"><span class="pre">UpdateQuery.order_by()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#sqlo.query.update.UpdateQuery.allow_all_rows"><code class="docutils literal notranslate"><span class="pre">UpdateQuery.allow_all_rows()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#sqlo.query.update.UpdateQuery.batch_update"><code class="docutils literal notranslate"><span class="pre">UpdateQuery.batch_update()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#sqlo.query.update.UpdateQuery.build"><code class="docutils literal notranslate"><span class="pre">UpdateQuery.build()</span></code></a></li>
 </ul>
 </li>
@@ -154,10 +171,14 @@
 <li class="toctree-l3"><a class="reference internal" href="#sqlo.query.delete.DeleteQuery.build"><code class="docutils literal notranslate"><span class="pre">DeleteQuery.build()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#sqlo.expressions.Expression"><code class="docutils literal notranslate"><span class="pre">Expression</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#sqlo.expressions.Expression"><code class="docutils literal notranslate"><span class="pre">Expression</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#sqlo.expressions.Expression.alias"><code class="docutils literal notranslate"><span class="pre">Expression.alias</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#sqlo.expressions.Expression.as_"><code class="docutils literal notranslate"><span class="pre">Expression.as_()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#sqlo.expressions.Raw"><code class="docutils literal notranslate"><span class="pre">Raw</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#sqlo.expressions.Func"><code class="docutils literal notranslate"><span class="pre">Func</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#sqlo.expressions.Func.as_"><code class="docutils literal notranslate"><span class="pre">Func.as_()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#sqlo.expressions.Func.over"><code class="docutils literal notranslate"><span class="pre">Func.over()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#sqlo.expressions.FunctionFactory"><code class="docutils literal notranslate"><span class="pre">FunctionFactory</span></code></a><ul>
@@ -182,6 +203,11 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#sqlo.expressions.ComplexCondition"><code class="docutils literal notranslate"><span class="pre">ComplexCondition</span></code></a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#sqlo.expressions.ComplexCondition.build"><code class="docutils literal notranslate"><span class="pre">ComplexCondition.build()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#sqlo.expressions.JSONPath"><code class="docutils literal notranslate"><span class="pre">JSONPath</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#sqlo.expressions.JSON"><code class="docutils literal notranslate"><span class="pre">JSON</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#sqlo.expressions.JSON.extract"><code class="docutils literal notranslate"><span class="pre">JSON.extract()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -215,7 +241,8 @@
   <section id="api-reference">
 <h1>API Reference<a class="headerlink" href="#api-reference" title="Link to this heading"></a></h1>
 <p>This section contains the auto-generated API documentation.</p>
-<dl class="py class" id="module-sqlo">
+<p id="module-sqlo">sqlo - A modern, type-safe, and extensible SQL query builder for Python.</p>
+<dl class="py class">
 <dt class="sig sig-object py" id="sqlo.Q">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sqlo.</span></span><span class="sig-name descname"><span class="pre">Q</span></span><a class="reference internal" href="_modules/sqlo/builder.html#Q"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sqlo.Q" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
@@ -276,7 +303,18 @@
 <dd class="field-odd"><p><strong>columns</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> | </em><a class="reference internal" href="#sqlo.expressions.Raw" title="sqlo.expressions.Raw"><em>Raw</em></a><em> | </em><a class="reference internal" href="#sqlo.expressions.Func" title="sqlo.expressions.Func"><em>Func</em></a>)</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="#sqlo.query.select.SelectQuery" title="sqlo.query.select.SelectQuery"><em>SelectQuery</em></a></p>
+<dd class="field-even"><p><a class="reference internal" href="#sqlo.query.select.SelectQuery" title="sqlo.query.select.SelectQuery"><em>SelectQuery</em></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sqlo.Q.set_debug">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">set_debug</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">debug</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sqlo/builder.html#Q.set_debug"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sqlo.Q.set_debug" title="Link to this definition"></a></dt>
+<dd><p>Enable or disable debug mode (prints SQL to stdout).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>debug</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>)</p>
 </dd>
 </dl>
 </dd></dl>
@@ -341,16 +379,24 @@ and use it within your queries. It supports arguments and aliasing.</p>
 </pre></div>
 </div>
 <dl class="py method">
-<dt class="sig sig-object py" id="sqlo.Func.as_">
-<span class="sig-name descname"><span class="pre">as_</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">alias</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sqlo/expressions.html#Func.as_"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sqlo.Func.as_" title="Link to this definition"></a></dt>
-<dd><dl class="field-list simple">
+<dt class="sig sig-object py" id="sqlo.Func.over">
+<span class="sig-name descname"><span class="pre">over</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">window</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sqlo/expressions.html#Func.over"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sqlo.Func.over" title="Link to this definition"></a></dt>
+<dd><p>Create a window function with OVER clause.</p>
+<dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>alias</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p>
+<dd class="field-odd"><p><strong>window</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a><em> | </em><em>None</em>) – Optional Window object for PARTITION BY / ORDER BY</p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="#sqlo.expressions.Func" title="sqlo.expressions.Func"><em>Func</em></a></p>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>WindowFunc object</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a></p>
 </dd>
 </dl>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">func</span><span class="o">.</span><span class="n">row_number</span><span class="p">()</span><span class="o">.</span><span class="n">over</span><span class="p">(</span><span class="n">Window</span><span class="o">.</span><span class="n">partition_by</span><span class="p">(</span><span class="s2">&quot;dept&quot;</span><span class="p">))</span>
+</pre></div>
+</div>
 </dd></dl>
 
 </dd></dl>
@@ -616,13 +662,174 @@ Conditions can be combined using bitwise operators (&amp; and |) or static metho
 
 </dd></dl>
 
-<dl class="py class" id="module-sqlo.query.select">
-<dt class="sig sig-object py" id="sqlo.query.select.SelectQuery">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sqlo.query.select.</span></span><span class="sig-name descname"><span class="pre">SelectQuery</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">columns</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dialect</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sqlo/query/select.html#SelectQuery"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sqlo.query.select.SelectQuery" title="Link to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">WhereClauseMixin</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Query</span></code></p>
+<dl class="py class">
+<dt class="sig sig-object py" id="sqlo.JSON">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sqlo.</span></span><span class="sig-name descname"><span class="pre">JSON</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">column</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sqlo/expressions.html#JSON"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sqlo.JSON" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#sqlo.expressions.Expression" title="sqlo.expressions.Expression"><code class="xref py py-class docutils literal notranslate"><span class="pre">Expression</span></code></a></p>
+<p>Represents a JSON column.</p>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">JSON</span><span class="p">(</span><span class="s2">&quot;data&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">extract</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>columns</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> | </em><a class="reference internal" href="#sqlo.expressions.Raw" title="sqlo.expressions.Raw"><em>Raw</em></a><em> | </em><a class="reference internal" href="#sqlo.expressions.Func" title="sqlo.expressions.Func"><em>Func</em></a>)</p>
+<dd class="field-odd"><p><strong>column</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="sqlo.JSON.extract">
+<span class="sig-name descname"><span class="pre">extract</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sqlo/expressions.html#JSON.extract"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sqlo.JSON.extract" title="Link to this definition"></a></dt>
+<dd><p>Extract a value from the JSON column.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>path</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#sqlo.expressions.JSONPath" title="sqlo.expressions.JSONPath"><em>JSONPath</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="sqlo.JSONPath">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sqlo.</span></span><span class="sig-name descname"><span class="pre">JSONPath</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">column</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sqlo/expressions.html#JSONPath"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sqlo.JSONPath" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#sqlo.expressions.Expression" title="sqlo.expressions.Expression"><code class="xref py py-class docutils literal notranslate"><span class="pre">Expression</span></code></a></p>
+<p>Represents a JSON path extraction.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>column</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p></li>
+<li><p><strong>path</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="sqlo.Window">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sqlo.</span></span><span class="sig-name descname"><span class="pre">Window</span></span><a class="reference internal" href="_modules/sqlo/window.html#Window"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sqlo.Window" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Represents a SQL window specification for window functions.</p>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Window</span><span class="o">.</span><span class="n">partition_by</span><span class="p">(</span><span class="s2">&quot;department&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="s2">&quot;-salary&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Window</span><span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="s2">&quot;date&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">rows_between</span><span class="p">(</span><span class="s2">&quot;UNBOUNDED PRECEDING&quot;</span><span class="p">,</span> <span class="s2">&quot;CURRENT ROW&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="sqlo.Window.and_order_by">
+<span class="sig-name descname"><span class="pre">and_order_by</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">columns</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sqlo/window.html#Window.and_order_by"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sqlo.Window.and_order_by" title="Link to this definition"></a></dt>
+<dd><p>Add ORDER BY clause to the window.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>columns</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#sqlo.Window" title="sqlo.window.Window"><em>Window</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sqlo.Window.and_partition_by">
+<span class="sig-name descname"><span class="pre">and_partition_by</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">columns</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sqlo/window.html#Window.and_partition_by"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sqlo.Window.and_partition_by" title="Link to this definition"></a></dt>
+<dd><p>Add PARTITION BY clause to the window.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>columns</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#sqlo.Window" title="sqlo.window.Window"><em>Window</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sqlo.Window.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dialect</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sqlo/window.html#Window.build"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sqlo.Window.build" title="Link to this definition"></a></dt>
+<dd><p>Build the window specification SQL.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>dialect</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)">str</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sqlo.Window.order_by">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">order_by</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">columns</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sqlo/window.html#Window.order_by"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sqlo.Window.order_by" title="Link to this definition"></a></dt>
+<dd><p>Create a window with ORDER BY clause.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>columns</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#sqlo.Window" title="sqlo.window.Window"><em>Window</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sqlo.Window.partition_by">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">partition_by</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">columns</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sqlo/window.html#Window.partition_by"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sqlo.Window.partition_by" title="Link to this definition"></a></dt>
+<dd><p>Create a window with PARTITION BY clause.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>columns</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#sqlo.Window" title="sqlo.window.Window"><em>Window</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sqlo.Window.range_between">
+<span class="sig-name descname"><span class="pre">range_between</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sqlo/window.html#Window.range_between"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sqlo.Window.range_between" title="Link to this definition"></a></dt>
+<dd><p>Add RANGE BETWEEN frame clause.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>start</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>) – Start of the frame</p></li>
+<li><p><strong>end</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>) – End of the frame</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#sqlo.Window" title="sqlo.window.Window"><em>Window</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sqlo.Window.rows_between">
+<span class="sig-name descname"><span class="pre">rows_between</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sqlo/window.html#Window.rows_between"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sqlo.Window.rows_between" title="Link to this definition"></a></dt>
+<dd><p>Add ROWS BETWEEN frame clause.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>start</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>) – Start of the frame (e.g., “UNBOUNDED PRECEDING”, “1 PRECEDING”, “CURRENT ROW”)</p></li>
+<li><p><strong>end</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>) – End of the frame (e.g., “CURRENT ROW”, “1 FOLLOWING”, “UNBOUNDED FOLLOWING”)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#sqlo.Window" title="sqlo.window.Window"><em>Window</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class" id="module-sqlo.query.select">
+<dt class="sig sig-object py" id="sqlo.query.select.SelectQuery">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sqlo.query.select.</span></span><span class="sig-name descname"><span class="pre">SelectQuery</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">columns</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dialect</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">debug</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sqlo/query/select.html#SelectQuery"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sqlo.query.select.SelectQuery" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">WhereClauseMixin</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Query</span></code>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Generic" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Generic</span></code></a>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">T</span></code>]</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>columns</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> | </em><a class="reference internal" href="#sqlo.expressions.Raw" title="sqlo.expressions.Raw"><em>Raw</em></a><em> | </em><a class="reference internal" href="#sqlo.expressions.Func" title="sqlo.expressions.Func"><em>Func</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><em>list</em></a>)</p>
 </dd>
 </dl>
 <dl class="py method">
@@ -669,7 +876,7 @@ Conditions can be combined using bitwise operators (&amp; and |) or static metho
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="#sqlo.query.select.SelectQuery" title="sqlo.query.select.SelectQuery"><em>SelectQuery</em></a></p>
+<dd class="field-even"><p><a class="reference internal" href="#sqlo.query.select.SelectQuery" title="sqlo.query.select.SelectQuery"><em>SelectQuery</em></a>[<em>T</em>]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -685,7 +892,7 @@ Conditions can be combined using bitwise operators (&amp; and |) or static metho
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="#sqlo.query.select.SelectQuery" title="sqlo.query.select.SelectQuery"><em>SelectQuery</em></a></p>
+<dd class="field-even"><p><a class="reference internal" href="#sqlo.query.select.SelectQuery" title="sqlo.query.select.SelectQuery"><em>SelectQuery</em></a>[<em>T</em>]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -701,7 +908,7 @@ Conditions can be combined using bitwise operators (&amp; and |) or static metho
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="#sqlo.query.select.SelectQuery" title="sqlo.query.select.SelectQuery"><em>SelectQuery</em></a></p>
+<dd class="field-even"><p><a class="reference internal" href="#sqlo.query.select.SelectQuery" title="sqlo.query.select.SelectQuery"><em>SelectQuery</em></a>[<em>T</em>]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -714,7 +921,7 @@ Conditions can be combined using bitwise operators (&amp; and |) or static metho
 <dd class="field-odd"><p><strong>table</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="#sqlo.query.select.SelectQuery" title="sqlo.query.select.SelectQuery"><em>SelectQuery</em></a></p>
+<dd class="field-even"><p><a class="reference internal" href="#sqlo.query.select.SelectQuery" title="sqlo.query.select.SelectQuery"><em>SelectQuery</em></a>[<em>T</em>]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -731,7 +938,7 @@ Conditions can be combined using bitwise operators (&amp; and |) or static metho
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="#sqlo.query.select.SelectQuery" title="sqlo.query.select.SelectQuery">SelectQuery</a></p>
+<dd class="field-even"><p><a class="reference internal" href="#sqlo.query.select.SelectQuery" title="sqlo.query.select.SelectQuery">SelectQuery</a>[T]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -748,7 +955,7 @@ Conditions can be combined using bitwise operators (&amp; and |) or static metho
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="#sqlo.query.select.SelectQuery" title="sqlo.query.select.SelectQuery"><em>SelectQuery</em></a></p>
+<dd class="field-even"><p><a class="reference internal" href="#sqlo.query.select.SelectQuery" title="sqlo.query.select.SelectQuery"><em>SelectQuery</em></a>[<em>T</em>]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -765,7 +972,7 @@ Conditions can be combined using bitwise operators (&amp; and |) or static metho
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="#sqlo.query.select.SelectQuery" title="sqlo.query.select.SelectQuery"><em>SelectQuery</em></a></p>
+<dd class="field-even"><p><a class="reference internal" href="#sqlo.query.select.SelectQuery" title="sqlo.query.select.SelectQuery"><em>SelectQuery</em></a>[<em>T</em>]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -783,7 +990,7 @@ Conditions can be combined using bitwise operators (&amp; and |) or static metho
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="#sqlo.query.select.SelectQuery" title="sqlo.query.select.SelectQuery">SelectQuery</a></p>
+<dd class="field-even"><p><a class="reference internal" href="#sqlo.query.select.SelectQuery" title="sqlo.query.select.SelectQuery">SelectQuery</a>[T]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -797,7 +1004,7 @@ Conditions can be combined using bitwise operators (&amp; and |) or static metho
 <dd class="field-odd"><p><strong>column</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="#sqlo.query.select.SelectQuery" title="sqlo.query.select.SelectQuery"><em>SelectQuery</em></a></p>
+<dd class="field-even"><p><a class="reference internal" href="#sqlo.query.select.SelectQuery" title="sqlo.query.select.SelectQuery"><em>SelectQuery</em></a>[<em>T</em>]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -811,7 +1018,7 @@ Conditions can be combined using bitwise operators (&amp; and |) or static metho
 <dd class="field-odd"><p><strong>column</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="#sqlo.query.select.SelectQuery" title="sqlo.query.select.SelectQuery"><em>SelectQuery</em></a></p>
+<dd class="field-even"><p><a class="reference internal" href="#sqlo.query.select.SelectQuery" title="sqlo.query.select.SelectQuery"><em>SelectQuery</em></a>[<em>T</em>]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -829,7 +1036,7 @@ Conditions can be combined using bitwise operators (&amp; and |) or static metho
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="#sqlo.query.select.SelectQuery" title="sqlo.query.select.SelectQuery"><em>SelectQuery</em></a></p>
+<dd class="field-even"><p><a class="reference internal" href="#sqlo.query.select.SelectQuery" title="sqlo.query.select.SelectQuery"><em>SelectQuery</em></a>[<em>T</em>]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -847,7 +1054,7 @@ Conditions can be combined using bitwise operators (&amp; and |) or static metho
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="#sqlo.query.select.SelectQuery" title="sqlo.query.select.SelectQuery"><em>SelectQuery</em></a></p>
+<dd class="field-even"><p><a class="reference internal" href="#sqlo.query.select.SelectQuery" title="sqlo.query.select.SelectQuery"><em>SelectQuery</em></a>[<em>T</em>]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -864,7 +1071,7 @@ Conditions can be combined using bitwise operators (&amp; and |) or static metho
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="#sqlo.query.select.SelectQuery" title="sqlo.query.select.SelectQuery"><em>SelectQuery</em></a></p>
+<dd class="field-even"><p><a class="reference internal" href="#sqlo.query.select.SelectQuery" title="sqlo.query.select.SelectQuery"><em>SelectQuery</em></a>[<em>T</em>]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -881,7 +1088,7 @@ Conditions can be combined using bitwise operators (&amp; and |) or static metho
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="#sqlo.query.select.SelectQuery" title="sqlo.query.select.SelectQuery"><em>SelectQuery</em></a></p>
+<dd class="field-even"><p><a class="reference internal" href="#sqlo.query.select.SelectQuery" title="sqlo.query.select.SelectQuery"><em>SelectQuery</em></a>[<em>T</em>]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -894,7 +1101,7 @@ Conditions can be combined using bitwise operators (&amp; and |) or static metho
 <dd class="field-odd"><p><strong>columns</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> | </em><a class="reference internal" href="#sqlo.expressions.Raw" title="sqlo.expressions.Raw"><em>Raw</em></a>)</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="#sqlo.query.select.SelectQuery" title="sqlo.query.select.SelectQuery"><em>SelectQuery</em></a></p>
+<dd class="field-even"><p><a class="reference internal" href="#sqlo.query.select.SelectQuery" title="sqlo.query.select.SelectQuery"><em>SelectQuery</em></a>[<em>T</em>]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -907,7 +1114,7 @@ Conditions can be combined using bitwise operators (&amp; and |) or static metho
 <dd class="field-odd"><p><strong>limit</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a>)</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="#sqlo.query.select.SelectQuery" title="sqlo.query.select.SelectQuery"><em>SelectQuery</em></a></p>
+<dd class="field-even"><p><a class="reference internal" href="#sqlo.query.select.SelectQuery" title="sqlo.query.select.SelectQuery"><em>SelectQuery</em></a>[<em>T</em>]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -920,7 +1127,7 @@ Conditions can be combined using bitwise operators (&amp; and |) or static metho
 <dd class="field-odd"><p><strong>offset</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a>)</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="#sqlo.query.select.SelectQuery" title="sqlo.query.select.SelectQuery"><em>SelectQuery</em></a></p>
+<dd class="field-even"><p><a class="reference internal" href="#sqlo.query.select.SelectQuery" title="sqlo.query.select.SelectQuery"><em>SelectQuery</em></a>[<em>T</em>]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -933,7 +1140,7 @@ Conditions can be combined using bitwise operators (&amp; and |) or static metho
 <dd class="field-odd"><p><strong>columns</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="#sqlo.query.select.SelectQuery" title="sqlo.query.select.SelectQuery"><em>SelectQuery</em></a></p>
+<dd class="field-even"><p><a class="reference internal" href="#sqlo.query.select.SelectQuery" title="sqlo.query.select.SelectQuery"><em>SelectQuery</em></a>[<em>T</em>]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -945,11 +1152,11 @@ Conditions can be combined using bitwise operators (&amp; and |) or static metho
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>condition</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a>)</p></li>
-<li><p><strong>callback</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.14)"><em>Callable</em></a><em>[</em><em>[</em><a class="reference internal" href="#sqlo.query.select.SelectQuery" title="sqlo.query.select.SelectQuery"><em>SelectQuery</em></a><em>]</em><em>, </em><em>None</em><em>]</em>)</p></li>
+<li><p><strong>callback</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.14)"><em>Callable</em></a><em>[</em><em>[</em><a class="reference internal" href="#sqlo.query.select.SelectQuery" title="sqlo.query.select.SelectQuery"><em>SelectQuery</em></a><em>[</em><em>T</em><em>]</em><em>]</em><em>, </em><em>None</em><em>]</em>)</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="#sqlo.query.select.SelectQuery" title="sqlo.query.select.SelectQuery"><em>SelectQuery</em></a></p>
+<dd class="field-even"><p><a class="reference internal" href="#sqlo.query.select.SelectQuery" title="sqlo.query.select.SelectQuery"><em>SelectQuery</em></a>[<em>T</em>]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1068,7 +1275,7 @@ Conditions can be combined using bitwise operators (&amp; and |) or static metho
 <dd class="field-odd"><p><strong>query</strong> (<a class="reference internal" href="#sqlo.query.select.SelectQuery" title="sqlo.query.select.SelectQuery"><em>SelectQuery</em></a>)</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="#sqlo.query.select.SelectQuery" title="sqlo.query.select.SelectQuery"><em>SelectQuery</em></a></p>
+<dd class="field-even"><p><a class="reference internal" href="#sqlo.query.select.SelectQuery" title="sqlo.query.select.SelectQuery"><em>SelectQuery</em></a>[<em>T</em>]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1081,7 +1288,7 @@ Conditions can be combined using bitwise operators (&amp; and |) or static metho
 <dd class="field-odd"><p><strong>query</strong> (<a class="reference internal" href="#sqlo.query.select.SelectQuery" title="sqlo.query.select.SelectQuery"><em>SelectQuery</em></a>)</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="#sqlo.query.select.SelectQuery" title="sqlo.query.select.SelectQuery"><em>SelectQuery</em></a></p>
+<dd class="field-even"><p><a class="reference internal" href="#sqlo.query.select.SelectQuery" title="sqlo.query.select.SelectQuery"><em>SelectQuery</em></a>[<em>T</em>]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1115,7 +1322,7 @@ Conditions can be combined using bitwise operators (&amp; and |) or static metho
 
 <dl class="py class" id="module-sqlo.query.insert">
 <dt class="sig sig-object py" id="sqlo.query.insert.InsertQuery">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sqlo.query.insert.</span></span><span class="sig-name descname"><span class="pre">InsertQuery</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dialect</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sqlo/query/insert.html#InsertQuery"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sqlo.query.insert.InsertQuery" title="Link to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sqlo.query.insert.</span></span><span class="sig-name descname"><span class="pre">InsertQuery</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dialect</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">debug</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sqlo/query/insert.html#InsertQuery"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sqlo.query.insert.InsertQuery" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Query</span></code></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1190,7 +1397,7 @@ Conditions can be combined using bitwise operators (&amp; and |) or static metho
 
 <dl class="py class" id="module-sqlo.query.update">
 <dt class="sig sig-object py" id="sqlo.query.update.UpdateQuery">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sqlo.query.update.</span></span><span class="sig-name descname"><span class="pre">UpdateQuery</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dialect</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sqlo/query/update.html#UpdateQuery"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sqlo.query.update.UpdateQuery" title="Link to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sqlo.query.update.</span></span><span class="sig-name descname"><span class="pre">UpdateQuery</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dialect</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">debug</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sqlo/query/update.html#UpdateQuery"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sqlo.query.update.UpdateQuery" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">WhereClauseMixin</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Query</span></code></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1309,6 +1516,24 @@ You must call this method explicitly if you want to update all rows.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="sqlo.query.update.UpdateQuery.batch_update">
+<span class="sig-name descname"><span class="pre">batch_update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sqlo/query/update.html#UpdateQuery.batch_update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sqlo.query.update.UpdateQuery.batch_update" title="Link to this definition"></a></dt>
+<dd><p>Perform a batch update using CASE WHEN.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>values</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a><em>]</em><em>]</em>) – List of dictionaries containing values to update.
+Each dictionary must contain the key column.</p></li>
+<li><p><strong>key</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>) – The column name to use as the key (e.g., “id”).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#sqlo.query.update.UpdateQuery" title="sqlo.query.update.UpdateQuery"><em>UpdateQuery</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="sqlo.query.update.UpdateQuery.build">
 <span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sqlo/query/update.html#UpdateQuery.build"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sqlo.query.update.UpdateQuery.build" title="Link to this definition"></a></dt>
 <dd><p>Build the query and return (sql, params).</p>
@@ -1323,7 +1548,7 @@ You must call this method explicitly if you want to update all rows.</p>
 
 <dl class="py class" id="module-sqlo.query.delete">
 <dt class="sig sig-object py" id="sqlo.query.delete.DeleteQuery">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sqlo.query.delete.</span></span><span class="sig-name descname"><span class="pre">DeleteQuery</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dialect</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sqlo/query/delete.html#DeleteQuery"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sqlo.query.delete.DeleteQuery" title="Link to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sqlo.query.delete.</span></span><span class="sig-name descname"><span class="pre">DeleteQuery</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dialect</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">debug</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sqlo/query/delete.html#DeleteQuery"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sqlo.query.delete.DeleteQuery" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">WhereClauseMixin</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Query</span></code></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1446,6 +1671,25 @@ You must call this method explicitly if you want to delete all rows.</p>
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sqlo.expressions.</span></span><span class="sig-name descname"><span class="pre">Expression</span></span><a class="reference internal" href="_modules/sqlo/expressions.html#Expression"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sqlo.expressions.Expression" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>Base class for SQL expressions.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="sqlo.expressions.Expression.alias">
+<span class="sig-name descname"><span class="pre">alias</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#sqlo.expressions.Expression.alias" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sqlo.expressions.Expression.as_">
+<span class="sig-name descname"><span class="pre">as_</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">alias</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sqlo/expressions.html#Expression.as_"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sqlo.expressions.Expression.as_" title="Link to this definition"></a></dt>
+<dd><p>Set an alias for the expression.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>alias</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#sqlo.expressions.Expression" title="sqlo.expressions.Expression"><em>Expression</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="py class">
@@ -1487,16 +1731,24 @@ and use it within your queries. It supports arguments and aliasing.</p>
 </pre></div>
 </div>
 <dl class="py method">
-<dt class="sig sig-object py" id="sqlo.expressions.Func.as_">
-<span class="sig-name descname"><span class="pre">as_</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">alias</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sqlo/expressions.html#Func.as_"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sqlo.expressions.Func.as_" title="Link to this definition"></a></dt>
-<dd><dl class="field-list simple">
+<dt class="sig sig-object py" id="sqlo.expressions.Func.over">
+<span class="sig-name descname"><span class="pre">over</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">window</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sqlo/expressions.html#Func.over"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sqlo.expressions.Func.over" title="Link to this definition"></a></dt>
+<dd><p>Create a window function with OVER clause.</p>
+<dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>alias</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p>
+<dd class="field-odd"><p><strong>window</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a><em> | </em><em>None</em>) – Optional Window object for PARTITION BY / ORDER BY</p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="#sqlo.expressions.Func" title="sqlo.expressions.Func"><em>Func</em></a></p>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>WindowFunc object</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a></p>
 </dd>
 </dl>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">func</span><span class="o">.</span><span class="n">row_number</span><span class="p">()</span><span class="o">.</span><span class="n">over</span><span class="p">(</span><span class="n">Window</span><span class="o">.</span><span class="n">partition_by</span><span class="p">(</span><span class="s2">&quot;dept&quot;</span><span class="p">))</span>
+</pre></div>
+</div>
 </dd></dl>
 
 </dd></dl>
@@ -1884,6 +2136,51 @@ It properly handles operator precedence and nested conditions.</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># SQL: (`age` &gt;= ? OR `country` = ?)</span>
 </pre></div>
 </div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="sqlo.expressions.JSONPath">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sqlo.expressions.</span></span><span class="sig-name descname"><span class="pre">JSONPath</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">column</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sqlo/expressions.html#JSONPath"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sqlo.expressions.JSONPath" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#sqlo.expressions.Expression" title="sqlo.expressions.Expression"><code class="xref py py-class docutils literal notranslate"><span class="pre">Expression</span></code></a></p>
+<p>Represents a JSON path extraction.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>column</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p></li>
+<li><p><strong>path</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="sqlo.expressions.JSON">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sqlo.expressions.</span></span><span class="sig-name descname"><span class="pre">JSON</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">column</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sqlo/expressions.html#JSON"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sqlo.expressions.JSON" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#sqlo.expressions.Expression" title="sqlo.expressions.Expression"><code class="xref py py-class docutils literal notranslate"><span class="pre">Expression</span></code></a></p>
+<p>Represents a JSON column.</p>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">JSON</span><span class="p">(</span><span class="s2">&quot;data&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">extract</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>column</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="sqlo.expressions.JSON.extract">
+<span class="sig-name descname"><span class="pre">extract</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sqlo/expressions.html#JSON.extract"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sqlo.expressions.JSON.extract" title="Link to this definition"></a></dt>
+<dd><p>Extract a value from the JSON column.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>path</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#sqlo.expressions.JSONPath" title="sqlo.expressions.JSONPath"><em>JSONPath</em></a></p>
+</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>

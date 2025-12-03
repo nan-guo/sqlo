@@ -14,8 +14,14 @@ query = Q.select("*").from_("users")
 sql, params = query.build()
 # SELECT * FROM `users`
 
-# Select specific columns
+# Select specific columns (unpacked arguments)
 query = Q.select("id", "name", "email").from_("users")
+sql, params = query.build()
+# SELECT `id`, `name`, `email` FROM `users`
+
+# Select specific columns (list argument)
+columns = ["id", "name", "email"]
+query = Q.select(columns).from_("users")
 sql, params = query.build()
 # SELECT `id`, `name`, `email` FROM `users`
 ```
