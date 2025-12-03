@@ -74,7 +74,10 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#sqlo.Raw"><code class="docutils literal notranslate"><span class="pre">Raw</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="#sqlo.Func"><code class="docutils literal notranslate"><span class="pre">Func</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#sqlo.Func"><code class="docutils literal notranslate"><span class="pre">Func</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#sqlo.Func.over"><code class="docutils literal notranslate"><span class="pre">Func.over()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#sqlo.Condition"><code class="docutils literal notranslate"><span class="pre">Condition</span></code></a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#sqlo.Condition.and_"><code class="docutils literal notranslate"><span class="pre">Condition.and_()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#sqlo.Condition.build"><code class="docutils literal notranslate"><span class="pre">Condition.build()</span></code></a></li>
@@ -92,6 +95,16 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#sqlo.JSONPath"><code class="docutils literal notranslate"><span class="pre">JSONPath</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#sqlo.Window"><code class="docutils literal notranslate"><span class="pre">Window</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#sqlo.Window.and_order_by"><code class="docutils literal notranslate"><span class="pre">Window.and_order_by()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#sqlo.Window.and_partition_by"><code class="docutils literal notranslate"><span class="pre">Window.and_partition_by()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#sqlo.Window.build"><code class="docutils literal notranslate"><span class="pre">Window.build()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#sqlo.Window.order_by"><code class="docutils literal notranslate"><span class="pre">Window.order_by()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#sqlo.Window.partition_by"><code class="docutils literal notranslate"><span class="pre">Window.partition_by()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#sqlo.Window.range_between"><code class="docutils literal notranslate"><span class="pre">Window.range_between()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#sqlo.Window.rows_between"><code class="docutils literal notranslate"><span class="pre">Window.rows_between()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#sqlo.query.select.SelectQuery"><code class="docutils literal notranslate"><span class="pre">SelectQuery</span></code></a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#sqlo.query.select.SelectQuery.from_"><code class="docutils literal notranslate"><span class="pre">SelectQuery.from_()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#sqlo.query.select.SelectQuery.join"><code class="docutils literal notranslate"><span class="pre">SelectQuery.join()</span></code></a></li>
@@ -164,7 +177,10 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#sqlo.expressions.Raw"><code class="docutils literal notranslate"><span class="pre">Raw</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="#sqlo.expressions.Func"><code class="docutils literal notranslate"><span class="pre">Func</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#sqlo.expressions.Func"><code class="docutils literal notranslate"><span class="pre">Func</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#sqlo.expressions.Func.over"><code class="docutils literal notranslate"><span class="pre">Func.over()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#sqlo.expressions.FunctionFactory"><code class="docutils literal notranslate"><span class="pre">FunctionFactory</span></code></a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#sqlo.expressions.FunctionFactory.count"><code class="docutils literal notranslate"><span class="pre">FunctionFactory.count()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#sqlo.expressions.FunctionFactory.sum"><code class="docutils literal notranslate"><span class="pre">FunctionFactory.sum()</span></code></a></li>
@@ -362,6 +378,27 @@ and use it within your queries. It supports arguments and aliasing.</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">as_</span><span class="p">(</span><span class="s2">&quot;total&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
+<dl class="py method">
+<dt class="sig sig-object py" id="sqlo.Func.over">
+<span class="sig-name descname"><span class="pre">over</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">window</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sqlo/expressions.html#Func.over"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sqlo.Func.over" title="Link to this definition"></a></dt>
+<dd><p>Create a window function with OVER clause.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>window</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a><em> | </em><em>None</em>) – Optional Window object for PARTITION BY / ORDER BY</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>WindowFunc object</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a></p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">func</span><span class="o">.</span><span class="n">row_number</span><span class="p">()</span><span class="o">.</span><span class="n">over</span><span class="p">(</span><span class="n">Window</span><span class="o">.</span><span class="n">partition_by</span><span class="p">(</span><span class="s2">&quot;dept&quot;</span><span class="p">))</span>
+</pre></div>
+</div>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="py class">
@@ -668,6 +705,122 @@ Conditions can be combined using bitwise operators (&amp; and |) or static metho
 </ul>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="sqlo.Window">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sqlo.</span></span><span class="sig-name descname"><span class="pre">Window</span></span><a class="reference internal" href="_modules/sqlo/window.html#Window"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sqlo.Window" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Represents a SQL window specification for window functions.</p>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Window</span><span class="o">.</span><span class="n">partition_by</span><span class="p">(</span><span class="s2">&quot;department&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="s2">&quot;-salary&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Window</span><span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="s2">&quot;date&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">rows_between</span><span class="p">(</span><span class="s2">&quot;UNBOUNDED PRECEDING&quot;</span><span class="p">,</span> <span class="s2">&quot;CURRENT ROW&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="sqlo.Window.and_order_by">
+<span class="sig-name descname"><span class="pre">and_order_by</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">columns</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sqlo/window.html#Window.and_order_by"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sqlo.Window.and_order_by" title="Link to this definition"></a></dt>
+<dd><p>Add ORDER BY clause to the window.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>columns</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#sqlo.Window" title="sqlo.window.Window"><em>Window</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sqlo.Window.and_partition_by">
+<span class="sig-name descname"><span class="pre">and_partition_by</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">columns</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sqlo/window.html#Window.and_partition_by"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sqlo.Window.and_partition_by" title="Link to this definition"></a></dt>
+<dd><p>Add PARTITION BY clause to the window.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>columns</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#sqlo.Window" title="sqlo.window.Window"><em>Window</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sqlo.Window.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dialect</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sqlo/window.html#Window.build"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sqlo.Window.build" title="Link to this definition"></a></dt>
+<dd><p>Build the window specification SQL.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>dialect</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)">str</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sqlo.Window.order_by">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">order_by</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">columns</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sqlo/window.html#Window.order_by"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sqlo.Window.order_by" title="Link to this definition"></a></dt>
+<dd><p>Create a window with ORDER BY clause.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>columns</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#sqlo.Window" title="sqlo.window.Window"><em>Window</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sqlo.Window.partition_by">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">partition_by</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">columns</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sqlo/window.html#Window.partition_by"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sqlo.Window.partition_by" title="Link to this definition"></a></dt>
+<dd><p>Create a window with PARTITION BY clause.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>columns</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#sqlo.Window" title="sqlo.window.Window"><em>Window</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sqlo.Window.range_between">
+<span class="sig-name descname"><span class="pre">range_between</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sqlo/window.html#Window.range_between"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sqlo.Window.range_between" title="Link to this definition"></a></dt>
+<dd><p>Add RANGE BETWEEN frame clause.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>start</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>) – Start of the frame</p></li>
+<li><p><strong>end</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>) – End of the frame</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#sqlo.Window" title="sqlo.window.Window"><em>Window</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sqlo.Window.rows_between">
+<span class="sig-name descname"><span class="pre">rows_between</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sqlo/window.html#Window.rows_between"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sqlo.Window.rows_between" title="Link to this definition"></a></dt>
+<dd><p>Add ROWS BETWEEN frame clause.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>start</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>) – Start of the frame (e.g., “UNBOUNDED PRECEDING”, “1 PRECEDING”, “CURRENT ROW”)</p></li>
+<li><p><strong>end</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>) – End of the frame (e.g., “CURRENT ROW”, “1 FOLLOWING”, “UNBOUNDED FOLLOWING”)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#sqlo.Window" title="sqlo.window.Window"><em>Window</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="py class" id="module-sqlo.query.select">
@@ -1577,6 +1730,27 @@ and use it within your queries. It supports arguments and aliasing.</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">as_</span><span class="p">(</span><span class="s2">&quot;total&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
+<dl class="py method">
+<dt class="sig sig-object py" id="sqlo.expressions.Func.over">
+<span class="sig-name descname"><span class="pre">over</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">window</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sqlo/expressions.html#Func.over"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sqlo.expressions.Func.over" title="Link to this definition"></a></dt>
+<dd><p>Create a window function with OVER clause.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>window</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a><em> | </em><em>None</em>) – Optional Window object for PARTITION BY / ORDER BY</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>WindowFunc object</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a></p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">func</span><span class="o">.</span><span class="n">row_number</span><span class="p">()</span><span class="o">.</span><span class="n">over</span><span class="p">(</span><span class="n">Window</span><span class="o">.</span><span class="n">partition_by</span><span class="p">(</span><span class="s2">&quot;dept&quot;</span><span class="p">))</span>
+</pre></div>
+</div>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="py class">

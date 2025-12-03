@@ -117,3 +117,32 @@ def test_window_function_ntile():
     sql, _ = q.build()
 
     assert "NTILE(4) OVER (ORDER BY `salary` DESC)" in sql
+
+
+def test_window_function_and_partition_by():
+    """Test adding partition columns with and_partition_by()."""
+    window = Window.partition_by("department").and_partition_by("location")
+    q = Q.select("name", func.row_number().over(window).as_("row_num")).from_(
+        "employees"
+    )
+
+    sql, _ = q.build()
+
+    assert "PARTITION BY `department`, `location`" in sql
+
+
+def test_window_function_range_between():
+    """Test RANGE BETWEEN frame clause."""
+    q = Q.select(
+        "date",
+        "amount",
+        func.sum("amount")
+        .over(
+            Window.order_by("date").range_between("UNBOUNDED PRECEDING", "CURRENT ROW")
+        )
+        .as_("running_total"),
+    ).from_("transactions")
+
+    sql, _ = q.build()
+
+    assert "RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW" in sql

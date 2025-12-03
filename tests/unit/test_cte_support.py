@@ -100,3 +100,54 @@ def test_cte_with_delete():
 
     assert "WITH `inactive` AS" in sql
     assert "DELETE FROM `users`" in sql
+
+
+def test_cte_without_name_raises_error():
+    """Test that CTE without name raises ValueError."""
+    import pytest
+
+    cte = Q.select("id").from_("users")  # No .as_() call
+
+    q = Q.select("*").from_("data")
+
+    with pytest.raises(ValueError, match="CTE name must be provided"):
+        q.with_(cte)
+
+
+def test_cte_with_string_query():
+    """Test CTE with string query (non-build object)."""
+    # This tests the else branch in _build_ctes when query doesn't have build()
+    q = Q.select("*").from_("users")
+    # Manually add a string CTE (simulating edge case)
+    q._ctes.append(("SELECT 1", "dummy", False))
+
+    sql, _ = q.build()
+
+    assert "WITH `dummy` AS (SELECT 1)" in sql
+
+
+def test_debug_method():
+    """Test debug() method prints SQL and returns self."""
+    import io
+    import sys
+
+    q = Q.select("name").from_("users").where("id", 1)
+
+    # Capture stdout
+    captured_output = io.StringIO()
+    sys.stdout = captured_output
+
+    result = q.debug()
+
+    # Restore stdout
+    sys.stdout = sys.__stdout__
+
+    output = captured_output.getvalue()
+
+    # Verify debug output was printed
+    assert "[sqlo DEBUG]" in output
+    assert "SELECT" in output
+    assert "Params:" in output
+
+    # Verify it returns self for chaining
+    assert result is q
