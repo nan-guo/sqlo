@@ -6,4 +6,4 @@ from .window import Window
 
 __all__ = ["Q", "Raw", "Func", "func", "Condition", "JSON", "JSONPath", "Window"]
 
-__version__ = "0.2.0"
+__version__ = "0.2.1"
