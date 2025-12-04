@@ -52,6 +52,18 @@ Documentation
    conditions
    expressions
    joins
+   window-functions
+   cte
+   json
+   batch-operations
+   
+.. toctree::
+   :maxdepth: 2
+   :caption: Integration & Recipes
+
+   integration-aiomysql
+   recipes
+   troubleshooting
    
 .. toctree::
    :maxdepth: 2
