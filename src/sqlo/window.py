@@ -12,7 +12,7 @@ class Window:
         >>> Window.order_by("date").rows_between("UNBOUNDED PRECEDING", "CURRENT ROW")
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._partition_by_cols: list[str] = []
         self._order_by_cols: list[str] = []
         self._frame_clause: Optional[str] = None
@@ -98,7 +98,7 @@ class WindowFunc:
 
     def __init__(
         self, func_name: str, func_args: tuple, window: Optional[Window] = None
-    ):
+    ) -> None:
         self.func_name = func_name
         self.func_args = func_args
         self.window = window
