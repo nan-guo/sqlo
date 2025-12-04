@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+
+## [0.2.1] - 2025-12-04
+
+### Documentation
+- **Comprehensive Documentation Expansion**: Added 7 new documentation files (3,300+ lines)
+  - `window-functions.md` - Complete guide to window functions with examples and use cases
+  - `cte.md` - Common Table Expressions including recursive CTEs
+  - `json.md` - JSON support with MySQL JSON functions
+  - `batch-operations.md` - Efficient bulk operations guide
+  - `troubleshooting.md` - Comprehensive troubleshooting and debugging guide
+  - `integration-aiomysql.md` - Complete async integration guide with aiomysql
+  - `recipes.md` - Best practices and common patterns
+- Updated `docs/index.rst` with new documentation structure and sections
+
+### Code Quality
+- Enhanced type hints in `window.py` with proper return type annotations
+- All mypy checks now pass without notes or warnings
+
 ## [0.2.0] - 2025-12-03
 
 ### Added
