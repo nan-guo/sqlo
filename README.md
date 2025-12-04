@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/nan-guo/sqlo/actions/workflows/ci.yml/badge.svg)](https://github.com/nan-guo/sqlo/actions/workflows/ci.yml)
 [![PyPI](https://img.shields.io/pypi/v/sqlo)](https://pypi.org/project/sqlo/)
-[![Documentation](https://img.shields.io/badge/docs-github%20pages-blue)](https://nan-guo.github.io/sqlo/)
+[![Documentation](https://img.shields.io/badge/docs-github%20pages-blue)](https://sqlo.readthedocs.io/en/stable/)
 [![License](https://img.shields.io/github/license/nan-guo/sqlo)](LICENSE)
 
 A **lightweight** and **powerful** SQL query builder for Python. Build SQL queries with a clean, intuitive API while staying safe from SQL injection. Support for JSON fields, CTEs, batch updates, and more!
@@ -23,6 +23,9 @@ A **lightweight** and **powerful** SQL query builder for Python. Build SQL queri
 ```bash
 pip install sqlo
 ```
+
+## Documentation
+https://sqlo.readthedocs.io/en/stable/
 
 ## Quick Start
 
@@ -151,7 +154,7 @@ query = Q.select(
 
 ## Documentation
 
-Full documentation is available at **[https://nan-guo.github.io/sqlo/](https://nan-guo.github.io/sqlo/)**.
+Full documentation is available at **[https://sqlo.readthedocs.io/en/stable/](https://sqlo.readthedocs.io/en/stable/)**.
 
 You can also browse the markdown files on GitHub:
 
