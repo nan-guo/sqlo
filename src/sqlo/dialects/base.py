@@ -1,4 +1,23 @@
 from abc import ABC, abstractmethod
+from functools import lru_cache
+
+from ..security import require_identifier
+
+
+@lru_cache(maxsize=4096)
+def _quote_identifier(quote_char: str, identifier: str) -> str:
+    """Validate and quote an identifier; results are cached.
+
+    Identifiers repeat across queries, and validating plus quoting one costs
+    about as much as the rest of building a simple query. The cache is bounded
+    because identifiers may come from dynamic input, and invalid identifiers
+    raise, so they are never stored.
+    """
+    require_identifier(identifier)
+    if "." in identifier:
+        parts = identifier.split(".")
+        return ".".join(f"{quote_char}{part}{quote_char}" for part in parts)
+    return f"{quote_char}{identifier}{quote_char}"
 
 
 class Dialect(ABC):
@@ -21,17 +40,9 @@ class Dialect(ABC):
         Raises:
             ValueError: If identifier contains invalid characters
         """
-        # Import here to avoid circular dependency
-        from ..security import require_identifier
-
-        require_identifier(identifier)
-
-        if "." in identifier:
-            parts = identifier.split(".")
-            return ".".join(
-                f"{self.quote_char}{part}{self.quote_char}" for part in parts
-            )
-        return f"{self.quote_char}{identifier}{self.quote_char}"
+        if not isinstance(identifier, str):
+            require_identifier(identifier)  # raises ValueError for non-strings
+        return _quote_identifier(self.quote_char, identifier)
 
     @abstractmethod
     def parameter_placeholder(self) -> str:
