@@ -4,7 +4,7 @@ Mixin classes for query builders to share common functionality.
 
 from typing import TYPE_CHECKING, Any, Optional, TypeVar, Union
 
-from ..constants import COMPACT_PATTERN
+from ..constants import COMPACT_PATTERN, ON_PATTERN
 from ..context import CompileContext
 from ..expressions import ComplexCondition, Condition, JSONPath, Raw
 from ..security import validate_alias, validate_operator
@@ -71,6 +71,102 @@ def validate_join(
 
 
 _Q = TypeVar("_Q", bound="WhereClauseMixin")
+
+
+def render_join_on(dialect: Any, on: Any) -> tuple[str, tuple[Any, ...]]:
+    """Validate a JOIN condition and render it as ``(sql, params)``.
+
+    ``on`` may be:
+
+    * ``None``: no ON clause;
+    * a string of the form ``"a.x = b.y"``, optionally several joined by
+      ``AND``. It is written as-is, which is safe because only identifiers and
+      comparison operators are accepted;
+    * ``Raw``: written as-is and may carry parameters, so use trusted SQL only;
+    * ``Condition`` / ``ComplexCondition``: columns are validated, values are
+      bound as parameters and the query's dialect is used.
+
+    :raises ValueError: for a string that is not a column comparison, or an
+        empty condition
+    :raises TypeError: for any other type
+    """
+    if on is None:
+        return "", ()
+    if isinstance(on, Raw):
+        return on.sql, tuple(on.params)
+    if isinstance(on, (Condition, ComplexCondition)):
+        ctx = CompileContext(dialect)
+        sql = on.render(ctx)
+        if not sql:
+            raise ValueError(
+                "Empty condition: it has no terms, so there is nothing to join on"
+            )
+        return sql, tuple(ctx.params)
+    if isinstance(on, str):
+        text = on.strip()
+        if ON_PATTERN.fullmatch(text):
+            return text, ()
+        raise ValueError(
+            f"Invalid join condition {on!r}. A string must be 'column <op> column' "
+            "(several can be joined by AND); use Raw() or a Condition for anything "
+            "else, for example functions or literal values."
+        )
+    raise TypeError(f"on must be a str, Raw or Condition, got {type(on).__name__}")
+
+
+_J = TypeVar("_J", bound="JoinClauseMixin")
+
+
+class JoinClauseMixin:
+    """Mixin for queries that support JOIN clauses (SELECT, UPDATE, DELETE).
+
+    The query class provides ``_dialect`` and the ``_joins`` list of
+    ``(join_type, table, on_sql, on_params)`` tuples.
+    """
+
+    _dialect: Any
+    _joins: list[tuple[str, Any, str, tuple[Any, ...]]]
+
+    def join(
+        self: _J,
+        table: Union[str, "SelectQuery"],
+        on: Union[str, Raw, "Condition", "ComplexCondition", None] = None,
+        join_type: str = "INNER",
+    ) -> _J:
+        """Add a JOIN clause.
+
+        Args:
+            table: ``"name"``, ``"name alias"``, ``"name AS alias"`` or a
+                subquery that has an alias.
+            on: The join condition, see :func:`render_join_on`.
+            join_type: ``INNER``, ``LEFT``, ``RIGHT``, ``CROSS`` or ``FULL``
+                (``LEFT``, ``RIGHT`` and ``FULL`` may add ``OUTER``).
+        """
+        table, join_type = validate_join(self._dialect, table, join_type)
+        on_sql, on_params = render_join_on(self._dialect, on)
+        self._joins.append((join_type, table, on_sql, on_params))
+        return self
+
+    def left_join(
+        self: _J,
+        table: Union[str, "SelectQuery"],
+        on: Union[str, Raw, "Condition", "ComplexCondition", None] = None,
+    ) -> _J:
+        """Add a LEFT JOIN clause."""
+        return self.join(table, on, join_type="LEFT")
+
+    def _build_joins(self, parts: list[str], params: list[Any]) -> None:
+        """Append the JOIN clauses and their parameters, in SQL order."""
+        for type_, table, on_sql, on_params in self._joins:
+            if hasattr(table, "build"):  # Subquery
+                sub_sql, sub_params = table.build()
+                parts.append(f" {type_} JOIN ({sub_sql}) AS {table._alias}")
+                params.extend(sub_params)
+            else:
+                parts.append(f" {type_} JOIN {table}")
+            if on_sql:
+                parts.append(f" ON {on_sql}")
+                params.extend(on_params)
 
 
 class WhereClauseMixin:

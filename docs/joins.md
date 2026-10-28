@@ -102,17 +102,42 @@ query = (
 
 ### Complex JOIN Conditions
 
-For complex ON clauses, you can pass a string with multiple conditions.
+The `on` argument accepts three kinds of value:
+
+- **A string** such as `"s.user_id = u.id"`: one column compared with another, with
+  several comparisons optionally joined by `AND`. Only column names and the operators
+  `=`, `!=`, `<>`, `<=>`, `<`, `<=`, `>`, `>=` are accepted.
+- **A `Condition`**: use it for literal values, which are bound as parameters, and for `OR`.
+- **A `Raw`**: use it for functions and any other SQL. It is written as-is, so only pass
+  trusted text; it can carry parameters too.
+
+Anything else, such as a string with a literal, a function or `OR`, raises `ValueError`
+that points to `Raw` or `Condition`. Other types raise `TypeError`.
 
 ```python
-# Join with multiple conditions
+from sqlo import Condition, Q, Raw
+
+# Several column comparisons: a string is enough
 query = (
     Q.select("*")
-    .from_("users AS u")
-    .join("subscriptions AS s", "s.user_id = u.id AND s.status = 'active'")
+    .from_("users", "u")
+    .join("subscriptions AS s", "s.user_id = u.id AND s.start_date <= u.end_date")
 )
-# INNER JOIN `subscriptions` AS `s` ON s.user_id = u.id AND s.status = 'active'
+# INNER JOIN subscriptions AS s ON s.user_id = u.id AND s.start_date <= u.end_date
+
+# A literal value: use a Condition, the value is bound as a parameter
+on = Condition("s.user_id", Raw("u.id")) & Condition("s.status", "active")
+query = Q.select("*").from_("users", "u").join("subscriptions AS s", on)
+# INNER JOIN subscriptions AS s ON (`s`.`user_id` = u.id AND `s`.`status` = %s)
+# params: ("active",)
+
+# A function: use Raw
+query = Q.select("*").from_("dates", "d").left_join("sales s", Raw("DATE(s.created_at) = d.date"))
+# LEFT JOIN sales s ON DATE(s.created_at) = d.date
 ```
+
+Parameters in the `ON` clause come before the parameters of `WHERE`, matching the order
+in the SQL.
 
 ### Joining Subqueries
 

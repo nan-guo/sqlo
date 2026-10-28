@@ -11,7 +11,7 @@ Common Table Expressions (CTEs) are temporary named result sets that exist only 
 Use the `with_()` method to define CTEs before your main query.
 
 ```python
-from sqlo import Q, func
+from sqlo import Q, Raw, func
 
 # Define a CTE
 cte = Q.select("user_id", func.count("*").as_("order_count")) \
@@ -179,7 +179,7 @@ query = (
 inactive_users = (
     Q.select("u.id")
     .from_("users u")
-    .left_join("orders o", "o.user_id = u.id AND o.created_at > DATE_SUB(NOW(), INTERVAL 1 YEAR)")
+    .left_join("orders o", Raw("o.user_id = u.id AND o.created_at > DATE_SUB(NOW(), INTERVAL 1 YEAR)"))
     .where_null("o.id")
     .where("u.last_login <", "2023-01-01")
     .as_("to_delete")
@@ -278,7 +278,7 @@ query = (
     )
     .with_(date_range)
     .from_("dates d")
-    .left_join("sales s", "DATE(s.created_at) = d.date")
+    .left_join("sales s", Raw("DATE(s.created_at) = d.date"))
     .group_by("d.date")
 )
 ```

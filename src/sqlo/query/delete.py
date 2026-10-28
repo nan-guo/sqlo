@@ -2,30 +2,18 @@ from typing import Any, Optional
 
 from ..security import validate_non_negative_int
 from .base import Query
-from .mixins import WhereClauseMixin, validate_join
+from .mixins import JoinClauseMixin, WhereClauseMixin
 
 
-class DeleteQuery(WhereClauseMixin, Query):
+class DeleteQuery(WhereClauseMixin, JoinClauseMixin, Query):
     def __init__(self, table: str, dialect=None, debug=False):
         super().__init__(dialect, debug)
         self._table = table
         self._wheres: list[tuple[str, str, Any]] = []
         self._limit: Optional[int] = None
         self._order_bys: list[str] = []
-        self._joins: list[tuple[str, str, Optional[str]]] = []  # (type, table, on)
+        self._joins: list[tuple[str, Any, str, tuple[Any, ...]]] = []
         self._allow_all_rows: bool = False
-
-    def join(
-        self, table: str, on: Optional[str] = None, join_type: str = "INNER"
-    ) -> "DeleteQuery":
-        """Add a JOIN clause (MySQL multi-table DELETE)."""
-        table, join_type = validate_join(self._dialect, table, join_type)
-        self._joins.append((join_type, table, on))
-        return self
-
-    def left_join(self, table: str, on: Optional[str] = None) -> "DeleteQuery":
-        """Add a LEFT JOIN clause."""
-        return self.join(table, on, join_type="LEFT")
 
     def limit(self, limit: int) -> "DeleteQuery":
         self._limit = validate_non_negative_int(limit, "limit")
@@ -77,11 +65,7 @@ class DeleteQuery(WhereClauseMixin, Query):
         parts.append(self._dialect.quote(self._table))
 
         # JOINs (for multi-table DELETE)
-        if self._joins:
-            for type_, table, on in self._joins:
-                parts.append(f" {type_} JOIN {table}")
-                if on:
-                    parts.append(f" ON {on}")
+        self._build_joins(parts, params)
 
         # WHERE
         if self._wheres:

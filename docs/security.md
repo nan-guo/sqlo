@@ -131,6 +131,23 @@ Raw(123)  # TypeError: Raw SQL must be a string
 
 ---
 
+### Where Trusted SQL Is Accepted
+
+Everything sqlo writes into a statement is either validated, bound as a parameter, or
+SQL you marked as trusted. These are the places that accept trusted SQL, and what each
+one checks:
+
+| Input | What it accepts | Checked |
+| --- | --- | --- |
+| `Raw(...)` | Any SQL | Nothing: only pass trusted text |
+| `join(on="...")` | `column <op> column`, several joined by `AND` | Identifiers and comparison operators; anything else raises `ValueError` and points to `Raw` or `Condition` |
+| `join(on=Raw(...))` | Any SQL, with parameters | Nothing: only pass trusted text |
+| `join(on=Condition(...))` | Column comparisons with bound values | Columns and operators are validated, values are parameters |
+| `optimizer_hint("...")` | Hint text for `/*+ ... */` | Comment delimiters (`/*`, `*/`) are rejected |
+| `with_(query, name)` | A query builder or `Raw(...)` | Plain strings raise `TypeError` |
+
+Never build any of these from user input.
+
 ## UPDATE/DELETE Safety
 
 ### Mandatory WHERE Clause
