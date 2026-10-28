@@ -47,6 +47,12 @@ class DeleteQuery(WhereClauseMixin, JoinClauseMixin, Query):
         if not self._table:
             raise ValueError("No table specified")
 
+        # MySQL's multi-table DELETE has no ORDER BY or LIMIT
+        if self._joins and (self._order_bys or self._limit is not None):
+            raise ValueError(
+                "ORDER BY and LIMIT cannot be used in a DELETE with a JOIN"
+            )
+
         # Safety check: DELETE without WHERE
         if not self._wheres and not self._allow_all_rows:
             raise ValueError(
@@ -60,9 +66,13 @@ class DeleteQuery(WhereClauseMixin, JoinClauseMixin, Query):
         # CTEs
         self._build_ctes(parts, params)
 
-        # DELETE FROM
-        parts.append("DELETE FROM ")
-        parts.append(self._dialect.quote(self._table))
+        # DELETE FROM. With a JOIN the table to delete from is named first:
+        # DELETE t FROM t JOIN ... (DELETE FROM t JOIN ... is a syntax error)
+        table = self._dialect.quote(self._table)
+        if self._joins:
+            parts.append(f"DELETE {table} FROM {table}")
+        else:
+            parts.append(f"DELETE FROM {table}")
 
         # JOINs (for multi-table DELETE)
         self._build_joins(parts, params)

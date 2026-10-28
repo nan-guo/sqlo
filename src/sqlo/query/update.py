@@ -121,6 +121,12 @@ class UpdateQuery(WhereClauseMixin, JoinClauseMixin, Query):
         if not self._values:
             raise ValueError("No values to update")
 
+        # MySQL's multi-table UPDATE has no ORDER BY or LIMIT
+        if self._joins and (self._order_bys or self._limit is not None):
+            raise ValueError(
+                "ORDER BY and LIMIT cannot be used in an UPDATE with a JOIN"
+            )
+
         # Safety check: UPDATE without WHERE
         if not self._wheres and not self._allow_all_rows:
             raise ValueError(

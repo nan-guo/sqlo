@@ -61,7 +61,10 @@ def test_delete_join():
         .where("orders.status", "cancelled")
     )
     sql, params = query.build()
-    assert "DELETE FROM `users` INNER JOIN orders ON orders.user_id = users.id" in sql
+    assert (
+        "DELETE `users` FROM `users` INNER JOIN orders "
+        "ON orders.user_id = users.id" in sql
+    )
     assert "WHERE `orders`.`status` = %s" in sql
     assert params == ("cancelled",)
 
@@ -74,7 +77,10 @@ def test_delete_left_join():
         .where_null("orders.id")
     )
     sql, params = query.build()
-    assert "DELETE FROM `users` LEFT JOIN orders ON orders.user_id = users.id" in sql
+    assert (
+        "DELETE `users` FROM `users` LEFT JOIN orders "
+        "ON orders.user_id = users.id" in sql
+    )
     assert "WHERE `orders`.`id` IS NULL" in sql
 
 
