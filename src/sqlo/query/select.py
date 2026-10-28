@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING, Any, Callable, Generic, Optional, TypeVar, Union
 
+from ..context import build_nested
 from ..expressions import Func, JSONPath, Raw, render_func
 from .base import Query
 from ..security import validate_alias, validate_non_negative_int
@@ -213,7 +214,7 @@ class SelectQuery(WhereClauseMixin, JoinClauseMixin, Query, Generic[T]):
                     "or pass one to from_(subquery, alias)"
                 )
 
-            sub_sql, sub_params = self._table.build()  # type: ignore[union-attr]
+            sub_sql, sub_params = build_nested(self._dialect, self._table)
             parts.append(f"({sub_sql})")
             params.extend(sub_params)
             # For subqueries, use AS keyword for alias
@@ -292,7 +293,7 @@ class SelectQuery(WhereClauseMixin, JoinClauseMixin, Query, Generic[T]):
 
         # Unions. An operand with its own ORDER BY / LIMIT needs parentheses
         for type_, query in self._unions:
-            union_sql, union_params = query.build()
+            union_sql, union_params = build_nested(self._dialect, query)
             if query._orders or query._limit is not None:
                 union_sql = f"({union_sql})"
             parts.append(f" {type_} {union_sql}")

@@ -5,6 +5,25 @@ from typing import Any, Optional
 from .dialects.base import Dialect
 
 
+def _name(dialect: Any) -> str:
+    return getattr(dialect, "name", type(dialect).__name__)
+
+
+def build_nested(dialect: Dialect, query: Any) -> tuple[str, tuple[Any, ...]]:
+    """Build a query nested in another one, which must use the same dialect.
+
+    A subquery rendered by another dialect would bring its own quoting and
+    syntax into the statement, so it is rejected.
+    """
+    nested = getattr(query, "_dialect", None)
+    if nested is not None and type(nested) is not type(dialect):
+        raise ValueError(
+            f"A subquery built for the {_name(nested)} dialect cannot be used in "
+            f"a query built for the {_name(dialect)} dialect"
+        )
+    return query.build()
+
+
 class CompileContext:
     """Collects the parameters of a statement while its nodes render.
 
@@ -37,12 +56,6 @@ class CompileContext:
 
         The nested query must use the same dialect as this context.
         """
-        sub_dialect = getattr(query, "_dialect", None)
-        if sub_dialect is not None and type(sub_dialect) is not type(self.dialect):
-            raise ValueError(
-                f"Subquery dialect {type(sub_dialect).__name__} does not match "
-                f"{type(self.dialect).__name__}"
-            )
-        sql, params = query.build()
+        sql, params = build_nested(self.dialect, query)
         self.params.extend(params)
         return sql

@@ -1,6 +1,6 @@
 """sqlo - A modern, type-safe, and extensible SQL query builder for Python."""
 
-from .builder import Q
+from .builder import Q, QueryFactory
 from .dialects.mysql import MySQLDialect
 from .dialects.postgresql import PostgreSQLDialect
 from .exceptions import UnsupportedFeatureError
@@ -9,6 +9,7 @@ from .window import Window
 
 __all__ = [
     "Q",
+    "QueryFactory",
     "Raw",
     "Func",
     "func",

@@ -1,6 +1,7 @@
 from collections import Counter
 from typing import Any, Optional
 
+from ..context import build_nested
 from ..expressions import Inserted, Raw
 from ..security import validate_non_negative_int
 from .base import Query
@@ -173,7 +174,7 @@ class UpdateQuery(WhereClauseMixin, JoinClauseMixin, Query):
                 params.extend(val.params)
             # Handle subqueries
             elif hasattr(val, "build"):
-                sub_sql, sub_params = val.build()
+                sub_sql, sub_params = build_nested(self._dialect, val)
                 parts.append(f"({sub_sql})")
                 params.extend(sub_params)
             # Handle regular values

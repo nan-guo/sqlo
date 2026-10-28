@@ -4,6 +4,7 @@ from typing import Any, Optional, TypeVar
 from ..dialects.base import Dialect
 from ..dialects.mysql import MySQLDialect
 from .._debug import log_query
+from ..context import build_nested
 from ..expressions import Raw
 
 
@@ -104,7 +105,7 @@ class Query(ABC):
                 parts.append(query.sql)
                 params.extend(query.params)
             else:
-                sql, p = query.build()
+                sql, p = build_nested(self._dialect, query)
                 parts.append(sql)
                 params.extend(p)
             parts.append(")")

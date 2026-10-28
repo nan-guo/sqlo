@@ -5,7 +5,7 @@ Mixin classes for query builders to share common functionality.
 from typing import TYPE_CHECKING, Any, Optional, TypeVar, Union
 
 from ..constants import COMPACT_PATTERN, FULL_JOIN_TYPES, ON_PATTERN, PORTABLE_JOIN_TYPES
-from ..context import CompileContext
+from ..context import CompileContext, build_nested
 from ..expressions import ComplexCondition, Condition, JSONPath, Raw
 from ..security import validate_alias, validate_operator
 
@@ -151,7 +151,7 @@ class JoinClauseMixin:
         """Append the JOIN clauses and their parameters, in SQL order."""
         for type_, table, on_sql, on_params in self._joins:
             if hasattr(table, "build"):  # Subquery
-                sub_sql, sub_params = table.build()
+                sub_sql, sub_params = build_nested(self._dialect, table)
                 parts.append(f" {type_} JOIN ({sub_sql}) AS {table._alias}")
                 params.extend(sub_params)
             else:
@@ -284,7 +284,7 @@ class WhereClauseMixin:
 
         # Handle subquery
         if hasattr(values, "build"):  # Subquery
-            sub_sql, sub_params = values.build()
+            sub_sql, sub_params = build_nested(self._dialect, values)
             self._wheres.append((connector, f"{quoted} {operator} ({sub_sql})", sub_params))
         # Handle empty list edge case
         # IN () is always false, NOT IN () is always true

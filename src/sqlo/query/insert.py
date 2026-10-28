@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING, Any, Optional, Union
 
+from ..context import build_nested
 from ..expressions import Inserted, Raw
 from .base import Query
 
@@ -168,7 +169,7 @@ class InsertQuery(Query):
             parts.append(") ")
 
             # Build SELECT query
-            select_sql, select_params = self._from_select.build()
+            select_sql, select_params = build_nested(self._dialect, self._from_select)
             parts.append(select_sql)
             params.extend(select_params)
         else:
