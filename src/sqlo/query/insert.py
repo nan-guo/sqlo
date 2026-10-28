@@ -31,9 +31,31 @@ class InsertQuery(Query):
         self, values: Union[dict[str, Any], list[dict[str, Any]]]
     ) -> "InsertQuery":
         if isinstance(values, dict):
-            self._values.append(values)
+            rows = [values]
         elif isinstance(values, list):
-            self._values.extend(values)
+            rows = values
+        else:
+            raise TypeError(
+                "values() expects a dict or a list of dicts, "
+                f"got {type(values).__name__}"
+            )
+
+        for i, row in enumerate(rows):
+            if not isinstance(row, dict):
+                raise TypeError(f"Row {i} must be a dict, got {type(row).__name__}")
+
+        # Every row must have the same columns as the first row, otherwise
+        # a missing column would become NULL and an extra one would be lost
+        if rows:
+            expected = (self._values[0] if self._values else rows[0]).keys()
+            for i, row in enumerate(rows):
+                if row.keys() != expected:
+                    raise ValueError(
+                        f"Row {i} has columns {list(row)} but expected "
+                        f"{list(expected)}: all rows must have the same columns"
+                    )
+
+        self._values.extend(rows)
         return self
 
     def ignore(self) -> "InsertQuery":
@@ -90,7 +112,7 @@ class InsertQuery(Query):
 
             for row in self._values:
                 for col in columns:
-                    params.append(row.get(col))
+                    params.append(row[col])
 
             parts.append(" (")
             parts.append(", ".join(map(self._dialect.quote, columns)))
