@@ -135,8 +135,19 @@ def test_on_duplicate_plain_strings_are_always_parameters(value):
 
 
 def test_values_of_quotes_column():
-    assert values_of("name").sql == "VALUES(`name`)"
-    assert values_of("t.name").sql == "VALUES(`t`.`name`)"
+    sql, _ = (
+        Q.insert_into("t")
+        .values({"id": 1})
+        .on_duplicate_key_update({"name": values_of("name")})
+        .build()
+    )
+    assert sql.endswith("ON DUPLICATE KEY UPDATE `name` = VALUES(`name`)")
+
+
+def test_values_of_takes_a_plain_column_name():
+    """A qualified name makes no sense for the inserted value."""
+    with pytest.raises(ValueError, match="qualified"):
+        values_of("t.name")
 
 
 @pytest.mark.parametrize("bad", ["name); DROP TABLE x;--", "a b", "", "1a"])

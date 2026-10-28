@@ -1,4 +1,5 @@
 import re
+from typing import Optional, Sequence
 
 from ..constants import FULL_JOIN_TYPES, PORTABLE_JOIN_TYPES
 from ..security import POSTGRESQL_OPERATORS
@@ -18,6 +19,8 @@ class PostgreSQLDialect(Dialect):
 
     join_types = PORTABLE_JOIN_TYPES | FULL_JOIN_TYPES
     extra_operators = POSTGRESQL_OPERATORS
+    supports_on_conflict = True
+    conflict_target_required = True
 
     @property
     def name(self) -> str:
@@ -48,6 +51,20 @@ class PostgreSQLDialect(Dialect):
             step = steps[0]
             return f"{quoted_column} ->> {step if step.isdigit() else repr(step)}"
         return f"{quoted_column} #>> '{{{','.join(steps)}}}'"
+
+    def inserted_value(self, quoted_column: str) -> str:
+        return f"EXCLUDED.{quoted_column}"
+
+    def conflict_clause(
+        self,
+        target: Sequence[str],
+        assignments: Optional[Sequence[str]],
+        first_column: str,
+    ) -> str:
+        on = f" ON CONFLICT ({', '.join(target)})" if target else " ON CONFLICT"
+        if assignments is None:
+            return f"{on} DO NOTHING"
+        return f"{on} DO UPDATE SET {', '.join(assignments)}"
 
     def window_frame_bound(self, bound: str) -> str:
         """``INTERVAL 7 DAY PRECEDING`` becomes ``INTERVAL '7 day' PRECEDING``.

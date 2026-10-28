@@ -139,6 +139,43 @@ query = (
 # ON DUPLICATE KEY UPDATE `name` = VALUES(`name`), `login_count` = `login_count` + VALUES(`login_count`)
 ```
 
+## Portable Upsert: `on_conflict()`
+
+`on_duplicate_key_update` and `INSERT IGNORE` exist only in MySQL. `on_conflict()` expresses
+the same thing for MySQL and PostgreSQL, and each dialect renders its own syntax:
+
+```python
+from sqlo import Q, values_of
+
+query = (
+    Q.insert_into("users")
+    .values({"id": 1, "name": "Alice"})
+    .on_conflict("id")                           # the unique column(s) that conflict
+    .do_update({"name": values_of("name")})      # take the value we tried to insert
+)
+# MySQL:      INSERT INTO `users` (`id`, `name`) VALUES (%s, %s)
+#             ON DUPLICATE KEY UPDATE `name` = VALUES(`name`)
+# PostgreSQL: INSERT INTO "users" ("id", "name") VALUES (%s, %s)
+#             ON CONFLICT ("id") DO UPDATE SET "name" = EXCLUDED."name"
+
+# Leave the existing row alone
+Q.insert_into("users").values({"id": 1}).on_conflict("id").do_nothing()
+# MySQL:      ... ON DUPLICATE KEY UPDATE `users`.`id` = `users`.`id`
+# PostgreSQL: ... ON CONFLICT ("id") DO NOTHING
+```
+
+- Values in `do_update` are bound as parameters; use `Raw` for an expression and
+  `values_of("col")` for the value that was being inserted.
+- **PostgreSQL needs the conflict columns for `do_update`** (`ValueError` otherwise). MySQL works
+  out the unique key itself and ignores them, so passing them keeps the code portable.
+- `do_nothing()` on MySQL is a no-op update, not `INSERT IGNORE`: `INSERT IGNORE` also
+  swallows other errors, such as a value that is too long for its column.
+- In PostgreSQL, a column name inside a `Raw` expression of `do_update` must be qualified with
+  the table, as in `Raw('"users"."visits" + %s', [1])`; an unqualified name is ambiguous
+  with the `excluded` row.
+- `on_conflict()` cannot be combined with `on_duplicate_key_update()`, and PostgreSQL rejects
+  `.ignore()` and `on_duplicate_key_update()` with an `UnsupportedFeatureError`.
+
 ## Combining INSERT IGNORE and ON DUPLICATE KEY UPDATE
 
 > [!WARNING]

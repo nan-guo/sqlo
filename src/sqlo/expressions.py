@@ -397,6 +397,9 @@ class Condition(_ConditionNode):
                 )
             return
 
+        if isinstance(value, Inserted):
+            raise TypeError("values_of() can only be used in an upsert")
+
         # A missing value must not silently drop the condition
         if value is None:
             raise ValueError(
@@ -661,19 +664,34 @@ class ComplexCondition(_ConditionNode):
 func = FunctionFactory()
 
 
-def values_of(column: str) -> Raw:
+class Inserted(Expression):
+    """The value an INSERT would have written to a column, used in an upsert.
+
+    It is rendered by the dialect of the query it is used in: ``VALUES(col)`` in
+    MySQL and ``EXCLUDED.col`` in PostgreSQL. Create it with ``values_of()``.
+    """
+
+    def __init__(self, column: str):
+        require_identifier(column)
+        if "." in column:
+            raise ValueError(
+                f"values_of() takes a column name, not a qualified name: {column!r}"
+            )
+        self.column = column
+
+
+def values_of(column: str) -> Inserted:
     """Reference the value that INSERT would have written to ``column``.
 
-    Use it in ``on_duplicate_key_update`` to get ``VALUES(`column`)`` with the
-    column name validated and quoted.
+    Use it in ``on_conflict(...).do_update(...)`` (or the MySQL-only
+    ``on_duplicate_key_update``). The column name is validated and the
+    reference is rendered for the dialect when the query is built.
 
     Example:
         >>> q = Q.insert_into("users").values({"id": 1, "name": "a"})
-        >>> q = q.on_duplicate_key_update({"name": values_of("name")})
+        >>> q = q.on_conflict("id").do_update({"name": values_of("name")})
     """
-    from .dialects.mysql import MySQLDialect
-
-    return Raw(f"VALUES({MySQLDialect().quote(column)})")
+    return Inserted(column)
 
 
 class JSONPath(Expression):

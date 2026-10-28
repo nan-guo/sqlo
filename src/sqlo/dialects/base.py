@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from functools import lru_cache
-from typing import Sequence
+from typing import Optional, Sequence
 
 from ..constants import PORTABLE_JOIN_TYPES
 from ..exceptions import UnsupportedFeatureError
@@ -42,6 +42,10 @@ class Dialect(ABC):
     supports_insert_ignore: bool = False
     #: ``ON DUPLICATE KEY UPDATE``.
     supports_on_duplicate_key: bool = False
+    #: ``on_conflict()``: the portable upsert, see ``conflict_clause``.
+    supports_on_conflict: bool = False
+    #: Whether ``on_conflict().do_update()`` must name the conflict columns.
+    conflict_target_required: bool = False
     #: JOIN in UPDATE and DELETE.
     supports_dml_join: bool = False
     #: ORDER BY and LIMIT in UPDATE and DELETE.
@@ -72,6 +76,24 @@ class Dialect(ABC):
     def json_extract(self, quoted_column: str, path: str) -> str:
         """The expression extracting ``path`` (``a.b[0].c``) from a JSON column."""
         raise self.unsupported("JSON path extraction")
+
+    def inserted_value(self, quoted_column: str) -> str:
+        """Refer to the value an INSERT would have written to a column."""
+        raise self.unsupported("Referencing the inserted value (values_of)")
+
+    def conflict_clause(
+        self,
+        target: Sequence[str],
+        assignments: Optional[Sequence[str]],
+        first_column: str,
+    ) -> str:
+        """The upsert clause after the INSERT, with its leading space.
+
+        ``target`` holds the quoted conflict columns, ``assignments`` the
+        ``col = value`` strings of ``do_update`` (``None`` for ``do_nothing``),
+        and ``first_column`` the first quoted inserted column.
+        """
+        raise self.unsupported("ON CONFLICT")
 
     def window_frame_bound(self, bound: str) -> str:
         """Render a validated window frame bound such as ``INTERVAL 7 DAY PRECEDING``.

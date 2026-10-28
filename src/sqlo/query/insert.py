@@ -1,10 +1,42 @@
 from typing import TYPE_CHECKING, Any, Optional, Union
 
-from ..expressions import Raw
+from ..expressions import Inserted, Raw
 from .base import Query
 
 if TYPE_CHECKING:
     from .select import SelectQuery
+
+
+class OnConflict:
+    """What to do when an inserted row conflicts with an existing one.
+
+    Returned by ``InsertQuery.on_conflict()``; nothing is added to the query
+    until ``do_update()`` or ``do_nothing()`` is called.
+    """
+
+    def __init__(self, query: "InsertQuery", columns: tuple[str, ...]):
+        self._query = query
+        self._columns = columns
+
+    def do_update(self, values: dict[str, Any]) -> "InsertQuery":
+        """Update the existing row. Values are parameters, ``Raw`` or ``values_of()``."""
+        if not isinstance(values, dict):
+            raise TypeError(f"do_update() expects a dict, got {type(values).__name__}")
+        if not values:
+            raise ValueError("do_update() needs at least one column to update")
+        dialect = self._query._dialect
+        if dialect.conflict_target_required and not self._columns:
+            raise ValueError(
+                f"The {dialect.name} dialect needs the conflict columns for "
+                "do_update(): on_conflict('id').do_update({...})"
+            )
+        self._query._conflict = (self._columns, dict(values))
+        return self._query
+
+    def do_nothing(self) -> "InsertQuery":
+        """Leave the existing row as it is."""
+        self._query._conflict = (self._columns, None)
+        return self._query
 
 
 class InsertQuery(Query):
@@ -14,6 +46,8 @@ class InsertQuery(Query):
         self._values: list[dict[str, Any]] = []
         self._ignore = False
         self._on_duplicate: Optional[dict[str, Any]] = None
+        # (conflict columns, assignments or None for "do nothing"), see on_conflict()
+        self._conflict: Optional[tuple[tuple[str, ...], Optional[dict[str, Any]]]] = None
         self._from_select: Optional[SelectQuery] = None
         self._select_columns: Optional[list[str]] = None
 
@@ -50,15 +84,59 @@ class InsertQuery(Query):
 
     def ignore(self) -> "InsertQuery":
         if not self._dialect.supports_insert_ignore:
-            raise self._dialect.unsupported("INSERT IGNORE")
+            raise self._dialect.unsupported(
+                "INSERT IGNORE", "Use on_conflict().do_nothing() instead."
+            )
         self._ignore = True
         return self
 
     def on_duplicate_key_update(self, values: dict[str, Any]) -> "InsertQuery":
         if not self._dialect.supports_on_duplicate_key:
-            raise self._dialect.unsupported("ON DUPLICATE KEY UPDATE")
+            raise self._dialect.unsupported(
+                "ON DUPLICATE KEY UPDATE",
+                "Use on_conflict(...).do_update(...) instead.",
+            )
+        if self._conflict is not None:
+            raise ValueError(
+                "on_duplicate_key_update() cannot be combined with on_conflict()"
+            )
         self._on_duplicate = values
         return self
+
+    def on_conflict(self, *columns: str) -> OnConflict:
+        """Choose what happens when a row conflicts with an existing one.
+
+        ``columns`` name the unique columns that conflict. PostgreSQL needs them
+        for ``do_update()``; MySQL infers the unique key and ignores them::
+
+            q.on_conflict("id").do_update({"name": values_of("name")})
+            q.on_conflict("id").do_nothing()
+        """
+        if not self._dialect.supports_on_conflict:
+            raise self._dialect.unsupported("ON CONFLICT")
+        if self._on_duplicate is not None:
+            raise ValueError(
+                "on_conflict() cannot be combined with on_duplicate_key_update()"
+            )
+        for column in columns:
+            self._dialect.quote(column)  # raises for an invalid identifier
+        return OnConflict(self, columns)
+
+    def _assignments(self, values: dict[str, Any], params: list[Any]) -> list[str]:
+        """Render ``col = value`` strings, adding the parameters in order."""
+        out = []
+        for col, val in values.items():
+            quoted = self._dialect.quote(col)
+            if isinstance(val, Raw):
+                out.append(f"{quoted} = {val.sql}")
+                params.extend(val.params)
+            elif isinstance(val, Inserted):
+                inserted = self._dialect.quote(val.column)
+                out.append(f"{quoted} = {self._dialect.inserted_value(inserted)}")
+            else:
+                out.append(f"{quoted} = {self._ph}")
+                params.append(val)
+        return out
 
     def from_select(
         self, columns: list[str], select_query: "SelectQuery"
@@ -115,23 +193,23 @@ class InsertQuery(Query):
 
         # ON DUPLICATE KEY UPDATE
         if self._on_duplicate:
-            parts.append(" ON DUPLICATE KEY UPDATE ")
-            first = True
-            for col, val in self._on_duplicate.items():
-                if not first:
-                    parts.append(", ")
-                first = False
-                parts.append(self._dialect.quote(col))
-                parts.append(" = ")
+            assignments = self._assignments(self._on_duplicate, params)
+            parts.append(" ON DUPLICATE KEY UPDATE " + ", ".join(assignments))
 
-                # Handle Raw expressions
-                if isinstance(val, Raw):
-                    parts.append(val.sql)
-                    params.extend(val.params)
-                # Handle regular values
-                else:
-                    parts.append(ph)
-                    params.append(val)
+        # ON CONFLICT: rendered by the dialect
+        if self._conflict is not None:
+            target_columns, updates = self._conflict
+            target = [self._dialect.quote(c) for c in target_columns]
+            # Qualified with the table: with INSERT ... SELECT an unqualified name is
+            # ambiguous when the SELECT's table has a column of the same name
+            first = (self._select_columns or list(self._values[0]))[0]
+            first_sql = self._dialect.quote(f"{self._table}.{first}")
+            assignments = (
+                None if updates is None else self._assignments(updates, params)
+            )
+            parts.append(
+                self._dialect.conflict_clause(target, assignments, first_sql)
+            )
 
         sql = "".join(parts)
         params_tuple = tuple(params)

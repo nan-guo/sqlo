@@ -1,7 +1,7 @@
 from collections import Counter
 from typing import Any, Optional
 
-from ..expressions import Raw
+from ..expressions import Inserted, Raw
 from ..security import validate_non_negative_int
 from .base import Query
 from .mixins import JoinClauseMixin, WhereClauseMixin
@@ -21,6 +21,9 @@ class UpdateQuery(WhereClauseMixin, JoinClauseMixin, Query):
         self._allow_all_rows: bool = False
 
     def set(self, values: dict[str, Any]) -> "UpdateQuery":
+        for value in values.values():
+            if isinstance(value, Inserted):
+                raise TypeError("values_of() can only be used in an upsert")
         self._values.update(values)
         return self
 
