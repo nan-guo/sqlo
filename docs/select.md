@@ -371,6 +371,19 @@ query = (
 # INNER JOIN `users` AS `u` ON u.id = o.user_id
 ```
 
+`as_()` names a query for the query that embeds it (a subquery in `FROM` or `JOIN`, a
+scalar subquery, a CTE). It does not change the query's own `FROM` clause. To alias the
+table in a query's own `FROM`, pass the alias to `from_()`; the two are independent:
+
+```python
+orders = (
+    Q.select("o.user_id")
+    .from_("orders", "o")       # FROM `orders` o
+    .where("o.total >", 100)
+    .as_("big_orders")          # (...) AS big_orders when used in another query
+)
+```
+
 ### Scalar Subquery in SELECT
 
 ```python

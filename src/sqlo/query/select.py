@@ -23,7 +23,11 @@ class SelectQuery(WhereClauseMixin, JoinClauseMixin, Query, Generic[T]):
         else:
             self._columns = columns if columns else ("*",)
         self._table: Optional[Union[str, SelectQuery]] = None
+        # Two different aliases: this query's own name when it is embedded in
+        # another query (a subquery, JOIN or CTE), and the alias of the table in
+        # this query's own FROM clause.
         self._alias: Optional[str] = None
+        self._table_alias: Optional[str] = None
         self._joins: list[tuple[str, Any, str, tuple[Any, ...]]] = []
         self._wheres: list[tuple[str, str, Any]] = []  # (connector, sql, params)
         self._groups: list[str] = []
@@ -43,12 +47,9 @@ class SelectQuery(WhereClauseMixin, JoinClauseMixin, Query, Generic[T]):
         if alias is not None:
             validate_alias(alias)
         self._table = table
-        # If table is a subquery with its own alias, use that alias
-        # Otherwise use the provided alias
-        if hasattr(table, "_alias") and table._alias and alias is None:
-            self._alias = table._alias
-        else:
-            self._alias = alias
+        # The alias of the table (or derived table) in this FROM clause. For a
+        # subquery without an explicit alias, its own alias (``as_()``) is used.
+        self._table_alias = alias
         return self
 
     def inner_join(self, table: str, on: JoinOn = None) -> "SelectQuery[T]":
@@ -157,7 +158,11 @@ class SelectQuery(WhereClauseMixin, JoinClauseMixin, Query, Generic[T]):
         return self
 
     def as_(self, alias: str) -> "SelectQuery":
-        """Set an alias for this query (used in FROM clauses)."""
+        """Name this query for when it is used as a subquery, JOIN or CTE.
+
+        This does not alias the table in the query's own FROM clause: use
+        ``from_(table, alias)`` for that.
+        """
         self._alias = validate_alias(alias)
         return self
 
@@ -194,12 +199,8 @@ class SelectQuery(WhereClauseMixin, JoinClauseMixin, Query, Generic[T]):
         """Build FROM clause."""
         parts.append(" FROM ")
         if self._table and hasattr(self._table, "build"):  # Subquery
-            # Get subquery's alias if it has one, otherwise use our alias
-            subquery_alias = None
-            if hasattr(self._table, "_alias"):
-                subquery_alias = self._table._alias
-            if subquery_alias is None:
-                subquery_alias = self._alias
+            # An explicit alias wins; otherwise use the subquery's own alias
+            subquery_alias = self._table_alias or self._table._alias
 
             sub_sql, sub_params = self._table.build()  # type: ignore[union-attr]
             parts.append(f"({sub_sql})")
@@ -210,8 +211,8 @@ class SelectQuery(WhereClauseMixin, JoinClauseMixin, Query, Generic[T]):
         else:
             parts.append(self._dialect.quote(self._table))  # type: ignore[arg-type]
             # For regular tables, alias without AS (MySQL style)
-            if self._alias:
-                parts.append(f" {self._alias}")
+            if self._table_alias:
+                parts.append(f" {self._table_alias}")
 
         # Index Hints
         if self._index_hint:
