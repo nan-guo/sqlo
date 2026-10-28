@@ -1,8 +1,26 @@
 from abc import ABC, abstractmethod
-from typing import Any, Optional
+from typing import Any, Optional, TypeVar
 
 from ..dialects.base import Dialect
 from ..dialects.mysql import MySQLDialect
+
+
+_T = TypeVar("_T", bound="Query")
+
+
+def _clone_element(element: Any) -> Any:
+    """Clone a nested query, or the queries held in a clause tuple.
+
+    Clause tuples such as ``(type, table, on)``, ``(type, query)`` and
+    ``(query, name, recursive)`` are rebuilt one level deep. Anything else,
+    including the rendered parameters of a WHERE clause, is shared: nothing
+    modifies it after it is created.
+    """
+    if isinstance(element, Query):
+        return element.clone()
+    if isinstance(element, tuple):
+        return tuple(e.clone() if isinstance(e, Query) else e for e in element)
+    return element
 
 
 class Query(ABC):
@@ -13,6 +31,32 @@ class Query(ABC):
         self._debug = debug
         self._ph = self._dialect.parameter_placeholder()
         self._ctes: list[tuple[Any, str, bool]] = []  # (query, name, recursive)
+
+    def clone(self: _T) -> _T:
+        """Return an independent copy of this query.
+
+        Queries are mutable: every method changes the query and returns it, so
+        two queries derived from the same base would share their conditions.
+        Clone the base first to branch from it::
+
+            base = Q.select("*").from_("users").where("active", True)
+            adults = base.clone().where("age >", 18)
+            french = base.clone().where("country", "FR")
+
+        Lists and dicts are copied and nested queries (a subquery in FROM or
+        JOIN, UNION operands, CTEs, ...) are cloned too. The dialect and the
+        expression objects (``Raw``, ``Condition``, ...) are shared.
+        """
+        clone = object.__new__(type(self))
+        for name, value in self.__dict__.items():
+            if isinstance(value, list):
+                value = [_clone_element(e) for e in value]
+            elif isinstance(value, dict):
+                value = {k: _clone_element(e) for k, e in value.items()}
+            else:
+                value = _clone_element(value)
+            setattr(clone, name, value)
+        return clone
 
     def with_(
         self, query: Any, name: Optional[str] = None, recursive: bool = False

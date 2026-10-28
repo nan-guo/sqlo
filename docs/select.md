@@ -455,6 +455,28 @@ def search_products(name=None, min_price=None, max_price=None, categories=None):
     return query
 ```
 
+## Reusing a Base Query
+
+Queries are mutable: every method changes the query and returns the same object. Two
+queries derived from one base would therefore share their conditions. Use `clone()` to
+branch from a base query:
+
+```python
+base = Q.select("*").from_("users").where("active", True)
+
+adults = base.clone().where("age >", 18)
+french = base.clone().where("country", "FR")
+
+base.build()    # WHERE `active` = %s
+adults.build()  # WHERE `active` = %s AND `age` > %s
+french.build()  # WHERE `active` = %s AND `country` = %s
+```
+
+`clone()` works on SELECT, INSERT, UPDATE and DELETE queries. Lists and dicts are copied
+and nested queries (a subquery in `FROM` or `JOIN`, `UNION` operands, CTEs) are cloned
+too. It is much cheaper than `copy.deepcopy`, especially for queries with large `IN`
+lists.
+
 ## Advanced Examples
 
 ### Complex Query with Multiple Features
