@@ -192,7 +192,7 @@ class UpdateQuery(WhereClauseMixin, Query):
             parts.append(", ".join(self._order_bys))
 
         # LIMIT
-        if self._limit:
+        if self._limit is not None:
             parts.append(f" LIMIT {self._limit}")
 
         sql = "".join(parts)

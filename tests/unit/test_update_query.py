@@ -113,3 +113,10 @@ def test_update_set_subquery():
     sql, params = query.build()
     assert "SET `count` = (SELECT `count` FROM `stats` WHERE `id` = %s)" in sql
     assert params == (1, 1)
+
+
+def test_update_limit_zero_is_emitted():
+    """limit(0) must not be dropped, otherwise all matching rows are updated"""
+    sql, params = Q.update("users").set({"a": 1}).where("id", 1).limit(0).build()
+    assert sql == "UPDATE `users` SET `a` = %s WHERE `id` = %s LIMIT 0"
+    assert params == (1, 1)

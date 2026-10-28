@@ -96,3 +96,10 @@ def test_delete_multiple_joins():
     sql, _ = query.build()
     assert "INNER JOIN t2" in sql
     assert "LEFT JOIN t3" in sql
+
+
+def test_delete_limit_zero_is_emitted():
+    """limit(0) must not be dropped, otherwise all matching rows are deleted"""
+    sql, params = Q.delete_from("users").where("id", 1).limit(0).build()
+    assert sql == "DELETE FROM `users` WHERE `id` = %s LIMIT 0"
+    assert params == (1,)
