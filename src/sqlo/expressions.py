@@ -359,10 +359,17 @@ class Condition(_ConditionNode):
                 )
             return
 
+        # A missing value must not silently drop the condition
+        if value is None:
+            raise ValueError(
+                f"Condition({column!r}) has no value to compare with. To test for "
+                "NULL use Condition.null(...), Condition.not_null(...) or "
+                "operator='IS NULL' / 'IS NOT NULL'."
+            )
+
         # Handle Raw values (e.g., Raw("users.id") for column references)
         # and standard operators with a value
-        if isinstance(value, Raw) or value is not None:
-            self._terms.append(_Compare(column, operator, value))
+        self._terms.append(_Compare(column, operator, value))
 
     def render(self, ctx: CompileContext) -> str:
         if not self._terms:
