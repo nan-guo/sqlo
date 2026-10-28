@@ -2,6 +2,7 @@ from typing import TYPE_CHECKING, Any, Callable, Generic, Optional, TypeVar, Uni
 
 from ..expressions import Func, JSONPath, Raw
 from .base import Query
+from ..security import validate_non_negative_int
 from .mixins import WhereClauseMixin
 
 if TYPE_CHECKING:
@@ -181,11 +182,11 @@ class SelectQuery(WhereClauseMixin, Query, Generic[T]):
         return self
 
     def limit(self, limit: int) -> "SelectQuery[T]":
-        self._limit = limit
+        self._limit = validate_non_negative_int(limit, "limit")
         return self
 
     def offset(self, offset: int) -> "SelectQuery[T]":
-        self._offset = offset
+        self._offset = validate_non_negative_int(offset, "offset")
         return self
 
     def group_by(self, *columns: str) -> "SelectQuery[T]":
@@ -200,7 +201,11 @@ class SelectQuery(WhereClauseMixin, Query, Generic[T]):
         return self
 
     def paginate(self, page: int, per_page: int) -> "SelectQuery":
-        page = max(page, 1)  # Use max() builtin
+        if not isinstance(page, int) or isinstance(page, bool):
+            raise TypeError(f"page must be an int, got {type(page).__name__}")
+        if validate_non_negative_int(per_page, "per_page") < 1:
+            raise ValueError(f"per_page must be >= 1, got {per_page}")
+        page = max(page, 1)
         self._limit = per_page
         self._offset = (page - 1) * per_page
         return self

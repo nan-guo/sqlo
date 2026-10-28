@@ -46,6 +46,21 @@ def validate_identifier(identifier: str, allow_dot: bool = True) -> bool:
     return bool(VALID_IDENTIFIER_PATTERN.match(identifier))
 
 
+def validate_non_negative_int(value: object, name: str) -> int:
+    """Ensure ``value`` is a non-negative ``int`` (``bool`` is rejected).
+
+    Used for values interpolated directly into SQL, such as LIMIT and OFFSET.
+
+    :raises TypeError: if ``value`` is not an ``int``
+    :raises ValueError: if ``value`` is negative
+    """
+    if not isinstance(value, int) or isinstance(value, bool):
+        raise TypeError(f"{name} must be an int, got {type(value).__name__}")
+    if value < 0:
+        raise ValueError(f"{name} must be >= 0, got {value}")
+    return value
+
+
 def validate_identifiers(identifiers: list[str], allow_dot: bool = True) -> bool:
     """Validate multiple SQL identifiers.
 
@@ -128,5 +143,6 @@ __all__ = [
     "validate_identifier",
     "validate_identifiers",
     "validate_identifier_whitelist",
+    "validate_non_negative_int",
     "escape_identifier",
 ]

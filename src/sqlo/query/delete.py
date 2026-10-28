@@ -1,6 +1,7 @@
 from typing import Any, Optional, Union
 
 from ..expressions import ComplexCondition, Condition, Raw
+from ..security import validate_non_negative_int
 from .base import Query
 from .mixins import WhereClauseMixin
 
@@ -47,7 +48,7 @@ class DeleteQuery(WhereClauseMixin, Query):
         return self
 
     def limit(self, limit: int) -> "DeleteQuery":
-        self._limit = limit
+        self._limit = validate_non_negative_int(limit, "limit")
         return self
 
     def order_by(self, *columns: str) -> "DeleteQuery":
