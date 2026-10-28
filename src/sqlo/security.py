@@ -7,8 +7,12 @@ and other SQL identifiers to prevent SQL injection attacks.
 import re
 
 # Pattern for valid SQL identifiers (letters, numbers, underscores, dots)
-# MySQL allows backticks for identifiers, but we validate the content
-VALID_IDENTIFIER_PATTERN = re.compile(r"^[a-zA-Z_][a-zA-Z0-9_.]*$")
+# MySQL allows backticks for identifiers, but we validate the content.
+# Dots separate non-empty segments ("a.b", never "a..b" or "a."). \Z anchors
+# the end: "$" would also accept a trailing newline.
+VALID_IDENTIFIER_PATTERN = re.compile(
+    r"^[a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z0-9_]+)*\Z"
+)
 
 
 def validate_identifier(identifier: str, allow_dot: bool = True) -> bool:
