@@ -38,7 +38,8 @@ class Window:
     def __init__(self) -> None:
         self._partition_by_cols: list[str] = []
         self._order_by_cols: list[str] = []
-        self._frame_clause: Optional[str] = None
+        # (ROWS | RANGE, start, end); rendered per dialect in build()
+        self._frame: Optional[tuple[str, str, str]] = None
 
     @classmethod
     def partition_by(cls, *columns: str) -> "Window":
@@ -72,8 +73,7 @@ class Window:
             start: Start of the frame (e.g., "UNBOUNDED PRECEDING", "1 PRECEDING", "CURRENT ROW")
             end: End of the frame (e.g., "CURRENT ROW", "1 FOLLOWING", "UNBOUNDED FOLLOWING")
         """
-        start, end = _frame_bound(start), _frame_bound(end)
-        self._frame_clause = f"ROWS BETWEEN {start} AND {end}"
+        self._frame = ("ROWS", _frame_bound(start), _frame_bound(end))
         return self
 
     def range_between(self, start: str, end: str) -> "Window":
@@ -84,8 +84,7 @@ class Window:
             start: Start of the frame
             end: End of the frame
         """
-        start, end = _frame_bound(start), _frame_bound(end)
-        self._frame_clause = f"RANGE BETWEEN {start} AND {end}"
+        self._frame = ("RANGE", _frame_bound(start), _frame_bound(end))
         return self
 
     def build(self, dialect: Any) -> str:
@@ -108,8 +107,11 @@ class Window:
             parts.append(f"ORDER BY {', '.join(order_parts)}")
 
         # Frame clause
-        if self._frame_clause:
-            parts.append(self._frame_clause)
+        if self._frame:
+            kind, start, end = self._frame
+            start = dialect.window_frame_bound(start)
+            end = dialect.window_frame_bound(end)
+            parts.append(f"{kind} BETWEEN {start} AND {end}")
 
         return " ".join(parts)
 

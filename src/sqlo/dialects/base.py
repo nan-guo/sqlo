@@ -73,6 +73,14 @@ class Dialect(ABC):
         """The expression extracting ``path`` (``a.b[0].c``) from a JSON column."""
         raise self.unsupported("JSON path extraction")
 
+    def window_frame_bound(self, bound: str) -> str:
+        """Render a validated window frame bound such as ``INTERVAL 7 DAY PRECEDING``.
+
+        The bound arrives upper-cased with single spaces. The default leaves it
+        as is.
+        """
+        return bound
+
     @property
     @abstractmethod
     def quote_char(self) -> str:

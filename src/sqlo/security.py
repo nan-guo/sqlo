@@ -91,9 +91,21 @@ PORTABLE_OPERATORS = frozenset(
 )
 # Operators only some dialects have. A dialect lists its own in `extra_operators`.
 MYSQL_OPERATORS = frozenset({"<=>", "REGEXP", "NOT REGEXP"})
+POSTGRESQL_OPERATORS = frozenset(
+    {
+        "~",
+        "~*",
+        "!~",
+        "!~*",
+        "ILIKE",
+        "NOT ILIKE",
+        "IS DISTINCT FROM",
+        "IS NOT DISTINCT FROM",
+    }
+)
 # Every operator sqlo knows. A `Condition` is built before the dialect is known,
 # so it is checked against this set, and again against the dialect when rendered.
-ALLOWED_OPERATORS = PORTABLE_OPERATORS | MYSQL_OPERATORS
+ALLOWED_OPERATORS = PORTABLE_OPERATORS | MYSQL_OPERATORS | POSTGRESQL_OPERATORS
 
 
 def check_operator_for_dialect(dialect: Any, operator: str) -> None:
@@ -247,6 +259,7 @@ __all__ = [
     "check_operator_for_dialect",
     "PORTABLE_OPERATORS",
     "MYSQL_OPERATORS",
+    "POSTGRESQL_OPERATORS",
     "validate_alias",
     "ALLOWED_OPERATORS",
     "escape_identifier",
