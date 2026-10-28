@@ -48,14 +48,9 @@ def test_delete_with_several_joins():
 
 def test_delete_join_params_come_before_where_params():
     sql, params = (
-        Q.delete_from("u")
-        .join("v", Raw("v.k = %s", ["k"]))
-        .where("u.id", 5)
-        .build()
+        Q.delete_from("u").join("v", Raw("v.k = %s", ["k"])).where("u.id", 5).build()
     )
-    assert sql == (
-        "DELETE `u` FROM `u` INNER JOIN v ON v.k = %s WHERE `u`.`id` = %s"
-    )
+    assert sql == ("DELETE `u` FROM `u` INNER JOIN v ON v.k = %s WHERE `u`.`id` = %s")
     assert params == ("k", 5)
 
 

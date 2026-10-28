@@ -59,7 +59,10 @@ def test_raw_column_with_value_and_operator():
 
 
 def test_raw_column_default_operator_is_equals():
-    assert Condition(Raw("LOWER(name)"), "bob").build() == ("LOWER(name) = %s", ("bob",))
+    assert Condition(Raw("LOWER(name)"), "bob").build() == (
+        "LOWER(name) = %s",
+        ("bob",),
+    )
 
 
 def test_raw_column_params_come_before_the_value_params():
@@ -95,8 +98,7 @@ def test_raw_column_in_a_query_with_other_conditions():
         .build()
     )
     assert sql == (
-        "SELECT * FROM `u` WHERE `a` = %s AND "
-        "((LENGTH(password) > %s AND `b` = %s))"
+        "SELECT * FROM `u` WHERE `a` = %s AND ((LENGTH(password) > %s AND `b` = %s))"
     )
     assert params == (0, 8, 1)
 

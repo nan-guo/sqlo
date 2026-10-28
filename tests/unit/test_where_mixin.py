@@ -68,17 +68,23 @@ def test_helpers_return_the_same_query(name, args):
         assert getattr(q, name)(*args) is q
 
 
-@pytest.mark.parametrize("name", ["where_like", "or_where_like", "where_not_like", "or_where_not_like"])
+@pytest.mark.parametrize(
+    "name", ["where_like", "or_where_like", "where_not_like", "or_where_not_like"]
+)
 @pytest.mark.parametrize("label, factory", FACTORIES)
 def test_like_without_a_pattern_is_rejected_everywhere(name, label, factory):
     with pytest.raises(ValueError, match="pattern"):
         getattr(factory(), name)("a", None)
 
 
-@pytest.mark.parametrize("name", ["where_in", "or_where_in", "where_not_in", "or_where_not_in"])
+@pytest.mark.parametrize(
+    "name", ["where_in", "or_where_in", "where_not_in", "or_where_not_in"]
+)
 @pytest.mark.parametrize("values", [[], [1]])
 @pytest.mark.parametrize("label, factory", FACTORIES)
-def test_in_helpers_validate_the_column_even_for_an_empty_list(name, values, label, factory):
+def test_in_helpers_validate_the_column_even_for_an_empty_list(
+    name, values, label, factory
+):
     with pytest.raises(ValueError, match="Invalid identifier"):
         getattr(factory(), name)("a; DROP TABLE x", values)
 

@@ -1,6 +1,6 @@
 import pytest
 
-from sqlo import Condition, Q, Raw, UnsupportedFeatureError
+from sqlo import Condition, Q, UnsupportedFeatureError
 from sqlo.dialects.base import Dialect
 from sqlo.dialects.mysql import MySQLDialect
 from sqlo.query.delete import DeleteQuery
@@ -35,7 +35,10 @@ def _select(dialect=PLAIN):
 def test_unsupported_feature_error_is_a_value_error_with_a_clear_message():
     err = UnsupportedFeatureError("Plain", "Index hints", "Use another way.")
     assert isinstance(err, ValueError)
-    assert str(err) == "Index hints is not supported by the Plain dialect. Use another way."
+    assert (
+        str(err)
+        == "Index hints is not supported by the Plain dialect. Use another way."
+    )
     assert (err.dialect, err.feature) == ("Plain", "Index hints")
 
 
@@ -108,7 +111,9 @@ def test_update_and_delete_without_the_extras_still_work():
 # --- join types --------------------------------------------------------------
 
 
-@pytest.mark.parametrize("join_type", ["INNER", "LEFT", "RIGHT", "CROSS", "left outer", "RIGHT OUTER"])
+@pytest.mark.parametrize(
+    "join_type", ["INNER", "LEFT", "RIGHT", "CROSS", "left outer", "RIGHT OUTER"]
+)
 def test_portable_join_types_work_everywhere(join_type):
     for dialect in (PLAIN, MYSQL):
         _select(dialect).join("v", "t.id = v.id", join_type=join_type)
@@ -137,7 +142,9 @@ def test_mysql_operators_are_rejected_by_a_portable_dialect(op):
     _select(MYSQL).where(f"a {op}", "x")  # MySQL accepts it
 
 
-@pytest.mark.parametrize("op", ["=", "!=", "<>", "<", "<=", ">", ">=", "LIKE", "NOT LIKE"])
+@pytest.mark.parametrize(
+    "op", ["=", "!=", "<>", "<", "<=", ">", ">=", "LIKE", "NOT LIKE"]
+)
 def test_portable_operators_work_in_every_dialect(op):
     for dialect in (PLAIN, MYSQL):
         _select(dialect).where("a", 1, op)
@@ -169,16 +176,36 @@ def test_validate_operator_works_without_a_dialect():
 
 
 def test_mysql_supports_its_extras():
-    assert "FORCE INDEX (`i`)" in SelectQuery("*").from_("t").force_index("i").build()[0]
-    assert "/*+ X(1) */" in SelectQuery("*").from_("t").optimizer_hint("X(1)").build()[0]
-    assert Q.insert_into("t").values({"a": 1}).ignore().build()[0].startswith("INSERT IGNORE")
-    assert "ON DUPLICATE KEY UPDATE" in (
-        Q.insert_into("t").values({"a": 1}).on_duplicate_key_update({"a": 2}).build()[0]
+    assert (
+        "FORCE INDEX (`i`)" in SelectQuery("*").from_("t").force_index("i").build()[0]
+    )
+    assert (
+        "/*+ X(1) */" in SelectQuery("*").from_("t").optimizer_hint("X(1)").build()[0]
+    )
+    assert (
+        Q.insert_into("t")
+        .values({"a": 1})
+        .ignore()
+        .build()[0]
+        .startswith("INSERT IGNORE")
+    )
+    assert (
+        "ON DUPLICATE KEY UPDATE"
+        in (
+            Q.insert_into("t")
+            .values({"a": 1})
+            .on_duplicate_key_update({"a": 2})
+            .build()[0]
+        )
     )
     assert "LIMIT 1" in Q.update("t").set({"a": 1}).where("id", 1).limit(1).build()[0]
     assert "ORDER BY" in Q.delete_from("t").where("id", 1).order_by("id").build()[0]
-    assert Q.delete_from("t").join("v", "t.id = v.id").where("t.id", 1).build()[0].startswith(
-        "DELETE `t` FROM `t`"
+    assert (
+        Q.delete_from("t")
+        .join("v", "t.id = v.id")
+        .where("t.id", 1)
+        .build()[0]
+        .startswith("DELETE `t` FROM `t`")
     )
 
 
@@ -195,7 +222,9 @@ def test_a_custom_dialect_can_enable_features():
             return f" USING {kind} ({quoted_indexes})"
 
     rich = Rich()
-    sql, _ = UpdateQuery("t", dialect=rich).set({"a": 1}).where("id", 1).limit(2).build()
+    sql, _ = (
+        UpdateQuery("t", dialect=rich).set({"a": 1}).where("id", 1).limit(2).build()
+    )
     assert sql.endswith("LIMIT 2")
     UpdateQuery("t", dialect=rich).join("v", "t.id = v.id")
     sql, _ = _select(rich).where("a <=>", 1).force_index("i").build()

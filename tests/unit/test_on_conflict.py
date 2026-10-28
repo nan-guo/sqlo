@@ -31,7 +31,9 @@ def _pg(rows=None):
 
 
 def test_mysql_do_update_renders_on_duplicate_key_update():
-    sql, params = _mysql().on_conflict("id").do_update({"name": values_of("name")}).build()
+    sql, params = (
+        _mysql().on_conflict("id").do_update({"name": values_of("name")}).build()
+    )
     assert sql == (
         "INSERT INTO `users` (`id`, `name`) VALUES (%s, %s) "
         "ON DUPLICATE KEY UPDATE `name` = VALUES(`name`)"
@@ -59,7 +61,11 @@ def test_mysql_do_nothing_uses_the_noop_update_not_insert_ignore():
 def test_mysql_do_nothing_with_insert_select_uses_the_first_selected_column():
     select = SelectQuery("a", "b").from_("src")
     sql, _ = (
-        Q.insert_into("users").from_select(["a", "b"], select).on_conflict().do_nothing().build()
+        Q.insert_into("users")
+        .from_select(["a", "b"], select)
+        .on_conflict()
+        .do_nothing()
+        .build()
     )
     assert sql.endswith("ON DUPLICATE KEY UPDATE `users`.`a` = `users`.`a`")
 
@@ -105,8 +111,16 @@ def test_postgresql_do_update_without_a_target_is_rejected_when_called():
 
 
 def test_postgresql_do_nothing_with_and_without_a_target():
-    assert _pg().on_conflict("id").do_nothing().build()[0].endswith('ON CONFLICT ("id") DO NOTHING')
-    assert _pg().on_conflict().do_nothing().build()[0].endswith("ON CONFLICT DO NOTHING")
+    assert (
+        _pg()
+        .on_conflict("id")
+        .do_nothing()
+        .build()[0]
+        .endswith('ON CONFLICT ("id") DO NOTHING')
+    )
+    assert (
+        _pg().on_conflict().do_nothing().build()[0].endswith("ON CONFLICT DO NOTHING")
+    )
 
 
 def test_postgresql_params_follow_sql_order():

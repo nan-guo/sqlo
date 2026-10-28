@@ -2,8 +2,8 @@ from typing import TYPE_CHECKING, Any, Callable, Generic, Optional, TypeVar, Uni
 
 from ..context import build_nested
 from ..expressions import Func, JSONPath, Raw, render_func
-from .base import Query
 from ..security import validate_alias, validate_non_negative_int
+from .base import Query
 from .mixins import JoinClauseMixin, WhereClauseMixin
 
 if TYPE_CHECKING:
@@ -207,7 +207,7 @@ class SelectQuery(WhereClauseMixin, JoinClauseMixin, Query, Generic[T]):
         if self._table and hasattr(self._table, "build"):  # Subquery
             # An explicit alias wins; otherwise use the subquery's own alias.
             # MySQL (and PostgreSQL before 16) reject a derived table without one.
-            subquery_alias = self._table_alias or self._table._alias
+            subquery_alias = self._table_alias or getattr(self._table, "_alias", None)
             if not subquery_alias:
                 raise ValueError(
                     "A subquery used in FROM requires an alias: call .as_() on it "

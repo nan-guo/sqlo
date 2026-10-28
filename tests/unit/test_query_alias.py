@@ -2,7 +2,6 @@ import pytest
 
 from sqlo import Q
 
-
 # --- as_() names the query, it does not alias its own FROM -------------------
 
 
@@ -14,9 +13,7 @@ def test_as_does_not_add_an_alias_to_the_inner_from():
 def test_subquery_in_from_gets_the_as_alias_only_outside():
     sub = Q.select("id").from_("users").where("x", 1).as_("active")
     sql, params = Q.select("*").from_(sub).build()
-    assert sql == (
-        "SELECT * FROM (SELECT `id` FROM `users` WHERE `x` = %s) AS active"
-    )
+    assert sql == ("SELECT * FROM (SELECT `id` FROM `users` WHERE `x` = %s) AS active")
     assert params == (1,)
 
 
@@ -52,13 +49,10 @@ def test_inner_query_can_use_the_real_table_name_in_qualified_columns():
 
 def test_a_query_can_have_a_table_alias_and_a_query_alias():
     sub = Q.select("x.id").from_("users", "x").where("x.active", True).as_("sub")
-    assert sub.build()[0] == (
-        "SELECT `x`.`id` FROM `users` x WHERE `x`.`active` = %s"
-    )
+    assert sub.build()[0] == ("SELECT `x`.`id` FROM `users` x WHERE `x`.`active` = %s")
     sql, _ = Q.select("*").from_(sub).build()
     assert sql == (
-        "SELECT * FROM (SELECT `x`.`id` FROM `users` x "
-        "WHERE `x`.`active` = %s) AS sub"
+        "SELECT * FROM (SELECT `x`.`id` FROM `users` x WHERE `x`.`active` = %s) AS sub"
     )
 
 

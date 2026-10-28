@@ -99,9 +99,7 @@ class UpdateQuery(WhereClauseMixin, JoinClauseMixin, Query):
         ids = [row[key] for row in values]
         duplicates = [k for k, n in Counter(ids).items() if n > 1]
         if duplicates:
-            raise ValueError(
-                f"Duplicate values for key '{key}': {duplicates[:5]}"
-            )
+            raise ValueError(f"Duplicate values for key '{key}': {duplicates[:5]}")
 
         # Group values by column
         columns_to_update = [k for k in first_keys if k != key]

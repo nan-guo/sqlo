@@ -98,18 +98,22 @@ def test_or_where_and_having_render_with_query_dialect():
 )
 def test_condition_kinds_render_with_query_dialect(cond, expected_sql, expected_params):
     sql, params = _select().where(cond).build()
-    assert sql == f"SELECT * FROM \"u\" WHERE {expected_sql}"
+    assert sql == f'SELECT * FROM "u" WHERE {expected_sql}'
     assert params == expected_params
 
 
 def test_in_subquery_and_exists_render_with_query_dialect():
     sub = SelectQuery("id", dialect=ANSI).from_("v").where("k", 9)
     sql, params = _select().where(Condition.in_("a", sub)).build()
-    assert sql == 'SELECT * FROM "u" WHERE ("a" IN (SELECT "id" FROM "v" WHERE "k" = ?))'
+    assert (
+        sql == 'SELECT * FROM "u" WHERE ("a" IN (SELECT "id" FROM "v" WHERE "k" = ?))'
+    )
     assert params == (9,)
 
     sql, params = _select().where(Condition.exists(sub)).build()
-    assert sql == 'SELECT * FROM "u" WHERE (EXISTS (SELECT "id" FROM "v" WHERE "k" = ?))'
+    assert (
+        sql == 'SELECT * FROM "u" WHERE (EXISTS (SELECT "id" FROM "v" WHERE "k" = ?))'
+    )
     assert params == (9,)
 
 

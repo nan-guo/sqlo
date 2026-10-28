@@ -13,9 +13,7 @@ from .exceptions import UnsupportedFeatureError
 # MySQL allows backticks for identifiers, but we validate the content.
 # Dots separate non-empty segments ("a.b", never "a..b" or "a."). \Z anchors
 # the end: "$" would also accept a trailing newline.
-VALID_IDENTIFIER_PATTERN = re.compile(
-    r"^[a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z0-9_]+)*\Z"
-)
+VALID_IDENTIFIER_PATTERN = re.compile(r"^[a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z0-9_]+)*\Z")
 
 
 def validate_identifier(identifier: str, allow_dot: bool = True) -> bool:

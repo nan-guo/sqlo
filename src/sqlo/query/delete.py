@@ -76,9 +76,9 @@ class DeleteQuery(WhereClauseMixin, JoinClauseMixin, Query):
         # DELETE t FROM t JOIN ... (DELETE FROM t JOIN ... is a syntax error)
         table = self._dialect.quote(self._table)
         if self._joins:
-            parts.append(f"DELETE {table} FROM {table}")
+            parts.extend(("DELETE ", table, " FROM ", table))
         else:
-            parts.append(f"DELETE FROM {table}")
+            parts.extend(("DELETE FROM ", table))
 
         # JOINs (for multi-table DELETE)
         self._build_joins(parts, params)

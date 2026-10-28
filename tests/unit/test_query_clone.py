@@ -76,7 +76,9 @@ def test_clone_is_a_new_object_of_the_same_type():
         lambda: Q.update("t").set({"a": 1}).where("id", 1).order_by("id").limit(3),
         lambda: Q.delete_from("t").where("id", 1).order_by("id").limit(3),
         lambda: Q.insert_into("t").values([{"a": 1}, {"a": 2}]).ignore(),
-        lambda: Q.update("t").batch_update([{"id": 1, "a": 2}, {"id": 2, "a": 3}], "id"),
+        lambda: Q.update("t").batch_update(
+            [{"id": 1, "a": 2}, {"id": 2, "a": 3}], "id"
+        ),
         lambda: Q.select("*").from_("t").where(Condition("a", 1) | Condition("b", 2)),
     ],
 )
@@ -140,7 +142,9 @@ def test_delete_clone_is_independent():
 
 def test_insert_clone_is_independent():
     original = Q.insert_into("t").values({"a": 1})
-    clone = original.clone().values({"a": 2}).on_duplicate_key_update({"a": Raw("a + 1")})
+    clone = (
+        original.clone().values({"a": 2}).on_duplicate_key_update({"a": Raw("a + 1")})
+    )
     assert original.build() == ("INSERT INTO `t` (`a`) VALUES (%s)", (1,))
     assert clone.build()[0] == (
         "INSERT INTO `t` (`a`) VALUES (%s), (%s) ON DUPLICATE KEY UPDATE `a` = a + 1"

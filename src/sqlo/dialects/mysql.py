@@ -1,4 +1,5 @@
-from typing import Optional, Sequence
+from collections.abc import Sequence
+from typing import Optional
 
 from ..security import MYSQL_OPERATORS
 from .base import Dialect

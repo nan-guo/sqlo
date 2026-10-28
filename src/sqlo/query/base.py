@@ -1,12 +1,11 @@
 from abc import ABC, abstractmethod
 from typing import Any, Optional, TypeVar
 
-from ..dialects.base import Dialect
-from ..dialects.mysql import MySQLDialect
 from .._debug import log_query
 from ..context import build_nested
+from ..dialects.base import Dialect
+from ..dialects.mysql import MySQLDialect
 from ..expressions import Raw
-
 
 _T = TypeVar("_T", bound="Query")
 
@@ -74,12 +73,12 @@ class Query(ABC):
         """
         if not isinstance(query, (Query, Raw)):
             raise TypeError(
-                "A CTE must be a query builder or Raw(), "
-                f"got {type(query).__name__}"
+                f"A CTE must be a query builder or Raw(), got {type(query).__name__}"
             )
         if name is None:
-            if isinstance(query, Query) and query._alias:
-                name = query._alias
+            alias = getattr(query, "_alias", None)
+            if alias:
+                name = alias
             else:
                 raise ValueError("CTE name must be provided")
         self._ctes.append((query, name, recursive))

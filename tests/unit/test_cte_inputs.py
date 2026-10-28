@@ -9,7 +9,16 @@ def _cte():
 
 @pytest.mark.parametrize(
     "bad",
-    ["SELECT 1", "SELECT 1; DROP TABLE x", "", None, 1, {"a": 1}, ["a"], Condition("a", 1)],
+    [
+        "SELECT 1",
+        "SELECT 1; DROP TABLE x",
+        "",
+        None,
+        1,
+        {"a": 1},
+        ["a"],
+        Condition("a", 1),
+    ],
 )
 def test_with_rejects_anything_but_a_query_or_raw(bad):
     with pytest.raises(TypeError, match="query"):

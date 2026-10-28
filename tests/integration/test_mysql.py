@@ -4,8 +4,6 @@ import pytest
 
 from sqlo import JSON, Condition, Raw, UnsupportedFeatureError, Window, func, values_of
 
-from .conftest import numbers
-
 pymysql = pytest.importorskip("pymysql")
 pytestmark = pytest.mark.integration
 
@@ -43,7 +41,12 @@ def test_delete_with_two_joins_and_a_bound_on_condition(mysql):
 
 
 def test_delete_with_a_join_and_a_cte(mysql):
-    q = mysql.q.delete_from("u").with_(Raw("SELECT %s AS n", [1]), "c").join("c", "c.n = u.id").where("u.a", 1)
+    q = (
+        mysql.q.delete_from("u")
+        .with_(Raw("SELECT %s AS n", [1]), "c")
+        .join("c", "c.n = u.id")
+        .where("u.a", 1)
+    )
     assert mysql.run(q) == 1
 
 
@@ -54,16 +57,28 @@ def test_update_with_a_join(mysql):
 
 
 def test_single_table_delete_and_update_keep_order_by_and_limit(mysql):
-    assert mysql.run(mysql.q.delete_from("u").where("id >", 0).order_by("-id").limit(1)) == 1
+    assert (
+        mysql.run(mysql.q.delete_from("u").where("id >", 0).order_by("-id").limit(1))
+        == 1
+    )
     assert _ids(mysql) == [1, 2]
-    assert mysql.run(mysql.q.update("u").set({"b": 5}).where("id >", 0).order_by("id").limit(1)) == 1
+    assert (
+        mysql.run(
+            mysql.q.update("u").set({"b": 5}).where("id >", 0).order_by("id").limit(1)
+        )
+        == 1
+    )
 
 
 def test_sqlo_rejects_a_join_with_order_by_or_limit_and_so_does_mysql(mysql):
     with pytest.raises(ValueError, match="DELETE.*JOIN"):
-        mysql.q.delete_from("u").join("v", "u.id = v.id").where("u.id", 1).limit(1).build()
+        mysql.q.delete_from("u").join("v", "u.id = v.id").where("u.id", 1).limit(
+            1
+        ).build()
     with pytest.raises(ValueError, match="UPDATE.*JOIN"):
-        mysql.q.update("u").set({"a": 1}).join("v", "u.id = v.id").where("u.id", 1).order_by("id").build()
+        mysql.q.update("u").set({"a": 1}).join("v", "u.id = v.id").where(
+            "u.id", 1
+        ).order_by("id").build()
     # the facts behind those errors
     with pytest.raises(pymysql.MySQLError):
         mysql.execute("DELETE u FROM u INNER JOIN v ON u.id = v.id LIMIT 1")
@@ -80,7 +95,13 @@ def test_the_old_delete_join_form_is_a_syntax_error_in_mysql(mysql):
 
 
 def test_index_and_optimizer_hints_run(mysql):
-    q = mysql.q.select("id").from_("u").force_index("PRIMARY").optimizer_hint("MAX_EXECUTION_TIME(1000)").order_by("id")
+    q = (
+        mysql.q.select("id")
+        .from_("u")
+        .force_index("PRIMARY")
+        .optimizer_hint("MAX_EXECUTION_TIME(1000)")
+        .order_by("id")
+    )
     assert mysql.run(q) == [(1,), (2,), (3,)]
 
 
@@ -98,7 +119,9 @@ def test_a_json_path_with_a_wildcard_runs(mysql):
 
 def test_window_frame_intervals_run_as_written(mysql):
     for unit in ("DAY", "WEEK", "MONTH", "QUARTER", "YEAR"):
-        frame = Window.order_by("ts").range_between(f"INTERVAL 1 {unit} PRECEDING", "CURRENT ROW")
+        frame = Window.order_by("ts").range_between(
+            f"INTERVAL 1 {unit} PRECEDING", "CURRENT ROW"
+        )
         q = mysql.q.select(func.sum("a").over(frame)).from_("u")
         assert len(mysql.run(q)) == 3
 
@@ -107,7 +130,11 @@ def test_window_frame_intervals_run_as_written(mysql):
 
 
 def test_the_legacy_upsert_still_works(mysql):
-    q = mysql.q.insert_into("v").values({"id": 1, "k": 5}).on_duplicate_key_update({"k": values_of("k")})
+    q = (
+        mysql.q.insert_into("v")
+        .values({"id": 1, "k": 5})
+        .on_duplicate_key_update({"k": values_of("k")})
+    )
     mysql.run(q)
     assert mysql.run(mysql.q.select("k").from_("v").where("id", 1)) == [(5,)]
 
@@ -118,7 +145,12 @@ def test_do_nothing_is_a_noop_update_so_it_does_not_hide_truncation(mysql):
     too_long = mysql.q.insert_into("w").values({"id": 2, "s": "abcdef"})
     assert mysql.run(too_long.ignore()) == 1  # silently truncated
     with pytest.raises(pymysql.MySQLError, match="1406"):
-        mysql.run(mysql.q.insert_into("w").values({"id": 3, "s": "abcdef"}).on_conflict("id").do_nothing())
+        mysql.run(
+            mysql.q.insert_into("w")
+            .values({"id": 3, "s": "abcdef"})
+            .on_conflict("id")
+            .do_nothing()
+        )
 
 
 # --- what sqlo refuses before it reaches MySQL ------------------------------------------

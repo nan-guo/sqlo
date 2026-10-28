@@ -1,5 +1,6 @@
 import re
-from typing import Optional, Sequence
+from collections.abc import Sequence
+from typing import Optional
 
 from ..constants import FULL_JOIN_TYPES, PORTABLE_JOIN_TYPES
 from ..security import POSTGRESQL_OPERATORS
@@ -64,7 +65,8 @@ class PostgreSQLDialect(Dialect):
         on = f" ON CONFLICT ({', '.join(target)})" if target else " ON CONFLICT"
         if assignments is None:
             return f"{on} DO NOTHING"
-        return f"{on} DO UPDATE SET {', '.join(assignments)}"
+        # The assignments are built by InsertQuery from quoted identifiers and placeholders
+        return f"{on} DO UPDATE SET {', '.join(assignments)}"  # nosec B608
 
     def window_frame_bound(self, bound: str) -> str:
         """``INTERVAL 7 DAY PRECEDING`` becomes ``INTERVAL '7 day' PRECEDING``.
@@ -78,4 +80,3 @@ class PostgreSQLDialect(Dialect):
         if unit == "QUARTER":
             amount, unit = str(int(amount) * 3), "MONTH"
         return f"INTERVAL '{amount} {unit.lower()}' {direction}"
-

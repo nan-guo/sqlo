@@ -1,6 +1,6 @@
 import pytest
 
-from sqlo import JSON, Condition, Raw, UnsupportedFeatureError, Window, func
+from sqlo import JSON, Condition, UnsupportedFeatureError, Window, func
 from sqlo.dialects.mysql import MySQLDialect
 from sqlo.dialects.postgresql import PostgreSQLDialect
 from sqlo.query.delete import DeleteQuery
@@ -67,11 +67,15 @@ def test_insert_update_delete():
 def test_subqueries_unions_and_ctes_render_with_postgresql_quoting():
     sub = SelectQuery("id", dialect=PG).from_("v").where("k", 9)
     sql, params = _s("*").from_("u").where_in("id", sub).build()
-    assert sql == 'SELECT * FROM "u" WHERE "id" IN (SELECT "id" FROM "v" WHERE "k" = %s)'
+    assert (
+        sql == 'SELECT * FROM "u" WHERE "id" IN (SELECT "id" FROM "v" WHERE "k" = %s)'
+    )
     assert params == (9,)
 
     union = _s("id").from_("u").union(SelectQuery("id", dialect=PG).from_("v").limit(1))
-    assert union.build()[0] == 'SELECT "id" FROM "u" UNION (SELECT "id" FROM "v" LIMIT 1)'
+    assert (
+        union.build()[0] == 'SELECT "id" FROM "u" UNION (SELECT "id" FROM "v" LIMIT 1)'
+    )
 
     cte = SelectQuery("id", dialect=PG).from_("u").where("a", 1)
     sql, _ = _s("*").from_("c").with_(cte, "c").build()
@@ -104,7 +108,16 @@ def test_portable_joins_still_work():
 
 @pytest.mark.parametrize(
     "op",
-    ["~", "~*", "!~", "!~*", "ILIKE", "NOT ILIKE", "IS DISTINCT FROM", "IS NOT DISTINCT FROM"],
+    [
+        "~",
+        "~*",
+        "!~",
+        "!~*",
+        "ILIKE",
+        "NOT ILIKE",
+        "IS DISTINCT FROM",
+        "IS NOT DISTINCT FROM",
+    ],
 )
 def test_postgresql_operators(op):
     sql, params = _s("*").from_("t").where("name", "x", op).build()
@@ -115,8 +128,12 @@ def test_postgresql_operators(op):
 def test_postgresql_operators_in_the_spaced_form_and_in_conditions():
     sql, _ = _s("*").from_("t").where("name ILIKE", "x%").build()
     assert sql == 'SELECT * FROM "t" WHERE "name" ILIKE %s'
-    assert _s("*").from_("t").where(Condition("name ~*", "^x")).build()[0].endswith(
-        'WHERE ("name" ~* %s)'
+    assert (
+        _s("*")
+        .from_("t")
+        .where(Condition("name ~*", "^x"))
+        .build()[0]
+        .endswith('WHERE ("name" ~* %s)')
     )
     assert Condition("a IS NOT DISTINCT FROM", 1).build(PG) == (
         '"a" IS NOT DISTINCT FROM %s',
@@ -201,29 +218,42 @@ def test_interval_bounds_are_quoted_for_postgresql():
     assert _frame("INTERVAL 7 DAY PRECEDING", "CURRENT ROW").endswith(
         """RANGE BETWEEN INTERVAL '7 day' PRECEDING AND CURRENT ROW) FROM "t\""""
     )
-    assert "INTERVAL '2 hour' FOLLOWING" in _frame("CURRENT ROW", "INTERVAL 2 HOUR FOLLOWING")
+    assert "INTERVAL '2 hour' FOLLOWING" in _frame(
+        "CURRENT ROW", "INTERVAL 2 HOUR FOLLOWING"
+    )
 
 
 def test_quarter_is_converted_because_postgresql_has_no_such_unit():
-    assert "INTERVAL '6 month' PRECEDING" in _frame("INTERVAL 2 QUARTER PRECEDING", "CURRENT ROW")
+    assert "INTERVAL '6 month' PRECEDING" in _frame(
+        "INTERVAL 2 QUARTER PRECEDING", "CURRENT ROW"
+    )
 
 
-@pytest.mark.parametrize("unit", ["MICROSECOND", "SECOND", "MINUTE", "HOUR", "DAY", "WEEK", "MONTH", "YEAR"])
+@pytest.mark.parametrize(
+    "unit", ["MICROSECOND", "SECOND", "MINUTE", "HOUR", "DAY", "WEEK", "MONTH", "YEAR"]
+)
 def test_every_other_unit_is_passed_through_in_lower_case(unit):
-    assert f"INTERVAL '3 {unit.lower()}' PRECEDING" in _frame(f"INTERVAL 3 {unit} PRECEDING", "CURRENT ROW")
+    assert f"INTERVAL '3 {unit.lower()}' PRECEDING" in _frame(
+        f"INTERVAL 3 {unit} PRECEDING", "CURRENT ROW"
+    )
 
 
 def test_non_interval_bounds_are_unchanged():
-    assert _frame("UNBOUNDED PRECEDING", "CURRENT ROW", "rows_between").count(
-        "ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW"
-    ) == 1
+    assert (
+        _frame("UNBOUNDED PRECEDING", "CURRENT ROW", "rows_between").count(
+            "ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW"
+        )
+        == 1
+    )
     assert "ROWS BETWEEN 2 PRECEDING AND 1 FOLLOWING" in _frame(
         "2 PRECEDING", "1 FOLLOWING", "rows_between"
     )
 
 
 def test_the_same_window_renders_per_dialect():
-    window = Window.order_by("ts").range_between("INTERVAL 7 DAY PRECEDING", "CURRENT ROW")
+    window = Window.order_by("ts").range_between(
+        "INTERVAL 7 DAY PRECEDING", "CURRENT ROW"
+    )
     assert "INTERVAL 7 DAY PRECEDING" in window.build(MySQLDialect())
     assert "INTERVAL '7 day' PRECEDING" in window.build(PG)
 
@@ -257,11 +287,15 @@ def test_update_and_delete_extras_raise(make):
 
 def test_mysql_output_is_untouched_by_the_new_dialect():
     mysql = MySQLDialect()
-    assert SelectQuery(JSON("d").extract("a.b"), dialect=mysql).from_("t").build()[0] == (
-        "SELECT `d`->>'$.a.b' FROM `t`"
+    assert SelectQuery(JSON("d").extract("a.b"), dialect=mysql).from_("t").build()[
+        0
+    ] == ("SELECT `d`->>'$.a.b' FROM `t`")
+    window = Window.order_by("ts").range_between(
+        "INTERVAL 7 DAY PRECEDING", "CURRENT ROW"
     )
-    window = Window.order_by("ts").range_between("INTERVAL 7 DAY PRECEDING", "CURRENT ROW")
-    assert window.build(mysql).endswith("RANGE BETWEEN INTERVAL 7 DAY PRECEDING AND CURRENT ROW")
+    assert window.build(mysql).endswith(
+        "RANGE BETWEEN INTERVAL 7 DAY PRECEDING AND CURRENT ROW"
+    )
     assert PG.extra_operators.isdisjoint(mysql.extra_operators)
 
 

@@ -77,7 +77,9 @@ def test_anything_else_is_rejected_for_every_query_type(on):
         Q.delete_from("u").join("o", on)
 
 
-@pytest.mark.parametrize("on", [123, 1.5, ["a.x = b.y"], ("a.x", "b.y"), object(), b"a=b"])
+@pytest.mark.parametrize(
+    "on", [123, 1.5, ["a.x = b.y"], ("a.x", "b.y"), object(), b"a=b"]
+)
 def test_other_types_are_rejected(on):
     with pytest.raises(TypeError, match="on"):
         _select().join("o", on)
@@ -171,7 +173,10 @@ def test_condition_on_uses_the_dialect_of_the_query():
     on = Condition("s.user_id", Raw("u.id")) & Condition("s.status", "active")
     q = SelectQuery("*", dialect=AnsiDialect()).from_("u").left_join("s", on)
     sql, params = q.build()
-    assert sql == 'SELECT * FROM "u" LEFT JOIN s ON ("s"."user_id" = u.id AND "s"."status" = ?)'
+    assert (
+        sql
+        == 'SELECT * FROM "u" LEFT JOIN s ON ("s"."user_id" = u.id AND "s"."status" = ?)'
+    )
     assert params == ("active",)
 
 
@@ -186,9 +191,7 @@ def test_update_join_params_come_before_set_and_where_params():
         .where("id", 5)
         .build()
     )
-    assert sql == (
-        "UPDATE `u` INNER JOIN v ON v.k = %s SET `a` = %s WHERE `id` = %s"
-    )
+    assert sql == ("UPDATE `u` INNER JOIN v ON v.k = %s SET `a` = %s WHERE `id` = %s")
     assert params == ("k", 1, 5)
 
 
@@ -206,9 +209,7 @@ def test_delete_join_params_come_before_where_params():
     sql, params = (
         Q.delete_from("u").join("v", Raw("v.k = %s", ["k"])).where("u.id", 5).build()
     )
-    assert sql == (
-        "DELETE `u` FROM `u` INNER JOIN v ON v.k = %s WHERE `u`.`id` = %s"
-    )
+    assert sql == ("DELETE `u` FROM `u` INNER JOIN v ON v.k = %s WHERE `u`.`id` = %s")
     assert params == ("k", 5)
 
 

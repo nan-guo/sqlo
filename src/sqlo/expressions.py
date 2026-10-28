@@ -1,6 +1,5 @@
-from typing import TYPE_CHECKING, Any, Optional, Union
-
 import math
+from typing import TYPE_CHECKING, Any, Optional, Union
 
 from .constants import COMPACT_PATTERN, JSON_PATH_PATTERN
 from .context import CompileContext
@@ -195,7 +194,7 @@ class _Compare:
 
     __slots__ = ("column", "operator", "value")
 
-    def __init__(self, column: str, operator: str, value: Any):
+    def __init__(self, column: Union[str, Raw], operator: str, value: Any):
         self.column = column
         self.operator = operator
         self.value = value
@@ -215,7 +214,7 @@ class _NullCheck:
 
     __slots__ = ("column", "operator")
 
-    def __init__(self, column: str, operator: str):
+    def __init__(self, column: Union[str, Raw], operator: str):
         self.column = column
         self.operator = operator
 
@@ -228,7 +227,7 @@ class _In:
 
     __slots__ = ("column", "operator", "values")
 
-    def __init__(self, column: str, operator: str, values: Any):
+    def __init__(self, column: Union[str, Raw], operator: str, values: Any):
         self.column = column
         self.operator = operator
         self.values = values
@@ -419,7 +418,9 @@ class Condition(_ConditionNode):
         # Wrap in parentheses if multiple terms
         return f"({sql})" if len(self._terms) > 1 else sql
 
-    def __and__(self, other: "_ConditionNode") -> "_ConditionNode":
+    def __and__(
+        self, other: "_ConditionNode"
+    ) -> Union["Condition", "ComplexCondition"]:
         if isinstance(other, Condition):
             new_cond = Condition()
             new_cond._terms = self._terms + other._terms
@@ -556,7 +557,9 @@ class Condition(_ConditionNode):
         return cond
 
     @staticmethod
-    def and_(*conditions: "Condition") -> "Condition":
+    def and_(
+        *conditions: Union["Condition", "ComplexCondition"],
+    ) -> Union["Condition", "ComplexCondition"]:
         """
         Combine multiple conditions with AND logic.
 
@@ -576,7 +579,7 @@ class Condition(_ConditionNode):
         if not conditions:
             return Condition()
 
-        result = conditions[0]
+        result: Union[Condition, ComplexCondition] = conditions[0]
         for cond in conditions[1:]:
             result = result & cond
         return result
@@ -633,8 +636,8 @@ class ComplexCondition(_ConditionNode):
     def __init__(
         self,
         operator: str,
-        left: Union[Condition, "ComplexCondition"],
-        right: Union[Condition, "ComplexCondition"],
+        left: "_ConditionNode",
+        right: "_ConditionNode",
     ):
         self.operator = operator
         self.left = left

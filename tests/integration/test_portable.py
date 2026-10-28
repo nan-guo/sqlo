@@ -15,12 +15,25 @@ U = {1: (1, "x"), 2: (2, "y"), 3: (3, "z")}  # id -> (a, name) in the seed data
 
 
 def test_where_order_limit_offset(db):
-    q = db.q.select("id", "name").from_("u").where("a >", 0).order_by("-id").limit(2).offset(1)
+    q = (
+        db.q.select("id", "name")
+        .from_("u")
+        .where("a >", 0)
+        .order_by("-id")
+        .limit(2)
+        .offset(1)
+    )
     assert db.run(q) == [(2, "y"), (1, "x")]
 
 
 def test_in_and_not_in(db):
-    q = db.q.select("id").from_("u").where_in("id", [1, 2]).where_not_in("a", [9]).order_by("id")
+    q = (
+        db.q.select("id")
+        .from_("u")
+        .where_in("id", [1, 2])
+        .where_not_in("a", [9])
+        .order_by("id")
+    )
     assert db.run(q) == [(1,), (2,)]
 
 
@@ -55,14 +68,24 @@ def test_exists_and_raw_predicates(db):
     sub = db.q.select("id").from_("v").where("k", 10)
     q = db.q.select("id").from_("u").where(Condition.exists(sub)).order_by("id")
     assert db.run(q) == [(1,), (2,), (3,)]
-    q = db.q.select("id").from_("u").where(Condition(Raw("a + %s > 2", [1]))).order_by("id")
+    q = (
+        db.q.select("id")
+        .from_("u")
+        .where(Condition(Raw("a + %s > 2", [1])))
+        .order_by("id")
+    )
     assert db.run(q) == [(2,), (3,)]
 
 
 def test_distinct_group_by_and_having(db):
     q = db.q.select("user_id").distinct().from_("o").order_by("user_id")
     assert db.run(q) == [(1,), (2,)]
-    q = db.q.select("user_id", func.count("*").as_("n")).from_("o").group_by("user_id").order_by("user_id")
+    q = (
+        db.q.select("user_id", func.count("*").as_("n"))
+        .from_("o")
+        .group_by("user_id")
+        .order_by("user_id")
+    )
     assert db.run(q) == [(1, 2), (2, 1)]
     q = (
         db.q.select("user_id", func.count("*").as_("n"))
@@ -77,9 +100,19 @@ def test_distinct_group_by_and_having(db):
 
 
 def test_joins(db):
-    q = db.q.select("u.id", "o.total").from_("u").join("o", "o.user_id = u.id").order_by("o.id")
+    q = (
+        db.q.select("u.id", "o.total")
+        .from_("u")
+        .join("o", "o.user_id = u.id")
+        .order_by("o.id")
+    )
     assert db.run(q) == [(1, 100), (1, 200), (2, 50)]
-    q = db.q.select("u.id").from_("u").left_join("o", "o.user_id = u.id").where_null("o.id")
+    q = (
+        db.q.select("u.id")
+        .from_("u")
+        .left_join("o", "o.user_id = u.id")
+        .where_null("o.id")
+    )
     assert db.run(q) == [(3,)]
     assert db.run(db.q.select(func.count("*")).from_("u").cross_join("v")) == [(6,)]
 
@@ -99,9 +132,20 @@ def test_join_a_subquery_and_select_from_a_derived_table(db):
 def test_union_and_union_all_with_a_limit(db):
     both = db.q.select("id").from_("u").union(db.q.select("id").from_("v"))
     assert db.run(both.order_by("id")) == [(1,), (2,), (3,)]
-    both = db.q.select("id").from_("u").union(db.q.select("id").from_("v")).order_by("id").limit(2)
+    both = (
+        db.q.select("id")
+        .from_("u")
+        .union(db.q.select("id").from_("v"))
+        .order_by("id")
+        .limit(2)
+    )
     assert db.run(both) == [(1,), (2,)]
-    twice = db.q.select("id").from_("v").union_all(db.q.select("id").from_("v")).order_by("id")
+    twice = (
+        db.q.select("id")
+        .from_("v")
+        .union_all(db.q.select("id").from_("v"))
+        .order_by("id")
+    )
     assert db.run(twice) == [(1,), (1,), (2,), (2,)]
 
 
@@ -122,7 +166,9 @@ def test_ctes(db):
 
 
 def test_window_functions(db):
-    running = func.sum("a").over(Window.order_by("id").rows_between("UNBOUNDED PRECEDING", "CURRENT ROW"))
+    running = func.sum("a").over(
+        Window.order_by("id").rows_between("UNBOUNDED PRECEDING", "CURRENT ROW")
+    )
     q = db.q.select("id", running.as_("s")).from_("u").order_by("id")
     assert numbers(db.run(q)) == [(1, 1), (2, 3), (3, 6)]
     previous = func.lag("a", 1).over(Window.order_by("id"))
@@ -134,7 +180,9 @@ def test_window_functions(db):
 
 
 def test_a_window_frame_with_an_interval(db):
-    frame = Window.order_by("ts").range_between("INTERVAL 1 DAY PRECEDING", "CURRENT ROW")
+    frame = Window.order_by("ts").range_between(
+        "INTERVAL 1 DAY PRECEDING", "CURRENT ROW"
+    )
     q = db.q.select("id", func.sum("a").over(frame).as_("s")).from_("u").order_by("id")
     assert numbers(db.run(q)) == [(1, 1), (2, 3), (3, 5)]
 
@@ -161,8 +209,13 @@ def test_a_json_path_in_where(db):
 
 def test_insert_variants(db):
     assert db.run(db.q.insert_into("v").values({"id": 9, "k": 90})) == 1
-    assert db.run(db.q.insert_into("v").values([{"id": 7, "k": 70}, {"id": 8, "k": 80}])) == 2
-    q = db.q.insert_into("v").from_select(["id", "k"], db.q.select("id", "a").from_("u").where("id", 3))
+    assert (
+        db.run(db.q.insert_into("v").values([{"id": 7, "k": 70}, {"id": 8, "k": 80}]))
+        == 2
+    )
+    q = db.q.insert_into("v").from_select(
+        ["id", "k"], db.q.select("id", "a").from_("u").where("id", 3)
+    )
     assert db.run(q) == 1
     assert db.run(db.q.select("id", "k").from_("v").order_by("id")) == [
         (1, 10), (2, 20), (3, 3), (7, 70), (8, 80), (9, 90),
@@ -202,39 +255,76 @@ def _v(db):
 
 
 def test_on_conflict_do_update_changes_the_row_on_a_conflict(db):
-    q = db.q.insert_into("v").values({"id": 1, "k": 999}).on_conflict("id").do_update({"k": values_of("k")})
+    q = (
+        db.q.insert_into("v")
+        .values({"id": 1, "k": 999})
+        .on_conflict("id")
+        .do_update({"k": values_of("k")})
+    )
     db.run(q)
     assert _v(db) == [(1, 999), (2, 20)]
 
 
 def test_on_conflict_do_nothing_leaves_the_row(db):
-    db.run(db.q.insert_into("v").values({"id": 1, "k": 999}).on_conflict("id").do_nothing())
+    db.run(
+        db.q.insert_into("v").values({"id": 1, "k": 999}).on_conflict("id").do_nothing()
+    )
     assert _v(db) == [(1, 10), (2, 20)]
 
 
 def test_on_conflict_inserts_when_there_is_no_conflict(db):
-    q = db.q.insert_into("v").values({"id": 9, "k": 90}).on_conflict("id").do_update({"k": values_of("k")})
+    q = (
+        db.q.insert_into("v")
+        .values({"id": 9, "k": 90})
+        .on_conflict("id")
+        .do_update({"k": values_of("k")})
+    )
     db.run(q)
     assert _v(db) == [(1, 10), (2, 20), (9, 90)]
 
 
 def test_on_conflict_with_several_rows(db):
     rows = [{"id": 1, "k": 111}, {"id": 3, "k": 333}]
-    db.run(db.q.insert_into("v").values(rows).on_conflict("id").do_update({"k": values_of("k")}))
+    db.run(
+        db.q.insert_into("v")
+        .values(rows)
+        .on_conflict("id")
+        .do_update({"k": values_of("k")})
+    )
     assert _v(db) == [(1, 111), (2, 20), (3, 333)]
 
 
 def test_on_conflict_with_an_expression_and_a_plain_value(db):
-    q = db.q.insert_into("v").values({"id": 1, "k": 0}).on_conflict("id").do_update({"k": Raw("v.k + %s", [5])})
+    q = (
+        db.q.insert_into("v")
+        .values({"id": 1, "k": 0})
+        .on_conflict("id")
+        .do_update({"k": Raw("v.k + %s", [5])})
+    )
     db.run(q)
     assert _v(db) == [(1, 15), (2, 20)]
-    db.run(db.q.insert_into("v").values({"id": 2, "k": 0}).on_conflict("id").do_update({"k": 77}))
+    db.run(
+        db.q.insert_into("v")
+        .values({"id": 2, "k": 0})
+        .on_conflict("id")
+        .do_update({"k": 77})
+    )
     assert _v(db) == [(1, 15), (2, 77)]
 
 
 def test_on_conflict_with_insert_select(db):
     source = db.q.select("id", "a").from_("u")
-    db.run(db.q.insert_into("v").from_select(["id", "k"], source).on_conflict("id").do_nothing())
+    db.run(
+        db.q.insert_into("v")
+        .from_select(["id", "k"], source)
+        .on_conflict("id")
+        .do_nothing()
+    )
     assert _v(db) == [(1, 10), (2, 20), (3, 3)]
-    db.run(db.q.insert_into("v").from_select(["id", "k"], source).on_conflict("id").do_update({"k": values_of("k")}))
+    db.run(
+        db.q.insert_into("v")
+        .from_select(["id", "k"], source)
+        .on_conflict("id")
+        .do_update({"k": values_of("k")})
+    )
     assert _v(db) == [(1, 1), (2, 2), (3, 3)]

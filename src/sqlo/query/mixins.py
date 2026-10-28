@@ -4,7 +4,12 @@ Mixin classes for query builders to share common functionality.
 
 from typing import TYPE_CHECKING, Any, Optional, TypeVar, Union
 
-from ..constants import COMPACT_PATTERN, FULL_JOIN_TYPES, ON_PATTERN, PORTABLE_JOIN_TYPES
+from ..constants import (
+    COMPACT_PATTERN,
+    FULL_JOIN_TYPES,
+    ON_PATTERN,
+    PORTABLE_JOIN_TYPES,
+)
 from ..context import CompileContext, build_nested
 from ..expressions import ComplexCondition, Condition, JSONPath, Raw
 from ..security import validate_alias, validate_operator
@@ -285,7 +290,9 @@ class WhereClauseMixin:
         # Handle subquery
         if hasattr(values, "build"):  # Subquery
             sub_sql, sub_params = build_nested(self._dialect, values)
-            self._wheres.append((connector, f"{quoted} {operator} ({sub_sql})", sub_params))
+            self._wheres.append(
+                (connector, f"{quoted} {operator} ({sub_sql})", sub_params)
+            )
         # Handle empty list edge case
         # IN () is always false, NOT IN () is always true
         elif len(values) == 0:
@@ -323,7 +330,9 @@ class WhereClauseMixin:
         self: _Q, column: str, connector: str = "AND", not_null: bool = False
     ) -> _Q:
         operator = "IS NOT NULL" if not_null else "IS NULL"
-        self._wheres.append((connector, f"{self._dialect.quote(column)} {operator}", []))
+        self._wheres.append(
+            (connector, f"{self._dialect.quote(column)} {operator}", [])
+        )
         return self
 
     def where_null(self: _Q, column: str) -> _Q:
@@ -392,7 +401,11 @@ class WhereClauseMixin:
         if pattern is None:
             raise ValueError(f"{operator} needs a pattern, got None")
         self._wheres.append(
-            (connector, f"{self._dialect.quote(column)} {operator} {self._ph}", [pattern])
+            (
+                connector,
+                f"{self._dialect.quote(column)} {operator} {self._ph}",
+                [pattern],
+            )
         )
         return self
 

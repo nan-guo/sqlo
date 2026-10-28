@@ -32,9 +32,7 @@ def test_complex_and_complex_and_or_mixes():
 
 def test_condition_and_complex_in_a_query():
     sql, params = Q.select("*").from_("u").where(C & (A | B)).build()
-    assert sql == (
-        "SELECT * FROM `u` WHERE ((`c` = %s AND (`a` = %s OR `b` = %s)))"
-    )
+    assert sql == ("SELECT * FROM `u` WHERE ((`c` = %s AND (`a` = %s OR `b` = %s)))")
     assert params == (3, 1, 2)
 
 

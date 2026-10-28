@@ -24,7 +24,14 @@ POSTGRES_URL = os.environ.get("SQLO_TEST_POSTGRES_URL")
 
 # The same logical data in both databases
 _ROWS_U = [
-    (1, 1, 1, "x", '{"a": {"b": 5, "c": [1, {"b": 9}]}, "list": [10, 20]}', "2024-01-01"),
+    (
+        1,
+        1,
+        1,
+        "x",
+        '{"a": {"b": 5, "c": [1, {"b": 9}]}, "list": [10, 20]}',
+        "2024-01-01",
+    ),
     (2, 2, 2, "y", '{"a": {"b": 6}}', "2024-01-02"),
     (3, 3, 3, "z", None, "2024-01-03"),
 ]
@@ -74,11 +81,11 @@ def _seed(engine):
         cur.execute(f"DROP TABLE IF EXISTS {table}")
     for statement in _SCHEMA[engine]:
         cur.execute(statement)
-    cur.executemany(
-        "INSERT INTO u VALUES (%s, %s, %s, %s, %s, %s)", _ROWS_U
-    )
+    cur.executemany("INSERT INTO u VALUES (%s, %s, %s, %s, %s, %s)", _ROWS_U)
     cur.executemany("INSERT INTO v VALUES (%s, %s)", [(1, 10), (2, 20)])
-    cur.executemany("INSERT INTO o VALUES (%s, %s, %s)", [(1, 1, 100), (2, 1, 200), (3, 2, 50)])
+    cur.executemany(
+        "INSERT INTO o VALUES (%s, %s, %s)", [(1, 1, 100), (2, 1, 200), (3, 2, 50)]
+    )
     conn.commit()
     conn.close()
 
@@ -149,4 +156,10 @@ def pg():
 
 def numbers(rows):
     """Normalize numeric results: MySQL returns Decimal where PostgreSQL returns int."""
-    return [tuple(int(v) if hasattr(v, "as_integer_ratio") and not isinstance(v, bool) else v for v in row) for row in rows]
+    return [
+        tuple(
+            int(v) if hasattr(v, "as_integer_ratio") and not isinstance(v, bool) else v
+            for v in row
+        )
+        for row in rows
+    ]

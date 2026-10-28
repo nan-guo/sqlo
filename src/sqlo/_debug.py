@@ -32,16 +32,21 @@ class _StdoutHandler(logging.Handler):
             self.handleError(record)
 
 
-# (handler, logger level, logger propagate, params logger level) before enable()
-_saved: Optional[tuple[_StdoutHandler, int, bool, int]] = None
+class _State:
+    """What ``enable()`` replaced, so that ``disable()`` can put it back."""
+
+    # (handler, logger level, logger propagate, params logger level)
+    saved: Optional[tuple[_StdoutHandler, int, bool, int]] = None
+
+
+_state = _State()
 
 
 def enable(hide_params: bool = False) -> None:
     """Log queries to stdout. Calling it again replaces the previous setup."""
-    global _saved
     disable()
     handler = _StdoutHandler()
-    _saved = (handler, logger.level, logger.propagate, params_logger.level)
+    _state.saved = (handler, logger.level, logger.propagate, params_logger.level)
     logger.addHandler(handler)
     logger.setLevel(logging.DEBUG)
     logger.propagate = False  # the handler is the output: do not print twice
@@ -51,15 +56,14 @@ def enable(hide_params: bool = False) -> None:
 
 def disable() -> None:
     """Undo ``enable()``, restoring the logger settings it replaced."""
-    global _saved
-    if _saved is None:
+    if _state.saved is None:
         return
-    handler, level, propagate, params_level = _saved
+    handler, level, propagate, params_level = _state.saved
     logger.removeHandler(handler)
     logger.setLevel(level)
     logger.propagate = propagate
     params_logger.setLevel(params_level)
-    _saved = None
+    _state.saved = None
 
 
 def log_query(sql: str, params: tuple[Any, ...]) -> None:

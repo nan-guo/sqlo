@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
+from collections.abc import Sequence
 from functools import lru_cache
-from typing import Optional, Sequence
+from typing import Optional
 
 from ..constants import PORTABLE_JOIN_TYPES
 from ..exceptions import UnsupportedFeatureError

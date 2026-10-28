@@ -48,7 +48,9 @@ class InsertQuery(Query):
         self._ignore = False
         self._on_duplicate: Optional[dict[str, Any]] = None
         # (conflict columns, assignments or None for "do nothing"), see on_conflict()
-        self._conflict: Optional[tuple[tuple[str, ...], Optional[dict[str, Any]]]] = None
+        self._conflict: Optional[tuple[tuple[str, ...], Optional[dict[str, Any]]]] = (
+            None
+        )
         self._from_select: Optional[SelectQuery] = None
         self._select_columns: Optional[list[str]] = None
 
@@ -205,11 +207,11 @@ class InsertQuery(Query):
             # ambiguous when the SELECT's table has a column of the same name
             first = (self._select_columns or list(self._values[0]))[0]
             first_sql = self._dialect.quote(f"{self._table}.{first}")
-            assignments = (
+            conflict_assignments = (
                 None if updates is None else self._assignments(updates, params)
             )
             parts.append(
-                self._dialect.conflict_clause(target, assignments, first_sql)
+                self._dialect.conflict_clause(target, conflict_assignments, first_sql)
             )
 
         sql = "".join(parts)

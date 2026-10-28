@@ -33,11 +33,17 @@ def test_factory_builds_every_query_type_in_its_dialect():
     sql, params = pg.select("id").from_("u").where("a", 1).build()
     assert sql == 'SELECT "id" FROM "u" WHERE "a" = %s'
     assert params == (1,)
-    assert pg.insert_into("u").values({"a": 1}).build()[0] == 'INSERT INTO "u" ("a") VALUES (%s)'
+    assert (
+        pg.insert_into("u").values({"a": 1}).build()[0]
+        == 'INSERT INTO "u" ("a") VALUES (%s)'
+    )
     assert pg.update("u").set({"a": 1}).where("id", 2).build()[0] == (
         'UPDATE "u" SET "a" = %s WHERE "id" = %s'
     )
-    assert pg.delete_from("u").where("id", 2).build()[0] == 'DELETE FROM "u" WHERE "id" = %s'
+    assert (
+        pg.delete_from("u").where("id", 2).build()[0]
+        == 'DELETE FROM "u" WHERE "id" = %s'
+    )
 
 
 def test_factory_queries_have_the_expected_types():
@@ -100,7 +106,9 @@ def test_dialect_features_follow_the_factory():
     assert sql.endswith('ON CONFLICT ("id") DO UPDATE SET "n" = EXCLUDED."n"')
 
 
-@pytest.mark.parametrize("bad", [PostgreSQLDialect, MySQLDialect, None, "postgresql", 1])
+@pytest.mark.parametrize(
+    "bad", [PostgreSQLDialect, MySQLDialect, None, "postgresql", 1]
+)
 def test_using_needs_a_dialect_instance(bad):
     with pytest.raises(TypeError, match="Dialect"):
         Q.using(bad)
@@ -150,7 +158,9 @@ def test_the_message_names_both_dialects():
 def test_a_subquery_from_the_same_dialect_is_fine():
     sub = pg.select("id").from_("v").where("k", 1)
     sql, params = _outer().where_in("id", sub).build()
-    assert sql == 'SELECT * FROM "u" WHERE "id" IN (SELECT "id" FROM "v" WHERE "k" = %s)'
+    assert (
+        sql == 'SELECT * FROM "u" WHERE "id" IN (SELECT "id" FROM "v" WHERE "k" = %s)'
+    )
     assert params == (1,)
 
 

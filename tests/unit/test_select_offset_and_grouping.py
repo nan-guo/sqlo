@@ -65,10 +65,7 @@ def test_condition_groups_an_or_inside_an_and():
 
 def test_condition_groups_an_and_inside_an_or():
     sql, params = (
-        _select()
-        .where("x", 0)
-        .or_where(Condition("a", 1) & Condition("b", 2))
-        .build()
+        _select().where("x", 0).or_where(Condition("a", 1) & Condition("b", 2)).build()
     )
     assert sql == "SELECT * FROM `u` WHERE `x` = %s OR ((`a` = %s AND `b` = %s))"
     assert params == (0, 1, 2)
