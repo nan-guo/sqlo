@@ -386,22 +386,23 @@ class SelectQuery(WhereClauseMixin, Query, Generic[T]):
         # Having
         self._build_where_having(parts, params, self._havings, "HAVING")
 
-        # Order By
+        # Unions. An operand with its own ORDER BY / LIMIT needs parentheses
+        for type_, query in self._unions:
+            union_sql, union_params = query.build()
+            if query._orders or query._limit is not None:
+                union_sql = f"({union_sql})"
+            parts.append(f" {type_} {union_sql}")
+            params.extend(union_params)
+
+        # Order By and Limit/Offset come last: with unions they apply to the
+        # whole combined result
         if self._orders:
             parts.append(" ORDER BY ")
             parts.append(", ".join(self._orders))
 
-        # Limit/Offset
         if self._limit is not None:
             parts.append(" ")
             parts.append(self._dialect.limit_offset(self._limit, self._offset))
-
-        # Unions
-        if self._unions:
-            for type_, query in self._unions:
-                union_sql, union_params = query.build()
-                parts.append(f" {type_} {union_sql}")
-                params.extend(union_params)
 
         sql = "".join(parts)
         params_tuple = tuple(params)
