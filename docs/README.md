@@ -6,10 +6,11 @@ sqlo documentation navigation.
 
 ### 🚀 Getting Started
 - **[Getting Started](getting-started.md)** - Installation, basic usage, core concepts
+- **[Dialects](dialects.md)** - MySQL and PostgreSQL: choosing a dialect, what each supports, writing portable code
 
 ### 📖 Query Types
 - **[SELECT Queries](select.md)** - Complete SELECT functionality (WHERE, ORDER BY, LIMIT, DISTINCT, UNION, etc.)
-- **[INSERT Queries](insert.md)** - Single/batch inserts, INSERT IGNORE, ON DUPLICATE KEY UPDATE  
+- **[INSERT Queries](insert.md)** - Single/batch inserts, INSERT IGNORE, ON DUPLICATE KEY UPDATE, portable `on_conflict()`  
 - **[UPDATE Queries](update.md)** - UPDATE, SET, WHERE, LIMIT, ORDER BY
 - **[DELETE Queries](delete.md)** - DELETE, WHERE, LIMIT, ORDER BY, safety best practices
 
@@ -30,6 +31,7 @@ sqlo documentation navigation.
 - **Build complex conditions** → [Condition Objects](conditions.md)
 - **Use SQL functions** → [Expressions & Functions](expressions.md)
 - **Write raw SQL** → [Raw SQL Expressions](expressions.md#raw-sql-expressions)
+- **Use PostgreSQL, or both databases** → [Dialects](dialects.md)
 
 ## 🔗 Quick Links
 

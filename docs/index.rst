@@ -34,6 +34,7 @@ Documentation
    :caption: User Guide
 
    getting-started
+   dialects
    security
    
 .. toctree::
