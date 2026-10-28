@@ -12,25 +12,6 @@ T = TypeVar("T")
 
 
 class SelectQuery(WhereClauseMixin, Query, Generic[T]):
-    __slots__ = (
-        "_columns",
-        "_table",
-        "_alias",
-        "_joins",
-        "_wheres",
-        "_groups",
-        "_havings",
-        "_orders",
-        "_limit",
-        "_offset",
-        "_index_hint",
-        "_explain",
-        "_distinct",
-        "_unions",
-        "_dialect",
-        "_optimizer_hints",
-    )
-
     def __init__(
         self, *columns: Union[str, Raw, Func, list], dialect=None, debug=False
     ):

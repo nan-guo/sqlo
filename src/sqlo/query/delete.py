@@ -7,16 +7,6 @@ from .mixins import WhereClauseMixin, validate_join
 
 
 class DeleteQuery(WhereClauseMixin, Query):
-    __slots__ = (
-        "_table",
-        "_wheres",
-        "_limit",
-        "_order_bys",
-        "_joins",
-        "_dialect",
-        "_allow_all_rows",
-    )
-
     def __init__(self, table: str, dialect=None, debug=False):
         super().__init__(dialect, debug)
         self._table = table

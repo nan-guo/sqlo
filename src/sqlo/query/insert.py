@@ -8,16 +8,6 @@ if TYPE_CHECKING:
 
 
 class InsertQuery(Query):
-    __slots__ = (
-        "_table",
-        "_values",
-        "_ignore",
-        "_on_duplicate",
-        "_from_select",
-        "_select_columns",
-        "_dialect",
-    )
-
     def __init__(self, table: str, dialect=None, debug=False):
         super().__init__(dialect, debug)
         self._table = table
