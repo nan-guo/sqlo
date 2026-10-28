@@ -207,6 +207,9 @@ class _In:
     def render(self, ctx: CompileContext) -> str:
         column = ctx.quote(self.column)
         if isinstance(self.values, tuple):
+            if not self.values:
+                # IN () is invalid SQL: it is always false, NOT IN () always true
+                return "TRUE" if self.operator == "NOT IN" else "FALSE"
             inner = ", ".join([ctx.param(v) for v in self.values])
         else:
             inner = ctx.subquery(self.values)
