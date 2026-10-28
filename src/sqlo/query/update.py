@@ -1,3 +1,4 @@
+from collections import Counter
 from typing import Any, Optional, Union
 
 from ..expressions import ComplexCondition, Condition, Raw
@@ -88,19 +89,42 @@ class UpdateQuery(WhereClauseMixin, Query):
 
         Args:
             values: List of dictionaries containing values to update.
-                    Each dictionary must contain the key column.
+                    Every dictionary must have the same columns, including
+                    the key column, and key values must be unique.
+                    An empty list does nothing.
             key: The column name to use as the key (e.g., "id").
+
+        Raises:
+            TypeError: If a row is not a dictionary.
+            ValueError: If the key is missing, the rows have different
+                columns, or a key value appears more than once.
         """
         if not values:
             return self
 
-        # Validate key exists in all rows
+        for i, row in enumerate(values):
+            if not isinstance(row, dict):
+                raise TypeError(f"Row {i} must be a dict, got {type(row).__name__}")
+
         first_keys = values[0].keys()
         if key not in first_keys:
             raise ValueError(f"Key '{key}' not found in values")
 
-        # Collect all IDs
+        # A missing column would raise KeyError and an extra one would be lost
+        for i, row in enumerate(values):
+            if row.keys() != first_keys:
+                raise ValueError(
+                    f"Row {i} has columns {list(row)} but expected "
+                    f"{list(first_keys)}: all rows must have the same columns"
+                )
+
+        # With a repeated key the CASE is ambiguous: only the first WHEN applies
         ids = [row[key] for row in values]
+        duplicates = [k for k, n in Counter(ids).items() if n > 1]
+        if duplicates:
+            raise ValueError(
+                f"Duplicate values for key '{key}': {duplicates[:5]}"
+            )
 
         # Group values by column
         columns_to_update = [k for k in first_keys if k != key]
