@@ -111,6 +111,10 @@ class WhereClauseMixin:
         if isinstance(column, (Condition, ComplexCondition)):
             ctx = CompileContext(self._dialect)
             sql = column.render(ctx)
+            if not sql:
+                raise ValueError(
+                    "Empty condition: it has no terms, so there is nothing to filter on"
+                )
             return ("AND", f"({sql})", ctx.params)
 
         # Handle JSONPath

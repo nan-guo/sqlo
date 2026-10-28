@@ -378,13 +378,19 @@ class Condition(_ConditionNode):
         # Wrap in parentheses if multiple terms
         return f"({sql})" if len(self._terms) > 1 else sql
 
-    def __and__(self, other: "Condition") -> "Condition":
-        new_cond = Condition()
-        new_cond._terms = self._terms + other._terms
-        return new_cond
+    def __and__(self, other: "_ConditionNode") -> "_ConditionNode":
+        if isinstance(other, Condition):
+            new_cond = Condition()
+            new_cond._terms = self._terms + other._terms
+            return new_cond
+        if isinstance(other, ComplexCondition):
+            return ComplexCondition("AND", self, other)
+        return NotImplemented
 
-    def __or__(self, other: "Condition") -> "ComplexCondition":
+    def __or__(self, other: "_ConditionNode") -> "ComplexCondition":
         # Use ComplexCondition for OR to properly handle precedence
+        if not isinstance(other, _ConditionNode):
+            return NotImplemented
         return ComplexCondition("OR", self, other)
 
     # Static factory methods
@@ -596,12 +602,21 @@ class ComplexCondition(_ConditionNode):
     def render(self, ctx: CompileContext) -> str:
         left_sql = self.left.render(ctx)
         right_sql = self.right.render(ctx)
+        # An empty side is the identity of both AND and OR: it is left out
+        if not left_sql:
+            return right_sql
+        if not right_sql:
+            return left_sql
         return f"({left_sql} {self.operator} {right_sql})"
 
     def __and__(self, other):
+        if not isinstance(other, _ConditionNode):
+            return NotImplemented
         return ComplexCondition("AND", self, other)
 
     def __or__(self, other):
+        if not isinstance(other, _ConditionNode):
+            return NotImplemented
         return ComplexCondition("OR", self, other)
 
 
