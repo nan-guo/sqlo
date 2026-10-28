@@ -122,6 +122,20 @@ def validate_non_negative_int(value: object, name: str) -> int:
     return value
 
 
+def require_identifier(identifier: str) -> str:
+    """Return ``identifier`` if it is a valid SQL identifier, else raise.
+
+    :raises ValueError: if the identifier contains invalid characters
+    """
+    if not validate_identifier(identifier, allow_dot=True):
+        raise ValueError(
+            f"Invalid identifier '{identifier}'. "
+            "Identifiers must contain only letters, numbers, underscores, "
+            "and dots. Use Raw() for SQL functions or expressions."
+        )
+    return identifier
+
+
 def validate_identifiers(identifiers: list[str], allow_dot: bool = True) -> bool:
     """Validate multiple SQL identifiers.
 
@@ -202,6 +216,7 @@ def escape_identifier(identifier: str, quote_char: str = "`") -> str:
 
 __all__ = [
     "validate_identifier",
+    "require_identifier",
     "validate_identifiers",
     "validate_identifier_whitelist",
     "validate_non_negative_int",

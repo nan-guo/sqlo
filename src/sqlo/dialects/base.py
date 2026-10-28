@@ -22,14 +22,9 @@ class Dialect(ABC):
             ValueError: If identifier contains invalid characters
         """
         # Import here to avoid circular dependency
-        from ..security import validate_identifier
+        from ..security import require_identifier
 
-        if not validate_identifier(identifier, allow_dot=True):
-            raise ValueError(
-                f"Invalid identifier '{identifier}'. "
-                "Identifiers must contain only letters, numbers, underscores, "
-                "and dots. Use Raw() for SQL functions or expressions."
-            )
+        require_identifier(identifier)
 
         if "." in identifier:
             parts = identifier.split(".")
@@ -41,6 +36,15 @@ class Dialect(ABC):
     @abstractmethod
     def parameter_placeholder(self) -> str:
         """The placeholder for parameters (e.g., '?' or '%s')."""
+
+    def placeholder(self, index: int) -> str:
+        """The placeholder for the ``index``-th (1-based) parameter of a statement.
+
+        Only position-independent placeholders (``%s``, ``?``) are supported:
+        queries render each clause on its own, so ``index`` is not a statement
+        wide position. The default ignores it.
+        """
+        return self.parameter_placeholder()
 
     def limit_offset(self, limit: int, offset: int) -> str:
         """Generate LIMIT and OFFSET clause."""

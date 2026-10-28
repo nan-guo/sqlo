@@ -3,7 +3,8 @@ from typing import TYPE_CHECKING, Any, Optional, Union
 import math
 
 from .constants import COMPACT_PATTERN, JSON_PATH_PATTERN
-from .security import validate_identifier, validate_operator
+from .context import CompileContext
+from .security import require_identifier, validate_identifier, validate_operator
 
 if TYPE_CHECKING:
     from .query.select import SelectQuery
@@ -162,7 +163,99 @@ class FunctionFactory:
         return Func("MAX", expression)
 
 
-class Condition(Expression):
+class _Compare:
+    """``column <operator> value`` where value is a parameter or a Raw fragment."""
+
+    __slots__ = ("column", "operator", "value")
+
+    def __init__(self, column: str, operator: str, value: Any):
+        self.column = column
+        self.operator = operator
+        self.value = value
+
+    def render(self, ctx: CompileContext) -> str:
+        column = ctx.quote(self.column)
+        if isinstance(self.value, Raw):
+            ctx.params.extend(self.value.params)
+            return f"{column} {self.operator} {self.value.sql}"
+        return f"{column} {self.operator} {ctx.param(self.value)}"
+
+
+class _NullCheck:
+    """``column IS NULL`` / ``column IS NOT NULL``."""
+
+    __slots__ = ("column", "operator")
+
+    def __init__(self, column: str, operator: str):
+        self.column = column
+        self.operator = operator
+
+    def render(self, ctx: CompileContext) -> str:
+        return f"{ctx.quote(self.column)} {self.operator}"
+
+
+class _In:
+    """``column [NOT] IN (values)`` where values is a tuple or a subquery."""
+
+    __slots__ = ("column", "operator", "values")
+
+    def __init__(self, column: str, operator: str, values: Any):
+        self.column = column
+        self.operator = operator
+        self.values = values
+
+    def render(self, ctx: CompileContext) -> str:
+        column = ctx.quote(self.column)
+        if isinstance(self.values, tuple):
+            inner = ", ".join([ctx.param(v) for v in self.values])
+        else:
+            inner = ctx.subquery(self.values)
+        return f"{column} {self.operator} ({inner})"
+
+
+class _Exists:
+    """``[NOT] EXISTS (subquery)``."""
+
+    __slots__ = ("subquery", "negate")
+
+    def __init__(self, subquery: Any, negate: bool):
+        self.subquery = subquery
+        self.negate = negate
+
+    def render(self, ctx: CompileContext) -> str:
+        keyword = "NOT EXISTS" if self.negate else "EXISTS"
+        return f"{keyword} ({ctx.subquery(self.subquery)})"
+
+
+class _ConditionNode(Expression):
+    """Base class of condition nodes: dialect-independent data that renders SQL."""
+
+    def render(self, ctx: CompileContext) -> str:
+        """Render the node, recording its parameters in ``ctx``."""
+        raise NotImplementedError
+
+    def build(self, dialect=None) -> tuple[str, tuple[Any, ...]]:
+        """
+        Build the condition and return (sql, params) tuple.
+
+        Args:
+            dialect: Optional dialect to render with. Defaults to ``Q.get_dialect()``.
+
+        Returns:
+            Tuple of (sql_string, params_tuple)
+
+        Example:
+            >>> c = Condition("age>=", 18)
+            >>> sql, params = c.build()
+            >>> assert sql == "`age` >= %s"
+            >>> assert params == (18,)
+        """
+        ctx = CompileContext(dialect)
+        sql = self.render(ctx)
+        return sql, tuple(ctx.params)
+
+
+class Condition(_ConditionNode):
     r"""
     Represents a SQL condition for use in WHERE or HAVING clauses.
 
@@ -204,17 +297,18 @@ class Condition(Expression):
         value: Any = None,
         operator: str = "=",
     ):
-        from .dialects.mysql import MySQLDialect
-
-        self.parts: list[tuple[str, Any]] = []  # (sql, params)
+        self._terms: list[Any] = []  # ANDed terms, rendered with a CompileContext
         self.connector = "AND"
-        self._dialect = MySQLDialect()
 
-        if column:
+        if column is not None:
             self._add_condition(column, value, operator)
 
     def _add_condition(self, column: str, value: Any, operator: str) -> None:
-        """Add a condition to this Condition object."""
+        """Add a condition to this Condition object.
+
+        The column and operator are validated here; quoting and placeholders
+        are decided later, when the condition is rendered for a dialect.
+        """
         col_name = None
         op = None
 
@@ -236,32 +330,26 @@ class Condition(Expression):
             operator = op
 
         operator = validate_operator(operator)
+        require_identifier(column)
 
         # Handle IS NULL / IS NOT NULL
-        if operator.upper() in ("IS NULL", "IS NOT NULL"):
-            self.parts.append((f"`{column}` {operator.upper()}", []))
+        if operator in ("IS NULL", "IS NOT NULL"):
+            self._terms.append(_NullCheck(column, operator))
             return
 
         # Handle IS / IS NOT with None value
-        if operator.upper() in ("IS", "IS NOT") and value is None:
-            null_op = "IS NULL" if operator.upper() == "IS" else "IS NOT NULL"
-            self.parts.append((f"`{column}` {null_op}", []))
+        if operator in ("IS", "IS NOT") and value is None:
+            null_op = "IS NULL" if operator == "IS" else "IS NOT NULL"
+            self._terms.append(_NullCheck(column, null_op))
             return
 
         # Handle IN / NOT IN operators
-        if operator.upper() in ("IN", "NOT IN"):
+        if operator in ("IN", "NOT IN"):
             # Check if value is a subquery (has build method)
             if hasattr(value, "build"):
-                sub_sql, sub_params = value.build()
-                self.parts.append(
-                    (f"`{column}` {operator.upper()} ({sub_sql})", list(sub_params))
-                )
+                self._terms.append(_In(column, operator, value))
             elif isinstance(value, (list, tuple)):
-                ph = self._dialect.parameter_placeholder()
-                placeholders = ", ".join([ph] * len(value))
-                self.parts.append(
-                    (f"`{column}` {operator.upper()} ({placeholders})", list(value))
-                )
+                self._terms.append(_In(column, operator, tuple(value)))
             else:
                 raise ValueError(
                     f"{operator} operator requires a list, tuple, or subquery"
@@ -269,63 +357,20 @@ class Condition(Expression):
             return
 
         # Handle Raw values (e.g., Raw("users.id") for column references)
-        if isinstance(value, Raw):
-            # Use raw SQL directly without placeholder
-            sql_fragment = f"`{column}` {operator} {value.sql}"
-            # Include Raw's params if any
-            self.parts.append((sql_fragment, list(value.params)))
-            return
+        # and standard operators with a value
+        if isinstance(value, Raw) or value is not None:
+            self._terms.append(_Compare(column, operator, value))
 
-        # Handle standard operators with value
-        if value is not None:
-            self.parts.append(
-                (
-                    f"`{column}` {operator} {self._dialect.parameter_placeholder()}",
-                    [value],
-                )
-            )
-
-    def build(self, dialect=None) -> tuple[str, tuple[Any, ...]]:
-        """
-        Build the condition and return (sql, params) tuple.
-
-        Args:
-            dialect: Optional dialect to use for quoting. Defaults to MySQLDialect.
-
-        Returns:
-            Tuple of (sql_string, params_tuple)
-
-        Example:
-            >>> c = Condition("age>=", 18)
-            >>> sql, params = c.build()
-            >>> assert sql == "`age` >= ?"
-            >>> assert params == (18,)
-        """
-        if not self.parts:
-            return "", ()
-
-        parts_sql = []
-        params = []
-
-        for sql, p in self.parts:
-            if sql in ("AND", "OR"):
-                parts_sql.append(sql)
-            else:
-                parts_sql.append(sql)
-                if p:
-                    params.extend(p)
-
-        sql = " ".join(parts_sql)
-
-        # Wrap in parentheses if multiple parts
-        if len(self.parts) > 1:
-            sql = f"({sql})"
-
-        return sql, tuple(params)
+    def render(self, ctx: CompileContext) -> str:
+        if not self._terms:
+            return ""
+        sql = " AND ".join([term.render(ctx) for term in self._terms])
+        # Wrap in parentheses if multiple terms
+        return f"({sql})" if len(self._terms) > 1 else sql
 
     def __and__(self, other: "Condition") -> "Condition":
         new_cond = Condition()
-        new_cond.parts = self.parts + [("AND", None)] + other.parts
+        new_cond._terms = self._terms + other._terms
         return new_cond
 
     def __or__(self, other: "Condition") -> "ComplexCondition":
@@ -429,8 +474,7 @@ class Condition(Expression):
             >>> # SQL: EXISTS (SELECT 1 FROM `orders` WHERE `user_id` = ?)
         """
         cond = Condition()
-        sub_sql, sub_params = subquery.build()
-        cond.parts.append((f"EXISTS ({sub_sql})", list(sub_params)))
+        cond._terms.append(_Exists(subquery, negate=False))
         return cond
 
     @staticmethod
@@ -451,8 +495,7 @@ class Condition(Expression):
             >>> # SQL: NOT EXISTS (SELECT 1 FROM `orders` WHERE `user_id` = ?)
         """
         cond = Condition()
-        sub_sql, sub_params = subquery.build()
-        cond.parts.append((f"NOT EXISTS ({sub_sql})", list(sub_params)))
+        cond._terms.append(_Exists(subquery, negate=True))
         return cond
 
     @staticmethod
@@ -507,7 +550,7 @@ class Condition(Expression):
         return result
 
 
-class ComplexCondition(Expression):
+class ComplexCondition(_ConditionNode):
     r"""
     Represents a complex SQL condition combining multiple conditions with AND/OR logic.
 
@@ -540,36 +583,10 @@ class ComplexCondition(Expression):
         self.left = left
         self.right = right
 
-    def build(self, dialect=None) -> tuple[str, tuple[Any, ...]]:
-        r"""
-        Build the complex condition and return (sql, params) tuple.
-
-        Args:
-            dialect: Optional dialect to use for quoting. Defaults to MySQLDialect.
-
-        Returns:
-            Tuple of (sql_string, params_tuple)
-
-        Example:
-            >>> c1 = Condition("age>=", 18)
-            >>> c2 = Condition("country", "US")
-            >>> complex = c1 \| c2
-            >>> sql, params = complex.build()
-            >>> # SQL: (`age` >= ? OR `country` = ?)
-        """
-        # Build left and right conditions
-        left_sql, left_params = (
-            self.left.build(dialect) if hasattr(self.left, "build") else ("", ())
-        )
-        right_sql, right_params = (
-            self.right.build(dialect) if hasattr(self.right, "build") else ("", ())
-        )
-
-        # Combine with operator
-        sql = f"({left_sql} {self.operator} {right_sql})"
-        params = left_params + right_params
-
-        return sql, params
+    def render(self, ctx: CompileContext) -> str:
+        left_sql = self.left.render(ctx)
+        right_sql = self.right.render(ctx)
+        return f"({left_sql} {self.operator} {right_sql})"
 
     def __and__(self, other):
         return ComplexCondition("AND", self, other)

@@ -5,11 +5,11 @@ Mixin classes for query builders to share common functionality.
 from typing import TYPE_CHECKING, Any, Optional, Union
 
 from ..constants import COMPACT_PATTERN
-from ..expressions import JSONPath, Raw
+from ..context import CompileContext
+from ..expressions import ComplexCondition, Condition, JSONPath, Raw
 from ..security import validate_alias, validate_operator
 
 if TYPE_CHECKING:
-    from ..expressions import ComplexCondition, Condition
     from .select import SelectQuery
 
 
@@ -108,9 +108,10 @@ class WhereClauseMixin:
             return ("AND", column.sql, column.params)
 
         # Handle Condition/ComplexCondition
-        if hasattr(column, "parts") or hasattr(column, "left"):
-            sql, params = self._build_condition(column)
-            return ("AND", f"({sql})", params)
+        if isinstance(column, (Condition, ComplexCondition)):
+            ctx = CompileContext(self._dialect)
+            sql = column.render(ctx)
+            return ("AND", f"({sql})", ctx.params)
 
         # Handle JSONPath
         if isinstance(column, JSONPath):
@@ -312,41 +313,3 @@ class WhereClauseMixin:
                 ("OR", f"{self._dialect.quote(column)} NOT LIKE {self._ph}", [pattern])
             )
         return self
-
-    @staticmethod
-    def _build_condition(condition) -> tuple[str, list[Any]]:
-        """
-        Recursively build SQL from Condition or ComplexCondition objects.
-
-        Args:
-            condition: Condition or ComplexCondition object
-
-        Returns:
-            Tuple of (sql, params)
-        """
-        # Handle Condition (has parts)
-        if hasattr(condition, "parts"):
-            parts_sql = []
-            params = []
-            for sql, p in condition.parts:
-                if sql in ("AND", "OR"):
-                    parts_sql.append(sql)
-                else:
-                    parts_sql.append(sql)
-                    if p:
-                        params.extend(p)
-            sql = " ".join(parts_sql)
-            if len(condition.parts) > 1:
-                return f"({sql})", params
-            return sql, params
-
-        # Handle ComplexCondition (has left/right)
-        if hasattr(condition, "left"):
-            left_sql, left_params = WhereClauseMixin._build_condition(condition.left)
-            right_sql, right_params = WhereClauseMixin._build_condition(condition.right)
-            return (
-                f"({left_sql} {condition.operator} {right_sql})",
-                left_params + right_params,
-            )
-
-        return "", []
