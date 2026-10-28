@@ -2,7 +2,7 @@
 Mixin classes for query builders to share common functionality.
 """
 
-from typing import TYPE_CHECKING, Any, Optional, Union
+from typing import TYPE_CHECKING, Any, Optional, TypeVar, Union
 
 from ..constants import COMPACT_PATTERN
 from ..context import CompileContext
@@ -70,11 +70,20 @@ def validate_join(
     return " ".join(tokens), normalized_type
 
 
+_Q = TypeVar("_Q", bound="WhereClauseMixin")
+
+
 class WhereClauseMixin:
-    """Mixin for queries that support WHERE clauses."""
+    """Mixin for queries that support WHERE clauses.
+
+    The query class provides ``_dialect``, ``_ph`` and the ``_wheres`` list of
+    ``(connector, sql, params)`` tuples. Every helper returns the query itself
+    and is typed so that chaining keeps the concrete query type.
+    """
 
     _dialect: Any  # Type hint for mixin - actual type defined in Query subclass
     _ph: str
+    _wheres: list[tuple[str, str, Any]]
 
     @staticmethod
     def _parse_column_operator(column: str) -> Optional[tuple[str, str]]:
@@ -149,171 +158,164 @@ class WhereClauseMixin:
 
         raise ValueError("Invalid where clause")
 
-    def or_where(
-        self,
+    def where(
+        self: _Q,
         column: Union[str, Raw, "Condition", "ComplexCondition"],
         value: Any = None,
         operator: str = "=",
-    ):
-        """Add an OR WHERE condition."""
+    ) -> _Q:
+        """Add a WHERE condition (joined with AND)."""
         connector, sql, params = self._build_where_clause(column, value, operator)
-        if hasattr(self, "_wheres"):
-            self._wheres.append(("OR", sql, params))
+        self._wheres.append((connector, sql, params))
+        return self
+
+    def or_where(
+        self: _Q,
+        column: Union[str, Raw, "Condition", "ComplexCondition"],
+        value: Any = None,
+        operator: str = "=",
+    ) -> _Q:
+        """Add an OR WHERE condition."""
+        _, sql, params = self._build_where_clause(column, value, operator)
+        self._wheres.append(("OR", sql, params))
         return self
 
     def _where_in_internal(
-        self,
+        self: _Q,
         column: str,
         values: Union[list[Any], "SelectQuery"],
         connector: str = "AND",
         not_in: bool = False,
-    ):
+    ) -> _Q:
         operator = "NOT IN" if not_in else "IN"
+        quoted = self._dialect.quote(column)  # validates, even for an empty list
 
         # Handle subquery
         if hasattr(values, "build"):  # Subquery
             sub_sql, sub_params = values.build()
-            if hasattr(self, "_wheres"):
-                self._wheres.append(
-                    (
-                        connector,
-                        f"{self._dialect.quote(column)} {operator} ({sub_sql})",
-                        sub_params,
-                    )
-                )
+            self._wheres.append((connector, f"{quoted} {operator} ({sub_sql})", sub_params))
         # Handle empty list edge case
         # IN () is always false, NOT IN () is always true
         elif len(values) == 0:
-            bool_value = "TRUE" if not_in else "FALSE"
-            if hasattr(self, "_wheres"):
-                self._wheres.append((connector, bool_value, []))
+            self._wheres.append((connector, "TRUE" if not_in else "FALSE", []))
         else:
-            count = len(values)
-            placeholders = ", ".join([self._ph] * count)
-            if hasattr(self, "_wheres"):
-                self._wheres.append(
-                    (
-                        connector,
-                        f"{self._dialect.quote(column)} {operator} ({placeholders})",
-                        tuple(values),
-                    )
-                )
+            placeholders = ", ".join([self._ph] * len(values))
+            self._wheres.append(
+                (connector, f"{quoted} {operator} ({placeholders})", tuple(values))
+            )
         return self
 
-    def where_in(self, column: str, values: Union[list[Any], "SelectQuery"]):
+    def where_in(self: _Q, column: str, values: Union[list[Any], "SelectQuery"]) -> _Q:
         """Add an IN WHERE condition."""
         return self._where_in_internal(column, values, connector="AND", not_in=False)
 
-    def or_where_in(self, column: str, values: Union[list[Any], "SelectQuery"]):
+    def or_where_in(
+        self: _Q, column: str, values: Union[list[Any], "SelectQuery"]
+    ) -> _Q:
         """Add an OR IN WHERE condition."""
         return self._where_in_internal(column, values, connector="OR", not_in=False)
 
-    def where_not_in(self, column: str, values: Union[list[Any], "SelectQuery"]):
+    def where_not_in(
+        self: _Q, column: str, values: Union[list[Any], "SelectQuery"]
+    ) -> _Q:
         """Add a NOT IN WHERE condition."""
         return self._where_in_internal(column, values, connector="AND", not_in=True)
 
-    def or_where_not_in(self, column: str, values: Union[list[Any], "SelectQuery"]):
+    def or_where_not_in(
+        self: _Q, column: str, values: Union[list[Any], "SelectQuery"]
+    ) -> _Q:
         """Add an OR NOT IN WHERE condition."""
         return self._where_in_internal(column, values, connector="OR", not_in=True)
 
     def _where_null_internal(
-        self, column: str, connector: str = "AND", not_null: bool = False
-    ):
+        self: _Q, column: str, connector: str = "AND", not_null: bool = False
+    ) -> _Q:
         operator = "IS NOT NULL" if not_null else "IS NULL"
-        if hasattr(self, "_wheres"):
-            self._wheres.append(
-                (connector, f"{self._dialect.quote(column)} {operator}", [])
-            )
+        self._wheres.append((connector, f"{self._dialect.quote(column)} {operator}", []))
         return self
 
-    def where_null(self, column: str):
+    def where_null(self: _Q, column: str) -> _Q:
         """Add an IS NULL WHERE condition."""
         return self._where_null_internal(column, connector="AND", not_null=False)
 
-    def or_where_null(self, column: str):
+    def or_where_null(self: _Q, column: str) -> _Q:
         """Add an OR IS NULL WHERE condition."""
         return self._where_null_internal(column, connector="OR", not_null=False)
 
-    def where_not_null(self, column: str):
+    def where_not_null(self: _Q, column: str) -> _Q:
         """Add an IS NOT NULL WHERE condition."""
         return self._where_null_internal(column, connector="AND", not_null=True)
 
-    def or_where_not_null(self, column: str):
+    def or_where_not_null(self: _Q, column: str) -> _Q:
         """Add an OR IS NOT NULL WHERE condition."""
         return self._where_null_internal(column, connector="OR", not_null=True)
 
     def _where_between_internal(
-        self,
+        self: _Q,
         column: str,
         value1: Any,
         value2: Any,
         connector: str = "AND",
         not_between: bool = False,
-    ):
+    ) -> _Q:
         operator = "NOT BETWEEN" if not_between else "BETWEEN"
         ph = self._ph
-        if hasattr(self, "_wheres"):
-            self._wheres.append(
-                (
-                    connector,
-                    f"{self._dialect.quote(column)} {operator} {ph} AND {ph}",
-                    [value1, value2],
-                )
+        self._wheres.append(
+            (
+                connector,
+                f"{self._dialect.quote(column)} {operator} {ph} AND {ph}",
+                [value1, value2],
             )
+        )
         return self
 
-    def where_between(self, column: str, value1: Any, value2: Any):
+    def where_between(self: _Q, column: str, value1: Any, value2: Any) -> _Q:
         """Add a BETWEEN WHERE condition."""
         return self._where_between_internal(
             column, value1, value2, connector="AND", not_between=False
         )
 
-    def or_where_between(self, column: str, value1: Any, value2: Any):
+    def or_where_between(self: _Q, column: str, value1: Any, value2: Any) -> _Q:
         """Add an OR BETWEEN WHERE condition."""
         return self._where_between_internal(
             column, value1, value2, connector="OR", not_between=False
         )
 
-    def where_not_between(self, column: str, value1: Any, value2: Any):
+    def where_not_between(self: _Q, column: str, value1: Any, value2: Any) -> _Q:
         """Add a NOT BETWEEN WHERE condition."""
         return self._where_between_internal(
             column, value1, value2, connector="AND", not_between=True
         )
 
-    def or_where_not_between(self, column: str, value1: Any, value2: Any):
+    def or_where_not_between(self: _Q, column: str, value1: Any, value2: Any) -> _Q:
         """Add an OR NOT BETWEEN WHERE condition."""
         return self._where_between_internal(
             column, value1, value2, connector="OR", not_between=True
         )
 
-    def where_like(self, column: str, pattern: str):
+    def _where_like_internal(
+        self: _Q, column: str, pattern: str, connector: str, negate: bool
+    ) -> _Q:
+        operator = "NOT LIKE" if negate else "LIKE"
+        if pattern is None:
+            raise ValueError(f"{operator} needs a pattern, got None")
+        self._wheres.append(
+            (connector, f"{self._dialect.quote(column)} {operator} {self._ph}", [pattern])
+        )
+        return self
+
+    def where_like(self: _Q, column: str, pattern: str) -> _Q:
         """Add a LIKE WHERE condition."""
-        if hasattr(self, "_wheres"):
-            self._wheres.append(
-                ("AND", f"{self._dialect.quote(column)} LIKE {self._ph}", [pattern])
-            )
-        return self
+        return self._where_like_internal(column, pattern, "AND", negate=False)
 
-    def or_where_like(self, column: str, pattern: str):
+    def or_where_like(self: _Q, column: str, pattern: str) -> _Q:
         """Add an OR LIKE WHERE condition."""
-        if hasattr(self, "_wheres"):
-            self._wheres.append(
-                ("OR", f"{self._dialect.quote(column)} LIKE {self._ph}", [pattern])
-            )
-        return self
+        return self._where_like_internal(column, pattern, "OR", negate=False)
 
-    def where_not_like(self, column: str, pattern: str):
+    def where_not_like(self: _Q, column: str, pattern: str) -> _Q:
         """Add a NOT LIKE WHERE condition."""
-        if hasattr(self, "_wheres"):
-            self._wheres.append(
-                ("AND", f"{self._dialect.quote(column)} NOT LIKE {self._ph}", [pattern])
-            )
-        return self
+        return self._where_like_internal(column, pattern, "AND", negate=True)
 
-    def or_where_not_like(self, column: str, pattern: str):
+    def or_where_not_like(self: _Q, column: str, pattern: str) -> _Q:
         """Add an OR NOT LIKE WHERE condition."""
-        if hasattr(self, "_wheres"):
-            self._wheres.append(
-                ("OR", f"{self._dialect.quote(column)} NOT LIKE {self._ph}", [pattern])
-            )
-        return self
+        return self._where_like_internal(column, pattern, "OR", negate=True)

@@ -1,7 +1,7 @@
 from collections import Counter
-from typing import Any, Optional, Union
+from typing import Any, Optional
 
-from ..expressions import ComplexCondition, Condition, Raw
+from ..expressions import Raw
 from ..security import validate_non_negative_int
 from .base import Query
 from .mixins import WhereClauseMixin, validate_join
@@ -33,16 +33,6 @@ class UpdateQuery(WhereClauseMixin, Query):
     def left_join(self, table: str, on: Optional[str] = None) -> "UpdateQuery":
         """Add a LEFT JOIN clause."""
         return self.join(table, on, join_type="LEFT")
-
-    def where(
-        self,
-        column: Union[str, Raw, Condition, ComplexCondition],
-        value: Any = None,
-        operator: str = "=",
-    ) -> "UpdateQuery":
-        connector, sql, params = self._build_where_clause(column, value, operator)
-        self._wheres.append((connector, sql, params))
-        return self
 
     def limit(self, limit: int) -> "UpdateQuery":
         self._limit = validate_non_negative_int(limit, "limit")

@@ -1,6 +1,5 @@
-from typing import Any, Optional, Union
+from typing import Any, Optional
 
-from ..expressions import ComplexCondition, Condition, Raw
 from ..security import validate_non_negative_int
 from .base import Query
 from .mixins import WhereClauseMixin, validate_join
@@ -27,16 +26,6 @@ class DeleteQuery(WhereClauseMixin, Query):
     def left_join(self, table: str, on: Optional[str] = None) -> "DeleteQuery":
         """Add a LEFT JOIN clause."""
         return self.join(table, on, join_type="LEFT")
-
-    def where(
-        self,
-        column: Union[str, Raw, Condition, ComplexCondition],
-        value: Any = None,
-        operator: str = "=",
-    ) -> "DeleteQuery":
-        connector, sql, params = self._build_where_clause(column, value, operator)
-        self._wheres.append((connector, sql, params))
-        return self
 
     def limit(self, limit: int) -> "DeleteQuery":
         self._limit = validate_non_negative_int(limit, "limit")
