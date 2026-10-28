@@ -1,7 +1,9 @@
 from typing import TYPE_CHECKING, Any, Optional, Union
 
-from .constants import COMPACT_PATTERN
-from .security import validate_operator
+import math
+
+from .constants import COMPACT_PATTERN, JSON_PATH_PATTERN
+from .security import validate_identifier, validate_operator
 
 if TYPE_CHECKING:
     from .query.select import SelectQuery
@@ -55,6 +57,7 @@ class Func(Expression):
     """
 
     def __init__(self, name: str, *args: Any):
+        render_func(name, args)  # Fail early on an invalid name or argument
         self.name = name
         self.args = args
         self.alias: Optional[str] = None
@@ -75,6 +78,49 @@ class Func(Expression):
         from .window import WindowFunc
 
         return WindowFunc(self.name, self.args, window)
+
+
+def _render_func_arg(arg: Any) -> str:
+    """Render one function argument as SQL, rejecting anything unsafe."""
+    if isinstance(arg, Func):
+        return render_func(arg.name, arg.args)
+    if isinstance(arg, Raw):
+        if arg.params:
+            raise ValueError(
+                "Raw() with params is not supported as a function argument"
+            )
+        return arg.sql
+    if arg is None:
+        return "NULL"
+    if isinstance(arg, bool):
+        return "TRUE" if arg else "FALSE"
+    if isinstance(arg, (int, float)):
+        if isinstance(arg, float) and not math.isfinite(arg):
+            raise ValueError(f"Invalid function argument {arg!r}")
+        return repr(arg)
+    if isinstance(arg, str):
+        if arg == "*" or validate_identifier(arg):
+            return arg
+        raise ValueError(
+            f"Invalid function argument {arg!r}. String arguments must be a column "
+            "name or '*'. Use Raw() for SQL expressions."
+        )
+    raise TypeError(f"Unsupported function argument type: {type(arg).__name__}")
+
+
+def render_func(name: str, args: tuple) -> str:
+    """Render ``NAME(arg, ...)``.
+
+    The name must be an identifier. String arguments must be column names
+    (optionally dotted) or ``*``; numbers, booleans and ``None`` are inlined;
+    nested ``Func`` are rendered recursively; ``Raw`` is emitted as-is.
+
+    :raises ValueError: for an invalid name or an unsafe string argument
+    :raises TypeError: for an unsupported argument type
+    """
+    if not validate_identifier(name, allow_dot=False):
+        raise ValueError(f"Invalid function name {name!r}")
+    return f"{name}({', '.join(_render_func_arg(a) for a in args)})"
 
 
 class FunctionFactory:
@@ -554,6 +600,11 @@ class JSONPath(Expression):
     """Represents a JSON path extraction."""
 
     def __init__(self, column: str, path: str):
+        if not isinstance(path, str) or not JSON_PATH_PATTERN.match(path):
+            raise ValueError(
+                f"Invalid JSON path {path!r}. Use keys, indexes and wildcards "
+                "such as 'a.b[0].c' or 'tags[*]'."
+            )
         self.column = column
         self.path = path
 

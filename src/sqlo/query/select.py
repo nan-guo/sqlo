@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, Any, Callable, Generic, Optional, TypeVar, Union
 
-from ..expressions import Func, JSONPath, Raw
+from ..expressions import Func, JSONPath, Raw, render_func
 from .base import Query
 from ..security import validate_alias, validate_non_negative_int
 from .mixins import WhereClauseMixin, validate_join
@@ -270,7 +270,7 @@ class SelectQuery(WhereClauseMixin, Query, Generic[T]):
                 parts.append(col.sql)
                 params.extend(col.params)
             elif isinstance(col, Func):
-                parts.append(f"{col.name}({', '.join(map(str, col.args))})")
+                parts.append(render_func(col.name, col.args))
             elif isinstance(col, JSONPath):
                 parts.append(f"{self._dialect.quote(col.column)}->>'$.{col.path}'")
             # Handle WindowFunc

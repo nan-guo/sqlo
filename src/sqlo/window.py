@@ -1,6 +1,29 @@
 """Window function support for sqlo."""
 
+import re
 from typing import Any, Optional
+
+from .expressions import render_func
+
+_FRAME_BOUND = re.compile(
+    r"^(?:UNBOUNDED (?:PRECEDING|FOLLOWING)"
+    r"|CURRENT ROW"
+    r"|\d+ (?:PRECEDING|FOLLOWING)"
+    r"|INTERVAL \d+ (?:MICROSECOND|SECOND|MINUTE|HOUR|DAY|WEEK|MONTH|QUARTER|YEAR)"
+    r" (?:PRECEDING|FOLLOWING))$"
+)
+
+
+def _frame_bound(bound: str) -> str:
+    """Validate a window frame bound and return it normalized."""
+    normalized = " ".join(str(bound).upper().split())
+    if not _FRAME_BOUND.match(normalized):
+        raise ValueError(
+            f"Invalid window frame bound {bound!r}. Use UNBOUNDED PRECEDING|FOLLOWING, "
+            "CURRENT ROW, '<n> PRECEDING|FOLLOWING' or "
+            "'INTERVAL <n> <unit> PRECEDING|FOLLOWING'."
+        )
+    return normalized
 
 
 class Window:
@@ -49,6 +72,7 @@ class Window:
             start: Start of the frame (e.g., "UNBOUNDED PRECEDING", "1 PRECEDING", "CURRENT ROW")
             end: End of the frame (e.g., "CURRENT ROW", "1 FOLLOWING", "UNBOUNDED FOLLOWING")
         """
+        start, end = _frame_bound(start), _frame_bound(end)
         self._frame_clause = f"ROWS BETWEEN {start} AND {end}"
         return self
 
@@ -60,6 +84,7 @@ class Window:
             start: Start of the frame
             end: End of the frame
         """
+        start, end = _frame_bound(start), _frame_bound(end)
         self._frame_clause = f"RANGE BETWEEN {start} AND {end}"
         return self
 
@@ -112,11 +137,7 @@ class WindowFunc:
     def build(self, dialect: Any) -> str:
         """Build the window function SQL."""
         # Build function call
-        if self.func_args:
-            args_str = ", ".join(str(arg) for arg in self.func_args)
-            func_sql = f"{self.func_name}({args_str})"
-        else:
-            func_sql = f"{self.func_name}()"
+        func_sql = render_func(self.func_name, self.func_args)
 
         # Build OVER clause
         if self.window:
