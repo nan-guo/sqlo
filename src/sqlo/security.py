@@ -46,6 +46,22 @@ def validate_identifier(identifier: str, allow_dot: bool = True) -> bool:
     return bool(VALID_IDENTIFIER_PATTERN.match(identifier))
 
 
+def validate_alias(alias: str) -> str:
+    """Validate a table or subquery alias (a plain identifier, no dots).
+
+    Aliases are interpolated into SQL, so they must be simple identifiers.
+
+    :raises ValueError: if the alias is not a valid identifier
+    """
+    if not validate_identifier(alias, allow_dot=False):
+        raise ValueError(
+            f"Invalid alias {alias!r}. "
+            "Aliases must start with a letter or underscore and contain only "
+            "letters, numbers and underscores."
+        )
+    return alias
+
+
 ALLOWED_OPERATORS = frozenset(
     {
         "=",
@@ -190,6 +206,7 @@ __all__ = [
     "validate_identifier_whitelist",
     "validate_non_negative_int",
     "validate_operator",
+    "validate_alias",
     "ALLOWED_OPERATORS",
     "escape_identifier",
 ]

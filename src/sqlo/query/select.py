@@ -2,8 +2,8 @@ from typing import TYPE_CHECKING, Any, Callable, Generic, Optional, TypeVar, Uni
 
 from ..expressions import Func, JSONPath, Raw
 from .base import Query
-from ..security import validate_non_negative_int
-from .mixins import WhereClauseMixin
+from ..security import validate_alias, validate_non_negative_int
+from .mixins import WhereClauseMixin, validate_join
 
 if TYPE_CHECKING:
     from ..expressions import ComplexCondition, Condition
@@ -58,6 +58,8 @@ class SelectQuery(WhereClauseMixin, Query, Generic[T]):
     def from_(
         self, table: Union[str, "SelectQuery"], alias: Optional[str] = None
     ) -> "SelectQuery":
+        if alias is not None:
+            validate_alias(alias)
         self._table = table
         # If table is a subquery with its own alias, use that alias
         # Otherwise use the provided alias
@@ -68,15 +70,12 @@ class SelectQuery(WhereClauseMixin, Query, Generic[T]):
         return self
 
     def join(
-        self, table: str, on: Optional[str] = None, join_type: str = "INNER"
+        self,
+        table: Union[str, "SelectQuery"],
+        on: Optional[str] = None,
+        join_type: str = "INNER",
     ) -> "SelectQuery":
-        # Validate table name (unless it's a subquery)
-        if not isinstance(table, SelectQuery):
-            # Extract table name from "table_name alias" format
-            # e.g., "orders o" -> validate "orders"
-            table_name = table.split()[0] if " " in table else table
-            # This will raise ValueError if invalid
-            self._dialect.quote(table_name)
+        table, join_type = validate_join(self._dialect, table, join_type)
         self._joins.append((join_type, table, on))
         return self
 
@@ -255,7 +254,7 @@ class SelectQuery(WhereClauseMixin, Query, Generic[T]):
 
     def as_(self, alias: str) -> "SelectQuery":
         """Set an alias for this query (used in FROM clauses)."""
-        self._alias = alias
+        self._alias = validate_alias(alias)
         return self
 
     def _build_select_columns(self, parts: list[str], params: list[Any]) -> None:
@@ -317,10 +316,15 @@ class SelectQuery(WhereClauseMixin, Query, Generic[T]):
             parts.append(", ".join(map(self._dialect.quote, indexes)))
             parts.append(")")
 
-    def _build_joins(self, parts: list[str]) -> None:
+    def _build_joins(self, parts: list[str], params: list[Any]) -> None:
         """Build JOIN clauses."""
         for type_, table, on in self._joins:
-            parts.append(f" {type_} JOIN {table}")
+            if hasattr(table, "build"):  # Subquery
+                sub_sql, sub_params = table.build()
+                parts.append(f" {type_} JOIN ({sub_sql}) AS {table._alias}")
+                params.extend(sub_params)
+            else:
+                parts.append(f" {type_} JOIN {table}")
             if on:
                 parts.append(f" ON {on}")
 
@@ -369,7 +373,7 @@ class SelectQuery(WhereClauseMixin, Query, Generic[T]):
         self._build_from_clause(parts, params)
 
         # Joins
-        self._build_joins(parts)
+        self._build_joins(parts, params)
 
         # Where
         self._build_where_having(parts, params, self._wheres, "WHERE")

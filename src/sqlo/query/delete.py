@@ -3,7 +3,7 @@ from typing import Any, Optional, Union
 from ..expressions import ComplexCondition, Condition, Raw
 from ..security import validate_non_negative_int
 from .base import Query
-from .mixins import WhereClauseMixin
+from .mixins import WhereClauseMixin, validate_join
 
 
 class DeleteQuery(WhereClauseMixin, Query):
@@ -30,6 +30,7 @@ class DeleteQuery(WhereClauseMixin, Query):
         self, table: str, on: Optional[str] = None, join_type: str = "INNER"
     ) -> "DeleteQuery":
         """Add a JOIN clause (MySQL multi-table DELETE)."""
+        table, join_type = validate_join(self._dialect, table, join_type)
         self._joins.append((join_type, table, on))
         return self
 

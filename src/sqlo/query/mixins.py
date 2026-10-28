@@ -6,11 +6,68 @@ from typing import TYPE_CHECKING, Any, Optional, Union
 
 from ..constants import COMPACT_PATTERN
 from ..expressions import JSONPath, Raw
-from ..security import validate_operator
+from ..security import validate_alias, validate_operator
 
 if TYPE_CHECKING:
     from ..expressions import ComplexCondition, Condition
     from .select import SelectQuery
+
+
+_JOIN_TYPES = frozenset(
+    {
+        "INNER",
+        "LEFT",
+        "RIGHT",
+        "CROSS",
+        "FULL",
+        "LEFT OUTER",
+        "RIGHT OUTER",
+        "FULL OUTER",
+    }
+)
+
+
+def validate_join(
+    dialect: Any, table: Any, join_type: str
+) -> tuple[Union[str, "SelectQuery"], str]:
+    """Validate and normalize the table and type of a JOIN.
+
+    ``table`` is either ``"name"``, ``"name alias"``, ``"name AS alias"`` or a
+    subquery that already has an alias. The ``ON`` condition is not handled
+    here: it is raw SQL and must come from trusted input.
+
+    :return: ``(table, join_type)``; the type is upper-cased with single spaces
+    :raises ValueError: if the table reference or the join type is invalid
+    """
+    normalized_type = " ".join(str(join_type).upper().split())
+    if normalized_type not in _JOIN_TYPES:
+        raise ValueError(
+            f"Invalid join type {join_type!r}. "
+            f"Allowed: {', '.join(sorted(_JOIN_TYPES))}."
+        )
+
+    if hasattr(table, "build"):  # Subquery
+        if not getattr(table, "_alias", None):
+            raise ValueError("A subquery used in a JOIN requires an alias (.as_())")
+        return table, normalized_type
+
+    tokens = table.split() if isinstance(table, str) else []
+    if not tokens:
+        raise ValueError(f"Invalid join table {table!r}")
+    dialect.quote(tokens[0])  # Raises ValueError if the name is invalid
+    alias = None
+    if len(tokens) == 2 and tokens[1].upper() != "AS":
+        alias = tokens[1]
+    elif len(tokens) == 3 and tokens[1].upper() == "AS":
+        alias = tokens[2]
+    elif len(tokens) != 1:
+        raise ValueError(
+            f"Invalid join table {table!r}. "
+            "Use 'name', 'name alias' or 'name AS alias'."
+        )
+    if alias is not None:
+        validate_alias(alias)
+    return " ".join(tokens), normalized_type
 
 
 class WhereClauseMixin:
