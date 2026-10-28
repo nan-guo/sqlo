@@ -409,6 +409,10 @@ query = (
 # SELECT /*+ INDEX(users idx_email) MAX_EXECUTION_TIME(1000) */ * FROM `users`
 ```
 
+A hint is written as-is inside `/*+ ... */`, so only pass trusted text. A hint containing
+a comment delimiter (`/*` or `*/`) is rejected with `ValueError`, because it could end the
+comment and let the rest of the string run as SQL.
+
 ## Dynamic Query Building
 
 ### Conditional Clauses with `when()`

@@ -126,7 +126,19 @@ class SelectQuery(WhereClauseMixin, Query, Generic[T]):
         return self
 
     def optimizer_hint(self, hint: str) -> "SelectQuery":
-        """Add an optimizer hint (MySQL 8.0+)."""
+        """Add an optimizer hint (MySQL 8.0+).
+
+        The hint is written as-is inside ``/*+ ... */``, so it must come from
+        trusted input. It may not contain a comment delimiter, which could end
+        the comment and let the rest of the string run as SQL.
+        """
+        if not isinstance(hint, str):
+            raise TypeError(f"Optimizer hint must be a str, got {type(hint).__name__}")
+        if "*/" in hint or "/*" in hint:
+            raise ValueError(
+                f"Invalid optimizer hint {hint!r}: it must not contain a comment "
+                "delimiter ('/*' or '*/')"
+            )
         self._optimizer_hints.append(hint)
         return self
 
