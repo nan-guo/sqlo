@@ -46,6 +46,51 @@ def validate_identifier(identifier: str, allow_dot: bool = True) -> bool:
     return bool(VALID_IDENTIFIER_PATTERN.match(identifier))
 
 
+ALLOWED_OPERATORS = frozenset(
+    {
+        "=",
+        "!=",
+        "<>",
+        "<",
+        "<=",
+        ">",
+        ">=",
+        "<=>",
+        "LIKE",
+        "NOT LIKE",
+        "REGEXP",
+        "NOT REGEXP",
+        "IN",
+        "NOT IN",
+        "IS",
+        "IS NOT",
+        "IS NULL",
+        "IS NOT NULL",
+    }
+)
+
+
+def validate_operator(operator: str) -> str:
+    """Validate a comparison operator against the allowed set.
+
+    Operators are interpolated directly into SQL, so anything outside
+    ``ALLOWED_OPERATORS`` is rejected. Matching is case-insensitive and
+    ignores repeated whitespace.
+
+    :return: The operator normalized to upper case with single spaces
+    :raises ValueError: if the operator is not allowed
+    """
+    if isinstance(operator, str):
+        normalized = " ".join(operator.upper().split())
+        if normalized in ALLOWED_OPERATORS:
+            return normalized
+    raise ValueError(
+        f"Invalid operator {operator!r}. "
+        f"Allowed operators: {', '.join(sorted(ALLOWED_OPERATORS))}. "
+        "Use Raw() for other expressions."
+    )
+
+
 def validate_non_negative_int(value: object, name: str) -> int:
     """Ensure ``value`` is a non-negative ``int`` (``bool`` is rejected).
 
@@ -144,5 +189,7 @@ __all__ = [
     "validate_identifiers",
     "validate_identifier_whitelist",
     "validate_non_negative_int",
+    "validate_operator",
+    "ALLOWED_OPERATORS",
     "escape_identifier",
 ]

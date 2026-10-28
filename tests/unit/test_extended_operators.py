@@ -1,3 +1,5 @@
+import pytest
+
 from sqlo import Q
 
 
@@ -14,11 +16,9 @@ def test_extended_operators():
     assert sql == "SELECT * FROM `users` WHERE `name` REGEXP %s"
     assert params == ("^J.*",)
 
-    # Custom/Weird Operator (just to prove regex flexibility)
-    q = Q.select().from_("users").where("age MY_OP", 10)
-    sql, params = q.build()
-    assert sql == "SELECT * FROM `users` WHERE `age` MY_OP %s"
-    assert params == (10,)
+    # Unknown operators are rejected
+    with pytest.raises(ValueError):
+        Q.select().from_("users").where("age MY_OP", 10)
 
 
 def test_is_operator():

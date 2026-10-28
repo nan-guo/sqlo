@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING, Any, Optional, Union
 
 from .constants import COMPACT_PATTERN
+from .security import validate_operator
 
 if TYPE_CHECKING:
     from .query.select import SelectQuery
@@ -187,6 +188,8 @@ class Condition(Expression):
         if col_name and op:
             column = col_name
             operator = op
+
+        operator = validate_operator(operator)
 
         # Handle IS NULL / IS NOT NULL
         if operator.upper() in ("IS NULL", "IS NOT NULL"):

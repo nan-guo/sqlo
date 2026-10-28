@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Any, Optional, Union
 
 from ..constants import COMPACT_PATTERN
 from ..expressions import JSONPath, Raw
+from ..security import validate_operator
 
 if TYPE_CHECKING:
     from ..expressions import ComplexCondition, Condition
@@ -59,7 +60,7 @@ class WhereClauseMixin:
             col_sql = f"{self._dialect.quote(column.column)}->>'$.{column.path}'"
             return (
                 "AND",
-                f"{col_sql} {operator} {self._ph}",
+                f"{col_sql} {validate_operator(operator)} {self._ph}",
                 [value],
             )
 
@@ -70,7 +71,8 @@ class WhereClauseMixin:
                 col_name, op = parsed
                 return (
                     "AND",
-                    f"{self._dialect.quote(col_name)} {op} {self._ph}",
+                    f"{self._dialect.quote(col_name)} {validate_operator(op)} "
+                    f"{self._ph}",
                     [value],
                 )
 
@@ -78,7 +80,8 @@ class WhereClauseMixin:
         if value is not None:
             return (
                 "AND",
-                f"{self._dialect.quote(column)} {operator} {self._ph}",
+                f"{self._dialect.quote(column)} {validate_operator(operator)} "
+                f"{self._ph}",
                 [value],
             )
 
