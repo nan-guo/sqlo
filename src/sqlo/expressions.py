@@ -163,6 +163,27 @@ class FunctionFactory:
         return Func("MAX", expression)
 
 
+def _column_sql(ctx: CompileContext, column: Union[str, Raw]) -> str:
+    """Render the left-hand side: a quoted identifier or a Raw expression."""
+    if isinstance(column, Raw):
+        ctx.params.extend(column.params)
+        return column.sql
+    return ctx.quote(column)
+
+
+class _RawPredicate:
+    """A complete predicate given as ``Raw`` SQL, e.g. ``MATCH(...) AGAINST(%s)``."""
+
+    __slots__ = ("raw",)
+
+    def __init__(self, raw: Raw):
+        self.raw = raw
+
+    def render(self, ctx: CompileContext) -> str:
+        ctx.params.extend(self.raw.params)
+        return self.raw.sql
+
+
 class _Compare:
     """``column <operator> value`` where value is a parameter or a Raw fragment."""
 
@@ -174,7 +195,7 @@ class _Compare:
         self.value = value
 
     def render(self, ctx: CompileContext) -> str:
-        column = ctx.quote(self.column)
+        column = _column_sql(ctx, self.column)
         if isinstance(self.value, Raw):
             ctx.params.extend(self.value.params)
             return f"{column} {self.operator} {self.value.sql}"
@@ -191,7 +212,7 @@ class _NullCheck:
         self.operator = operator
 
     def render(self, ctx: CompileContext) -> str:
-        return f"{ctx.quote(self.column)} {self.operator}"
+        return f"{_column_sql(ctx, self.column)} {self.operator}"
 
 
 class _In:
@@ -205,7 +226,7 @@ class _In:
         self.values = values
 
     def render(self, ctx: CompileContext) -> str:
-        column = ctx.quote(self.column)
+        column = _column_sql(ctx, self.column)
         if isinstance(self.values, tuple):
             if not self.values:
                 # IN () is invalid SQL: it is always false, NOT IN () always true
@@ -296,7 +317,7 @@ class Condition(_ConditionNode):
 
     def __init__(
         self,
-        column: Optional[str] = None,
+        column: Optional[Union[str, Raw]] = None,
         value: Any = None,
         operator: str = "=",
     ):
@@ -306,7 +327,9 @@ class Condition(_ConditionNode):
         if column is not None:
             self._add_condition(column, value, operator)
 
-    def _add_condition(self, column: str, value: Any, operator: str) -> None:
+    def _add_condition(
+        self, column: Union[str, Raw], value: Any, operator: str
+    ) -> None:
         """Add a condition to this Condition object.
 
         The column and operator are validated here; quoting and placeholders
@@ -314,6 +337,12 @@ class Condition(_ConditionNode):
         """
         col_name = None
         op = None
+
+        # A Raw column with no value and the default operator is a complete
+        # predicate: Condition(Raw("MATCH(t) AGAINST(%s)", ["x"]))
+        if isinstance(column, Raw) and value is None and operator == "=":
+            self._terms.append(_RawPredicate(column))
+            return
 
         # Parse column for embedded operator (e.g., "age>=")
         if isinstance(column, str):
@@ -333,7 +362,8 @@ class Condition(_ConditionNode):
             operator = op
 
         operator = validate_operator(operator)
-        require_identifier(column)
+        if not isinstance(column, Raw):
+            require_identifier(column)
 
         # Handle IS NULL / IS NOT NULL
         if operator in ("IS NULL", "IS NOT NULL"):

@@ -176,16 +176,21 @@ if where_clause:
 ## Raw SQL Conditions
 
 For conditions that can't be expressed with standard operators, use `Raw`.
+`Raw` is emitted as-is, so only use it with trusted SQL; pass values as parameters.
 
 ```python
-from sqlo import Raw
+from sqlo import Condition, Raw
 
-# Raw SQL condition
-c = Condition(Raw("LENGTH(password)"), ">", 8)
-# LENGTH(password) > %s
+# Raw expression on the left: Condition(expression, value, operator)
+c = Condition(Raw("LENGTH(password)"), 8, ">")
+# LENGTH(password) > %s      params: (8,)
 
-# Completely raw condition
-c = Condition(Raw("MATCH(title, body) AGAINST(  %s)", ["search term"]))
+# Completely raw predicate (no value and no operator)
+c = Condition(Raw("MATCH(title, body) AGAINST(%s)", ["search term"]))
+# MATCH(title, body) AGAINST(%s)      params: ("search term",)
+
+# Raw conditions combine like any other
+c = Condition("status", "published") & Condition(Raw("LENGTH(body) > %s", [100]))
 ```
 
 ## See Also
