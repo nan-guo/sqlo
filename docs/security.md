@@ -243,6 +243,14 @@ Q.update("users").set({"email": None}).where("id", 123)
 
 ---
 
+## Debug Output and Sensitive Data
+
+Debug mode (`Q.set_debug(True)`) and the `sqlo` and `sqlo.params` loggers record the
+parameters of every query, which can include passwords or tokens. Use
+`Q.set_debug(True, hide_params=True)`, or set the `sqlo.params` logger to a level above
+`DEBUG`, wherever the output is stored or shipped. Nothing is formatted or logged while
+debug logging is off, which is the default.
+
 ## Best Practices
 
 ### 1. Always Validate Dynamic Identifiers

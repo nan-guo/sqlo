@@ -61,6 +61,26 @@ sql, params = query.build()
 Q.set_debug(False)
 ```
 
+Debug mode logs every built query on the `sqlo` logger at DEBUG level: the SQL on `sqlo`
+and the parameters on `sqlo.params`. `Q.set_debug(True)` is a shortcut that prints both to
+stdout, and it applies to queries created before and after the call.
+
+> Parameters can contain sensitive values such as passwords. Use
+> `Q.set_debug(True, hide_params=True)` to print only the SQL.
+
+### Using the `logging` Module
+
+The loggers work like any other, so you can route them through your own logging setup
+instead of using `set_debug`:
+
+```python
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logging.getLogger("sqlo").setLevel(logging.DEBUG)           # log the SQL
+logging.getLogger("sqlo.params").setLevel(logging.WARNING)  # but not the values
+```
+
 ### Query Debug Mode
 
 You can also enable debug mode for a specific query:

@@ -3,6 +3,7 @@ from typing import Any, Optional, TypeVar
 
 from ..dialects.base import Dialect
 from ..dialects.mysql import MySQLDialect
+from .._debug import log_query
 from ..expressions import Raw
 
 
@@ -111,8 +112,11 @@ class Query(ABC):
         parts.append(" ")
 
     def _print_debug(self, sql: str, params: tuple[Any, ...]) -> None:
-        """Print debug output if debug mode is enabled."""
-        if self._debug:
+        """Output a built query: printed if this query was created with
+        ``debug=True``, otherwise logged on the ``sqlo`` logger at DEBUG level."""
+        if not self._debug:
+            log_query(sql, params)
+        else:
             print(f"[sqlo DEBUG] {sql}")
             print(f"[sqlo DEBUG] Params: {params}")
 
