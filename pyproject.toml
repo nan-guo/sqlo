@@ -39,6 +39,9 @@ dev = [
     "sphinx>=7.0.0",
     "sphinx-rtd-theme>=2.0.0",
     "myst-parser>=2.0.0",
+    # Only the integration tests, which run the generated SQL on real databases
+    "pymysql>=1.1.0",
+    "psycopg[binary]>=3.2.0",
 ]
 
 [build-system]
@@ -90,6 +93,9 @@ strict = false
 addopts = "-s -vv"
 pythonpath = "src"
 testpaths = ["tests"]
+markers = [
+    "integration: runs the generated SQL on real MySQL and PostgreSQL servers (needs SQLO_TEST_MYSQL_URL and SQLO_TEST_POSTGRES_URL)",
+]
 
 [tool.bandit]
 exclude_dirs = ["tests"]
