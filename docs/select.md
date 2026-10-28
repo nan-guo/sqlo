@@ -84,6 +84,22 @@ query = (
 # WHERE `role` = %s OR `role` = %s
 ```
 
+> **AND binds tighter than OR.** `where()` and `or_where()` are joined in call order with
+> no automatic grouping, so `.where("a", 1).or_where("b", 2).where("c", 3)` means
+> `a = 1 OR (b = 2 AND c = 3)`. To group conditions, use a [`Condition`](conditions.md):
+>
+> ```python
+> from sqlo import Condition
+>
+> query = (
+>     Q.select("*")
+>     .from_("t")
+>     .where(Condition("a", 1) | Condition("b", 2))
+>     .where("c", 3)
+> )
+> # WHERE ((`a` = %s OR `b` = %s)) AND `c` = %s
+> ```
+
 ### IN and NOT IN
 
 ```python
@@ -169,10 +185,10 @@ from sqlo import Condition
 
 # Create complex conditions
 condition = Condition.and_(
-    Condition("age", ">=", 18),
+    Condition("age", 18, ">="),
     Condition.or_(
-        Condition("country", "=", "US"),
-        Condition("country", "=", "CA")
+        Condition("country", "US"),
+        Condition("country", "CA")
     )
 )
 
@@ -226,6 +242,10 @@ query = Q.select("*").from_("users").limit(10).offset(20)
 query = Q.select("*").from_("users").paginate(page=3, per_page=20)
 # LIMIT 20 OFFSET 40
 ```
+
+`offset()` needs a `limit()`: `build()` raises `ValueError` for an `offset` greater than 0
+without a `limit`, because SQL would ignore it. With a `UNION`, `limit()`, `offset()` and
+`order_by()` apply to the combined result.
 
 ## GROUP BY and HAVING
 

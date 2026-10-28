@@ -344,6 +344,10 @@ class SelectQuery(WhereClauseMixin, Query, Generic[T]):
     def build(self) -> tuple[str, tuple[Any, ...]]:
         if not self._table:
             raise ValueError("No table specified")
+        if self._offset > 0 and self._limit is None:
+            raise ValueError(
+                "offset() requires limit(): OFFSET without LIMIT would be ignored"
+            )
 
         parts: list[str] = []
         params: list[Any] = []
