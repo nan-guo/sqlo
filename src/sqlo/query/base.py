@@ -3,6 +3,7 @@ from typing import Any, Optional, TypeVar
 
 from ..dialects.base import Dialect
 from ..dialects.mysql import MySQLDialect
+from ..expressions import Raw
 
 
 _T = TypeVar("_T", bound="Query")
@@ -61,9 +62,21 @@ class Query(ABC):
     def with_(
         self, query: Any, name: Optional[str] = None, recursive: bool = False
     ) -> Any:
-        """Add a Common Table Expression (CTE)."""
+        """Add a Common Table Expression (CTE).
+
+        Args:
+            query: A query builder, or ``Raw`` for SQL written by hand. Plain
+                strings are rejected: use ``Raw`` to mark SQL as trusted.
+            name: The CTE name. Defaults to the alias of ``query``.
+            recursive: Whether this is a recursive CTE.
+        """
+        if not isinstance(query, (Query, Raw)):
+            raise TypeError(
+                "A CTE must be a query builder or Raw(), "
+                f"got {type(query).__name__}"
+            )
         if name is None:
-            if hasattr(query, "_alias") and query._alias:
+            if isinstance(query, Query) and query._alias:
                 name = query._alias
             else:
                 raise ValueError("CTE name must be provided")
@@ -86,12 +99,13 @@ class Query(ABC):
             first = False
 
             parts.append(f"{self._dialect.quote(name)} AS (")
-            if hasattr(query, "build"):
+            if isinstance(query, Raw):
+                parts.append(query.sql)
+                params.extend(query.params)
+            else:
                 sql, p = query.build()
                 parts.append(sql)
                 params.extend(p)
-            else:
-                parts.append(str(query))
             parts.append(")")
 
         parts.append(" ")

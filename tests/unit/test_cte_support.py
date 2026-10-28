@@ -1,6 +1,8 @@
 """Tests for CTE (Common Table Expression) support."""
 
-from sqlo import Q, func
+import pytest
+
+from sqlo import Q, Raw, func
 
 
 def test_cte_basic():
@@ -114,16 +116,24 @@ def test_cte_without_name_raises_error():
         q.with_(cte)
 
 
-def test_cte_with_string_query():
-    """Test CTE with string query (non-build object)."""
-    # This tests the else branch in _build_ctes when query doesn't have build()
+def test_cte_with_string_query_is_rejected():
+    """A plain string is not a CTE: hand-written SQL has to be wrapped in Raw."""
     q = Q.select("*").from_("users")
-    # Manually add a string CTE (simulating edge case)
-    q._ctes.append(("SELECT 1", "dummy", False))
 
-    sql, _ = q.build()
+    with pytest.raises(TypeError, match="query builder or Raw"):
+        q.with_("SELECT 1", "dummy")
 
-    assert "WITH `dummy` AS (SELECT 1)" in sql
+    assert "WITH" not in q.build()[0]
+
+
+def test_cte_with_raw_sql():
+    """Raw SQL is accepted as a CTE and keeps its parameters."""
+    q = Q.select("*").from_("dummy").with_(Raw("SELECT %s AS n", [1]), "dummy")
+
+    sql, params = q.build()
+
+    assert "WITH `dummy` AS (SELECT %s AS n)" in sql
+    assert params == (1,)
 
 
 def test_debug_method():
