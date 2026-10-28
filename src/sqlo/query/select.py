@@ -199,15 +199,20 @@ class SelectQuery(WhereClauseMixin, JoinClauseMixin, Query, Generic[T]):
         """Build FROM clause."""
         parts.append(" FROM ")
         if self._table and hasattr(self._table, "build"):  # Subquery
-            # An explicit alias wins; otherwise use the subquery's own alias
+            # An explicit alias wins; otherwise use the subquery's own alias.
+            # MySQL (and PostgreSQL before 16) reject a derived table without one.
             subquery_alias = self._table_alias or self._table._alias
+            if not subquery_alias:
+                raise ValueError(
+                    "A subquery used in FROM requires an alias: call .as_() on it "
+                    "or pass one to from_(subquery, alias)"
+                )
 
             sub_sql, sub_params = self._table.build()  # type: ignore[union-attr]
             parts.append(f"({sub_sql})")
             params.extend(sub_params)
             # For subqueries, use AS keyword for alias
-            if subquery_alias:
-                parts.append(f" AS {subquery_alias}")
+            parts.append(f" AS {subquery_alias}")
         else:
             parts.append(self._dialect.quote(self._table))  # type: ignore[arg-type]
             # For regular tables, alias without AS (MySQL style)
