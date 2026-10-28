@@ -8,6 +8,8 @@ from .mixins import JoinClauseMixin, WhereClauseMixin
 
 
 class UpdateQuery(WhereClauseMixin, JoinClauseMixin, Query):
+    _join_feature = "UPDATE with JOIN"
+
     def __init__(self, table: str, dialect=None, debug=False):
         super().__init__(dialect, debug)
         self._table = table
@@ -23,10 +25,14 @@ class UpdateQuery(WhereClauseMixin, JoinClauseMixin, Query):
         return self
 
     def limit(self, limit: int) -> "UpdateQuery":
+        if not self._dialect.supports_dml_order_limit:
+            raise self._dialect.unsupported("LIMIT in UPDATE")
         self._limit = validate_non_negative_int(limit, "limit")
         return self
 
     def order_by(self, *columns: str) -> "UpdateQuery":
+        if not self._dialect.supports_dml_order_limit:
+            raise self._dialect.unsupported("ORDER BY in UPDATE")
         for col in columns:
             direction = "ASC"
             if col.startswith("-"):

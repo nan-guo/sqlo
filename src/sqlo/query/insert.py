@@ -49,10 +49,14 @@ class InsertQuery(Query):
         return self
 
     def ignore(self) -> "InsertQuery":
+        if not self._dialect.supports_insert_ignore:
+            raise self._dialect.unsupported("INSERT IGNORE")
         self._ignore = True
         return self
 
     def on_duplicate_key_update(self, values: dict[str, Any]) -> "InsertQuery":
+        if not self._dialect.supports_on_duplicate_key:
+            raise self._dialect.unsupported("ON DUPLICATE KEY UPDATE")
         self._on_duplicate = values
         return self
 

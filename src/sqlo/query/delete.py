@@ -6,6 +6,8 @@ from .mixins import JoinClauseMixin, WhereClauseMixin
 
 
 class DeleteQuery(WhereClauseMixin, JoinClauseMixin, Query):
+    _join_feature = "DELETE with JOIN"
+
     def __init__(self, table: str, dialect=None, debug=False):
         super().__init__(dialect, debug)
         self._table = table
@@ -16,10 +18,14 @@ class DeleteQuery(WhereClauseMixin, JoinClauseMixin, Query):
         self._allow_all_rows: bool = False
 
     def limit(self, limit: int) -> "DeleteQuery":
+        if not self._dialect.supports_dml_order_limit:
+            raise self._dialect.unsupported("LIMIT in DELETE")
         self._limit = validate_non_negative_int(limit, "limit")
         return self
 
     def order_by(self, *columns: str) -> "DeleteQuery":
+        if not self._dialect.supports_dml_order_limit:
+            raise self._dialect.unsupported("ORDER BY in DELETE")
         for col in columns:
             direction = "ASC"
             if col.startswith("-"):

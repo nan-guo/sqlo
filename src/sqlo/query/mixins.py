@@ -4,27 +4,13 @@ Mixin classes for query builders to share common functionality.
 
 from typing import TYPE_CHECKING, Any, Optional, TypeVar, Union
 
-from ..constants import COMPACT_PATTERN, ON_PATTERN
+from ..constants import COMPACT_PATTERN, FULL_JOIN_TYPES, ON_PATTERN, PORTABLE_JOIN_TYPES
 from ..context import CompileContext
 from ..expressions import ComplexCondition, Condition, JSONPath, Raw
 from ..security import validate_alias, validate_operator
 
 if TYPE_CHECKING:
     from .select import SelectQuery
-
-
-_JOIN_TYPES = frozenset(
-    {
-        "INNER",
-        "LEFT",
-        "RIGHT",
-        "CROSS",
-        "FULL",
-        "LEFT OUTER",
-        "RIGHT OUTER",
-        "FULL OUTER",
-    }
-)
 
 
 def validate_join(
@@ -40,10 +26,12 @@ def validate_join(
     :raises ValueError: if the table reference or the join type is invalid
     """
     normalized_type = " ".join(str(join_type).upper().split())
-    if normalized_type not in _JOIN_TYPES:
+    if normalized_type not in dialect.join_types:
+        if normalized_type in PORTABLE_JOIN_TYPES | FULL_JOIN_TYPES:
+            raise dialect.unsupported(f"{normalized_type} JOIN")
         raise ValueError(
             f"Invalid join type {join_type!r}. "
-            f"Allowed: {', '.join(sorted(_JOIN_TYPES))}."
+            f"Allowed: {', '.join(sorted(dialect.join_types))}."
         )
 
     if hasattr(table, "build"):  # Subquery
@@ -126,6 +114,8 @@ class JoinClauseMixin:
 
     _dialect: Any
     _joins: list[tuple[str, Any, str, tuple[Any, ...]]]
+    #: Set by UPDATE and DELETE, where a JOIN is a dialect capability.
+    _join_feature: Optional[str] = None
 
     def join(
         self: _J,
@@ -142,6 +132,8 @@ class JoinClauseMixin:
             join_type: ``INNER``, ``LEFT``, ``RIGHT``, ``CROSS`` or ``FULL``
                 (``LEFT``, ``RIGHT`` and ``FULL`` may add ``OUTER``).
         """
+        if self._join_feature and not self._dialect.supports_dml_join:
+            raise self._dialect.unsupported(self._join_feature)
         table, join_type = validate_join(self._dialect, table, join_type)
         on_sql, on_params = render_join_on(self._dialect, on)
         self._joins.append((join_type, table, on_sql, on_params))
@@ -224,10 +216,12 @@ class WhereClauseMixin:
 
         # Handle JSONPath
         if isinstance(column, JSONPath):
-            col_sql = f"{self._dialect.quote(column.column)}->>'$.{column.path}'"
+            col_sql = self._dialect.json_extract(
+                self._dialect.quote(column.column), column.path
+            )
             return (
                 "AND",
-                f"{col_sql} {validate_operator(operator)} {self._ph}",
+                f"{col_sql} {validate_operator(operator, self._dialect)} {self._ph}",
                 [value],
             )
 
@@ -238,7 +232,8 @@ class WhereClauseMixin:
                 col_name, op = parsed
                 return (
                     "AND",
-                    f"{self._dialect.quote(col_name)} {validate_operator(op)} "
+                    f"{self._dialect.quote(col_name)} "
+                    f"{validate_operator(op, self._dialect)} "
                     f"{self._ph}",
                     [value],
                 )
@@ -247,7 +242,8 @@ class WhereClauseMixin:
         if value is not None:
             return (
                 "AND",
-                f"{self._dialect.quote(column)} {validate_operator(operator)} "
+                f"{self._dialect.quote(column)} "
+                f"{validate_operator(operator, self._dialect)} "
                 f"{self._ph}",
                 [value],
             )

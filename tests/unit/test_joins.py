@@ -1,3 +1,5 @@
+import pytest
+
 from sqlo import Q
 
 
@@ -66,7 +68,15 @@ def test_generic_join_method():
     query = (
         Q.select("*")
         .from_("users")
-        .join("orders", on="users.id = orders.user_id", join_type="FULL OUTER")
+        .join("orders", on="users.id = orders.user_id", join_type="LEFT OUTER")
     )
     sql, _ = query.build()
-    assert "FULL OUTER JOIN orders ON users.id = orders.user_id" in sql
+    assert "LEFT OUTER JOIN orders ON users.id = orders.user_id" in sql
+
+
+def test_full_join_is_not_supported_by_mysql():
+    """MySQL has no FULL JOIN, so asking for one is an error, not invalid SQL"""
+    from sqlo import UnsupportedFeatureError
+
+    with pytest.raises(UnsupportedFeatureError, match="FULL OUTER JOIN.*MySQL"):
+        Q.select("*").from_("users").join("orders", "a = b", join_type="FULL OUTER")

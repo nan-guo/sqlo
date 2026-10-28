@@ -35,7 +35,7 @@ class SelectQuery(WhereClauseMixin, JoinClauseMixin, Query, Generic[T]):
         self._orders: list[str] = []
         self._limit: Optional[int] = None
         self._offset: int = 0
-        self._index_hint: Optional[tuple[str, tuple[str, ...]]] = None
+        self._index_hint: Optional[str] = None  # rendered by the dialect
         self._explain: bool = False
         self._distinct: bool = False
         self._unions: list[tuple[str, SelectQuery]] = []
@@ -102,17 +102,20 @@ class SelectQuery(WhereClauseMixin, JoinClauseMixin, Query, Generic[T]):
         self._offset = (page - 1) * per_page
         return self
 
-    def force_index(self, *indexes: str) -> "SelectQuery":
-        self._index_hint = ("FORCE", indexes)
+    def _set_index_hint(self, kind: str, indexes: tuple[str, ...]) -> "SelectQuery":
+        # Rendered now, so an unsupported dialect or a bad name fails at the call
+        quoted = ", ".join(map(self._dialect.quote, indexes))
+        self._index_hint = self._dialect.index_hint(kind, quoted)
         return self
+
+    def force_index(self, *indexes: str) -> "SelectQuery":
+        return self._set_index_hint("FORCE", indexes)
 
     def use_index(self, *indexes: str) -> "SelectQuery":
-        self._index_hint = ("USE", indexes)
-        return self
+        return self._set_index_hint("USE", indexes)
 
     def ignore_index(self, *indexes: str) -> "SelectQuery":
-        self._index_hint = ("IGNORE", indexes)
-        return self
+        return self._set_index_hint("IGNORE", indexes)
 
     def optimizer_hint(self, hint: str) -> "SelectQuery":
         """Add an optimizer hint (MySQL 8.0+).
@@ -128,6 +131,7 @@ class SelectQuery(WhereClauseMixin, JoinClauseMixin, Query, Generic[T]):
                 f"Invalid optimizer hint {hint!r}: it must not contain a comment "
                 "delimiter ('/*' or '*/')"
             )
+        self._dialect.optimizer_hint([hint])  # raises if the dialect has none
         self._optimizer_hints.append(hint)
         return self
 
@@ -181,7 +185,8 @@ class SelectQuery(WhereClauseMixin, JoinClauseMixin, Query, Generic[T]):
             elif isinstance(col, Func):
                 parts.append(render_func(col.name, col.args))
             elif isinstance(col, JSONPath):
-                parts.append(f"{self._dialect.quote(col.column)}->>'$.{col.path}'")
+                quoted = self._dialect.quote(col.column)
+                parts.append(self._dialect.json_extract(quoted, col.path))
             # Handle WindowFunc
             elif hasattr(col, "build") and hasattr(col, "window"):
                 parts.append(col.build(self._dialect))
@@ -221,10 +226,7 @@ class SelectQuery(WhereClauseMixin, JoinClauseMixin, Query, Generic[T]):
 
         # Index Hints
         if self._index_hint:
-            hint_type, indexes = self._index_hint
-            parts.append(f" {hint_type} INDEX (")
-            parts.append(", ".join(map(self._dialect.quote, indexes)))
-            parts.append(")")
+            parts.append(self._index_hint)
 
     @staticmethod
     def _build_where_having(
@@ -262,7 +264,7 @@ class SelectQuery(WhereClauseMixin, JoinClauseMixin, Query, Generic[T]):
 
         # Optimizer Hints
         if self._optimizer_hints:
-            parts.append(f" /*+ {' '.join(self._optimizer_hints)} */")
+            parts.append(self._dialect.optimizer_hint(self._optimizer_hints))
 
         # DISTINCT
         if self._distinct:

@@ -1,6 +1,9 @@
 from abc import ABC, abstractmethod
 from functools import lru_cache
+from typing import Sequence
 
+from ..constants import PORTABLE_JOIN_TYPES
+from ..exceptions import UnsupportedFeatureError
 from ..security import require_identifier
 
 
@@ -21,7 +24,54 @@ def _quote_identifier(quote_char: str, identifier: str) -> str:
 
 
 class Dialect(ABC):
-    """Abstract base class for SQL dialects."""
+    """Abstract base class for SQL dialects.
+
+    The defaults describe the portable subset of SQL. A dialect turns features
+    on by overriding the capability attributes and the hooks below; a feature
+    it does not provide raises ``UnsupportedFeatureError`` instead of producing
+    SQL that would fail, or mean something else, on that database.
+    """
+
+    # --- capabilities (portable defaults) ---------------------------------
+
+    #: JOIN types the dialect supports, upper-cased (``LEFT OUTER``, ``FULL``...).
+    join_types: frozenset = PORTABLE_JOIN_TYPES
+    #: Comparison operators beyond ``security.PORTABLE_OPERATORS``.
+    extra_operators: frozenset = frozenset()
+    #: ``INSERT IGNORE``.
+    supports_insert_ignore: bool = False
+    #: ``ON DUPLICATE KEY UPDATE``.
+    supports_on_duplicate_key: bool = False
+    #: JOIN in UPDATE and DELETE.
+    supports_dml_join: bool = False
+    #: ORDER BY and LIMIT in UPDATE and DELETE.
+    supports_dml_order_limit: bool = False
+
+    @property
+    def name(self) -> str:
+        """The dialect name used in error messages."""
+        return type(self).__name__.removesuffix("Dialect") or "SQL"
+
+    def unsupported(self, feature: str, hint: str = "") -> UnsupportedFeatureError:
+        """The error to raise for a ``feature`` this dialect does not support."""
+        return UnsupportedFeatureError(self.name, feature, hint)
+
+    # --- hooks: return a SQL fragment, or raise for an unsupported feature --
+
+    def index_hint(self, kind: str, quoted_indexes: str) -> str:
+        """The index hint after the table, with its leading space.
+
+        ``kind`` is ``FORCE``, ``USE`` or ``IGNORE``.
+        """
+        raise self.unsupported("Index hints")
+
+    def optimizer_hint(self, hints: Sequence[str]) -> str:
+        """The optimizer hint comment after ``SELECT``, with its leading space."""
+        raise self.unsupported("Optimizer hints")
+
+    def json_extract(self, quoted_column: str, path: str) -> str:
+        """The expression extracting ``path`` (``a.b[0].c``) from a JSON column."""
+        raise self.unsupported("JSON path extraction")
 
     @property
     @abstractmethod

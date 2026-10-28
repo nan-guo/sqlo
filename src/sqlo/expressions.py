@@ -4,7 +4,13 @@ import math
 
 from .constants import COMPACT_PATTERN, JSON_PATH_PATTERN
 from .context import CompileContext
-from .security import require_identifier, validate_identifier, validate_operator
+from .security import (
+    PORTABLE_OPERATORS,
+    check_operator_for_dialect,
+    require_identifier,
+    validate_identifier,
+    validate_operator,
+)
 
 if TYPE_CHECKING:
     from .query.select import SelectQuery
@@ -195,6 +201,8 @@ class _Compare:
         self.value = value
 
     def render(self, ctx: CompileContext) -> str:
+        if self.operator not in PORTABLE_OPERATORS:
+            check_operator_for_dialect(ctx.dialect, self.operator)
         column = _column_sql(ctx, self.column)
         if isinstance(self.value, Raw):
             ctx.params.extend(self.value.params)

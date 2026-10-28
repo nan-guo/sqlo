@@ -5,6 +5,9 @@ and other SQL identifiers to prevent SQL injection attacks.
 """
 
 import re
+from typing import Any
+
+from .exceptions import UnsupportedFeatureError
 
 # Pattern for valid SQL identifiers (letters, numbers, underscores, dots)
 # MySQL allows backticks for identifiers, but we validate the content.
@@ -66,7 +69,8 @@ def validate_alias(alias: str) -> str:
     return alias
 
 
-ALLOWED_OPERATORS = frozenset(
+# Operators every dialect supports.
+PORTABLE_OPERATORS = frozenset(
     {
         "=",
         "!=",
@@ -75,11 +79,8 @@ ALLOWED_OPERATORS = frozenset(
         "<=",
         ">",
         ">=",
-        "<=>",
         "LIKE",
         "NOT LIKE",
-        "REGEXP",
-        "NOT REGEXP",
         "IN",
         "NOT IN",
         "IS",
@@ -88,21 +89,39 @@ ALLOWED_OPERATORS = frozenset(
         "IS NOT NULL",
     }
 )
+# Operators only some dialects have. A dialect lists its own in `extra_operators`.
+MYSQL_OPERATORS = frozenset({"<=>", "REGEXP", "NOT REGEXP"})
+# Every operator sqlo knows. A `Condition` is built before the dialect is known,
+# so it is checked against this set, and again against the dialect when rendered.
+ALLOWED_OPERATORS = PORTABLE_OPERATORS | MYSQL_OPERATORS
 
 
-def validate_operator(operator: str) -> str:
+def check_operator_for_dialect(dialect: Any, operator: str) -> None:
+    """Raise if a normalized ``operator`` is not supported by ``dialect``.
+
+    :raises UnsupportedFeatureError: if the dialect does not have the operator
+    """
+    if operator not in PORTABLE_OPERATORS and operator not in dialect.extra_operators:
+        raise UnsupportedFeatureError(dialect.name, f"The {operator} operator")
+
+
+def validate_operator(operator: str, dialect: Any = None) -> str:
     """Validate a comparison operator against the allowed set.
 
     Operators are interpolated directly into SQL, so anything outside
     ``ALLOWED_OPERATORS`` is rejected. Matching is case-insensitive and
-    ignores repeated whitespace.
+    ignores repeated whitespace. With a ``dialect``, the operator must also be
+    supported by it.
 
     :return: The operator normalized to upper case with single spaces
     :raises ValueError: if the operator is not allowed
+    :raises UnsupportedFeatureError: if the dialect does not have the operator
     """
     if isinstance(operator, str):
         normalized = " ".join(operator.upper().split())
         if normalized in ALLOWED_OPERATORS:
+            if dialect is not None and normalized not in PORTABLE_OPERATORS:
+                check_operator_for_dialect(dialect, normalized)
             return normalized
     raise ValueError(
         f"Invalid operator {operator!r}. "
@@ -225,6 +244,9 @@ __all__ = [
     "validate_identifier_whitelist",
     "validate_non_negative_int",
     "validate_operator",
+    "check_operator_for_dialect",
+    "PORTABLE_OPERATORS",
+    "MYSQL_OPERATORS",
     "validate_alias",
     "ALLOWED_OPERATORS",
     "escape_identifier",
