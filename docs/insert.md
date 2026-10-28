@@ -7,7 +7,7 @@ Complete guide to INSERT query building with sqlo.
 ### Single Row Insert
 
 ```python
-from sqlo import Q
+from sqlo import Q, Raw, values_of
 
 # Insert a single row
 query = Q.insert_into("users").values([
@@ -96,12 +96,12 @@ Update existing rows when a duplicate key is encountered:
 query = (
     Q.insert_into("users")
     .values([{"email": "alice@example.com", "name": "Alice", "login_count": 1}])
-    .on_duplicate_key_update({"login_count": "login_count + 1"})
+    .on_duplicate_key_update({"login_count": Raw("`login_count` + 1")})
 )
 
 sql, params = query.build()
 # INSERT INTO `users` (`email`, `name`, `login_count`) VALUES (%s, %s, %s)
-# ON DUPLICATE KEY UPDATE `login_count` = login_count + 1
+# ON DUPLICATE KEY UPDATE `login_count` = `login_count` + 1
 ```
 
 ### Update Multiple Columns
@@ -113,12 +113,15 @@ query = (
     .on_duplicate_key_update({
         "name": "Alice Updated",
         "last_login": "2023-11-23",
-        "updated_at": "NOW()"
+        "updated_at": Raw("NOW()")
     })
 )
 
 # ON DUPLICATE KEY UPDATE `name` = %s, `last_login` = %s, `updated_at` = NOW()
 ```
+
+> **Strings are always bound as parameters.** To use SQL in an `ON DUPLICATE KEY UPDATE`
+> value, wrap it in `Raw()` (trusted input only), or use `values_of("col")` for `VALUES(col)`.
 
 ### Using VALUES() Reference
 
@@ -128,12 +131,12 @@ query = (
     Q.insert_into("users")
     .values([{"email": "alice@example.com", "name": "Alice", "login_count": 1}])
     .on_duplicate_key_update({
-        "name": "VALUES(name)",  # Use the name from INSERT
-        "login_count": "login_count + VALUES(login_count)"
+        "name": values_of("name"),  # Use the name from INSERT
+        "login_count": Raw("`login_count` + VALUES(`login_count`)")
     })
 )
 
-# ON DUPLICATE KEY UPDATE `name` = VALUES(name), `login_count` = login_count + VALUES(login_count)
+# ON DUPLICATE KEY UPDATE `name` = VALUES(`name`), `login_count` = `login_count` + VALUES(`login_count`)
 ```
 
 ## Combining INSERT IGNORE and ON DUPLICATE KEY UPDATE
@@ -248,7 +251,7 @@ def upsert_user_profile(user_id: int, profile_data: dict):
         }])
         .on_duplicate_key_update({
             **profile_data,
-            "updated_at": "NOW()"
+            "updated_at": Raw("NOW()")
         })
     )
     return query

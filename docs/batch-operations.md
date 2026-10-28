@@ -13,7 +13,7 @@ Batch operations allow you to process large datasets efficiently by grouping mul
 The most efficient way to insert multiple rows is with a single `INSERT` statement.
 
 ```python
-from sqlo import Q
+from sqlo import Q, Raw, values_of
 
 # Insert multiple users at once
 users = [
@@ -78,15 +78,15 @@ query = (
         {"user_id": 2, "login_count": 1, "last_login": "2024-01-01"}
     ])
     .on_duplicate_key_update({
-        "login_count": "login_count + 1",
-        "last_login": "VALUES(last_login)"
+        "login_count": Raw("`login_count` + 1"),
+        "last_login": values_of("last_login")
     })
 )
 
 # INSERT INTO `user_stats` ...
 # ON DUPLICATE KEY UPDATE
-#   `login_count` = login_count + 1,
-#   `last_login` = VALUES(last_login)
+#   `login_count` = `login_count` + 1,
+#   `last_login` = VALUES(`last_login`)
 ```
 
 ## Batch UPDATE
@@ -344,7 +344,7 @@ def import_users_from_csv(csv_data: list[dict], batch_size: int = 500):
             query = (
                 Q.insert_into("users")
                 .values(chunk)
-                .on_duplicate_key_update({"updated_at": "NOW()"})
+                .on_duplicate_key_update({"updated_at": Raw("NOW()")})
             )
             sql, params = query.build()
             

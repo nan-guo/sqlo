@@ -7,7 +7,7 @@ Collection of common patterns and best practices for using sqlo effectively.
 ### User Management
 
 ```python
-from sqlo import Q
+from sqlo import Q, Raw
 from typing import Optional, List, Dict, Any
 
 class UserRepository:
@@ -377,7 +377,7 @@ def upsert_user(email: str, name: str):
     query = (
         Q.insert_into("users")
         .values([{"email": email, "name": name}])
-        .on_duplicate_key_update({"name": name, "updated_at": "NOW()"})
+        .on_duplicate_key_update({"name": name, "updated_at": Raw("NOW()")})
     )
     return query
 ```

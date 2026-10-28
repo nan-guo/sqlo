@@ -112,17 +112,6 @@ class InsertQuery(Query):
                 if isinstance(val, Raw):
                     parts.append(val.sql)
                     params.extend(val.params)
-                # Handle string expressions (like "login_count + 1" or "VALUES(name)")
-                elif isinstance(val, str) and (
-                    "VALUES(" in val.upper()
-                    or "+" in val
-                    or "-" in val
-                    or "*" in val
-                    or "/" in val
-                    or "NOW()" in val.upper()
-                ):
-                    # Treat as raw SQL expression
-                    parts.append(val)
                 # Handle regular values
                 else:
                     parts.append(ph)

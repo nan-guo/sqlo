@@ -535,6 +535,21 @@ class ComplexCondition(Expression):
 func = FunctionFactory()
 
 
+def values_of(column: str) -> Raw:
+    """Reference the value that INSERT would have written to ``column``.
+
+    Use it in ``on_duplicate_key_update`` to get ``VALUES(`column`)`` with the
+    column name validated and quoted.
+
+    Example:
+        >>> q = Q.insert_into("users").values({"id": 1, "name": "a"})
+        >>> q = q.on_duplicate_key_update({"name": values_of("name")})
+    """
+    from .dialects.mysql import MySQLDialect
+
+    return Raw(f"VALUES({MySQLDialect().quote(column)})")
+
+
 class JSONPath(Expression):
     """Represents a JSON path extraction."""
 
