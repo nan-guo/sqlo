@@ -184,8 +184,14 @@ def test_range_between_rejects_bad_bounds(bound):
     ],
 )
 def test_valid_frames_render(start, end):
-    w = Window.order_by("d").rows_between(start, end)
-    assert w.build(Q.select("*")._dialect).endswith(f"ROWS BETWEEN {start} AND {end}")
+    # An INTERVAL bound is only valid in a RANGE frame
+    kind = "RANGE" if "INTERVAL" in start + end else "ROWS"
+    window = Window.order_by("d")
+    frame = (window.range_between if kind == "RANGE" else window.rows_between)(
+        start, end
+    )
+    sql = frame.build(Q.select("*")._dialect)
+    assert sql.endswith(f"{kind} BETWEEN {start} AND {end}")
 
 
 def test_frame_bounds_are_normalized():

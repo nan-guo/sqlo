@@ -2,6 +2,7 @@
 Mixin classes for query builders to share common functionality.
 """
 
+import re
 from typing import TYPE_CHECKING, Any, Optional, TypeVar, Union
 
 from ..constants import (
@@ -63,6 +64,8 @@ def validate_join(
     return " ".join([quoted_name, *tokens[1:]]), normalized_type
 
 
+_ON_OPERATOR = re.compile(r"<=>|<=|>=|<>|!=|=|<|>")
+
 _NEEDS_A_HELPER = {
     "IN": "where_in()",
     "NOT IN": "where_not_in()",
@@ -107,6 +110,9 @@ def render_join_on(dialect: Any, on: Any) -> tuple[str, tuple[Any, ...]]:
     if isinstance(on, str):
         text = on.strip()
         if ON_PATTERN.fullmatch(text):
+            # Columns hold no operator characters, so every match is an operator
+            for operator in _ON_OPERATOR.findall(text):
+                validate_operator(operator, dialect)
             return text, ()
         raise ValueError(
             f"Invalid join condition {on!r}. A string must be 'column <op> column' "
@@ -149,6 +155,11 @@ class JoinClauseMixin:
         if self._join_feature and not self._dialect.supports_dml_join:
             raise self._dialect.unsupported(self._join_feature)
         table, join_type = validate_join(self._dialect, table, join_type)
+        if join_type == "CROSS" and on is not None:
+            raise ValueError(
+                "A CROSS JOIN has no ON condition (PostgreSQL rejects it): "
+                "use an INNER JOIN, or put the condition in where()"
+            )
         on_sql, on_params = render_join_on(self._dialect, on)
         self._joins.append((join_type, table, on_sql, on_params))
         return self

@@ -100,7 +100,8 @@ def test_full_join_is_supported(join_type):
 
 def test_portable_joins_still_work():
     for join_type in ("INNER", "LEFT", "RIGHT", "CROSS", "LEFT OUTER"):
-        _s("*").from_("u").join("v", "u.id = v.id", join_type=join_type)
+        on = None if join_type == "CROSS" else "u.id = v.id"
+        _s("*").from_("u").join("v", on, join_type=join_type)
 
 
 # --- operators ----------------------------------------------------------------

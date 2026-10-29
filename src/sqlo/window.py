@@ -73,7 +73,12 @@ class Window:
             start: Start of the frame (e.g., "UNBOUNDED PRECEDING", "1 PRECEDING", "CURRENT ROW")
             end: End of the frame (e.g., "CURRENT ROW", "1 FOLLOWING", "UNBOUNDED FOLLOWING")
         """
-        self._frame = ("ROWS", _frame_bound(start), _frame_bound(end))
+        bounds = _frame_bound(start), _frame_bound(end)
+        if any(bound.startswith("INTERVAL") for bound in bounds):
+            raise ValueError(
+                "An INTERVAL frame bound needs a RANGE frame: use range_between()"
+            )
+        self._frame = ("ROWS", *bounds)
         return self
 
     def range_between(self, start: str, end: str) -> "Window":

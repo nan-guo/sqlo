@@ -44,7 +44,8 @@ def test_update_delete_join_type_rejected(join_type):
 
 @pytest.mark.parametrize("join_type", ["inner", "Left", "RIGHT", "cross", "left outer"])
 def test_valid_join_types_accepted(join_type):
-    sql, _ = _select().join("v", "u.id = v.id", join_type=join_type).build()
+    on = None if join_type.upper() == "CROSS" else "u.id = v.id"
+    sql, _ = _select().join("v", on, join_type=join_type).build()
     assert f"{join_type.upper()} JOIN `v`" in sql
 
 

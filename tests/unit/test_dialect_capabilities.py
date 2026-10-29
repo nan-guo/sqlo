@@ -115,8 +115,9 @@ def test_update_and_delete_without_the_extras_still_work():
     "join_type", ["INNER", "LEFT", "RIGHT", "CROSS", "left outer", "RIGHT OUTER"]
 )
 def test_portable_join_types_work_everywhere(join_type):
+    on = None if join_type == "CROSS" else "t.id = v.id"
     for dialect in (PLAIN, MYSQL):
-        _select(dialect).join("v", "t.id = v.id", join_type=join_type)
+        _select(dialect).join("v", on, join_type=join_type)
 
 
 @pytest.mark.parametrize("join_type", ["FULL", "FULL OUTER", "full outer"])
