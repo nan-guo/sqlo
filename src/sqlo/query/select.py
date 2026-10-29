@@ -192,7 +192,9 @@ class SelectQuery(WhereClauseMixin, JoinClauseMixin, Query, Generic[T]):
             elif hasattr(col, "build") and hasattr(col, "window"):
                 parts.append(col.build(self._dialect))
             # Allow * and numeric literals without validation
-            elif col == "*" or (isinstance(col, str) and col.isdigit()):
+            elif col == "*" or (
+                isinstance(col, str) and col.isascii() and col.isdigit()
+            ):
                 parts.append(col)
             else:
                 parts.append(self._dialect.quote(col))
