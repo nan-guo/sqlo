@@ -63,6 +63,15 @@ def validate_join(
     return " ".join([quoted_name, *tokens[1:]]), normalized_type
 
 
+_NEEDS_A_HELPER = {
+    "IN": "where_in()",
+    "NOT IN": "where_not_in()",
+    "IS": "where_null() or where_not_null()",
+    "IS NOT": "where_null() or where_not_null()",
+    "IS NULL": "where_null()",
+    "IS NOT NULL": "where_not_null()",
+}
+
 _Q = TypeVar("_Q", bound="WhereClauseMixin")
 
 
@@ -193,6 +202,20 @@ class WhereClauseMixin:
 
         return None
 
+    def _value_operator(self, operator: str) -> str:
+        """Validate an operator that is followed by exactly one bound value.
+
+        ``IN`` needs a list and ``IS [NOT] NULL`` takes no value, so with a single
+        placeholder they would render SQL the database rejects.
+        """
+        normalized = validate_operator(operator, self._dialect)
+        helper = _NEEDS_A_HELPER.get(normalized)
+        if helper:
+            raise ValueError(
+                f"The {normalized} operator does not take a single value: use {helper}"
+            )
+        return normalized
+
     def _build_where_clause(
         self,
         column: Union[str, Raw, "Condition", "ComplexCondition"],
@@ -226,7 +249,7 @@ class WhereClauseMixin:
             )
             return (
                 "AND",
-                f"{col_sql} {validate_operator(operator, self._dialect)} {self._ph}",
+                f"{col_sql} {self._value_operator(operator)} {self._ph}",
                 [value],
             )
 
@@ -238,7 +261,7 @@ class WhereClauseMixin:
                 return (
                     "AND",
                     f"{self._dialect.quote(col_name)} "
-                    f"{validate_operator(op, self._dialect)} "
+                    f"{self._value_operator(op)} "
                     f"{self._ph}",
                     [value],
                 )
@@ -248,7 +271,7 @@ class WhereClauseMixin:
             return (
                 "AND",
                 f"{self._dialect.quote(column)} "
-                f"{validate_operator(operator, self._dialect)} "
+                f"{self._value_operator(operator)} "
                 f"{self._ph}",
                 [value],
             )

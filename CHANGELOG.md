@@ -61,6 +61,7 @@ Each of these used to produce SQL that was injectable, invalid, wrong, or that l
 | You wrote | Now | Use instead |
 | --- | --- | --- |
 | `where("age MY_OP", 10)`, any operator outside the known set | `ValueError` | `where(Raw("age MY_OP %s", [10]))` |
+| `where("id IN", ids)`, `where("d", 1, "IS NULL")`, `where("a IS", True)`: `IN` and `IS` with one bound value (rendered `id IN %s`, `d IS NULL %s`, which no database accepts) | `ValueError` | `where_in()`, `where_null()`, `where_not_null()` |
 | `Q.set_dialect("mysql")`, a string or class instead of an instance | `TypeError` | `Q.set_dialect(MySQLDialect())` |
 | `func.count("DISTINCT id")`, any function argument that is not a column or `*` | `ValueError` | `func.count(Raw("DISTINCT id"))` |
 | `join(t, "s.user_id = u.id AND s.status = 'active'")`: a string `ON` with a literal, function, `OR` or parentheses | `ValueError` | `join(t, Condition("s.user_id", Raw("u.id")) & Condition("s.status", "active"))` or `Raw(...)` |
