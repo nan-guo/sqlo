@@ -1,3 +1,5 @@
+import pytest
+
 from sqlo.dialects.mysql import MySQLDialect
 
 
@@ -33,3 +35,10 @@ def test_limit_offset_without_offset():
     dialect = MySQLDialect()
     result = dialect.limit_offset(10, 0)
     assert result == "LIMIT 10"
+
+
+def test_set_dialect_rejects_a_string():
+    from sqlo import Q
+
+    with pytest.raises(TypeError, match="Dialect instance"):
+        Q.set_dialect("mysql")

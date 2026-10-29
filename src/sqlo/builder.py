@@ -65,6 +65,11 @@ class Q:
     @classmethod
     def set_dialect(cls, dialect):
         """Set the default dialect for all queries."""
+        if not isinstance(dialect, Dialect):
+            raise TypeError(
+                "set_dialect() expects a Dialect instance such as MySQLDialect(), "
+                f"got {dialect!r}"
+            )
         cls._default_dialect = dialect
 
     @classmethod
