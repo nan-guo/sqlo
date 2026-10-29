@@ -53,3 +53,6 @@ reports/
 
 # Sphinx build output
 docs/_build/
+
+# Working notes and specs, kept local
+docs/specs/
