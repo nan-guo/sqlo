@@ -74,3 +74,12 @@ def test_compact_operator_does_not_silently_drop_a_trailing_newline(column):
 def test_compact_operator_still_works():
     sql, _ = Q.select("*").from_("u").where("age>=", 1).build()
     assert sql == "SELECT * FROM `u` WHERE `age` >= %s"
+
+
+def test_non_ascii_digits_are_rejected_in_json_paths_and_frame_bounds():
+    from sqlo import JSON, Window
+
+    with pytest.raises(ValueError):
+        JSON("d").extract("a[١]")
+    with pytest.raises(ValueError):
+        Window.order_by("a").rows_between("١ PRECEDING", "CURRENT ROW")

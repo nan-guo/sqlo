@@ -6,8 +6,8 @@ from ..constants import FULL_JOIN_TYPES, PORTABLE_JOIN_TYPES
 from ..security import POSTGRESQL_OPERATORS
 from .base import Dialect
 
-_JSON_STEP = re.compile(r"\[\*\]|\[\d+\]|\*|[A-Za-z_][A-Za-z0-9_]*")
-_INTERVAL_BOUND = re.compile(r"^INTERVAL (\d+) ([A-Z]+) (PRECEDING|FOLLOWING)$")
+_JSON_STEP = re.compile(r"\[\*\]|\[[0-9]+\]|\*|[A-Za-z_][A-Za-z0-9_]*")
+_INTERVAL_BOUND = re.compile(r"^INTERVAL ([0-9]+) ([A-Z]+) (PRECEDING|FOLLOWING)$")
 
 
 class PostgreSQLDialect(Dialect):

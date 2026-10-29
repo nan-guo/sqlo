@@ -5,9 +5,9 @@ COMPACT_PATTERN = re.compile(r"^([\w\.]+)([<>=!]+)\Z")
 
 # MySQL JSON path (without the leading "$."), e.g. "a.b[0].c", "tags[*]", "*".
 # Keys that need quoting in MySQL ('$."a b"') are intentionally not supported.
-_JSON_PATH_STEP = r"(?:[A-Za-z_][A-Za-z0-9_]*|\*|\[(?:\d+|\*)\])"
+_JSON_PATH_STEP = r"(?:[A-Za-z_][A-Za-z0-9_]*|\*|\[(?:[0-9]+|\*)\])"
 JSON_PATH_PATTERN = re.compile(
-    rf"^(?:{_JSON_PATH_STEP})(?:\.(?:[A-Za-z_][A-Za-z0-9_]*|\*)|\[(?:\d+|\*)\])*\Z"
+    rf"^(?:{_JSON_PATH_STEP})(?:\.(?:[A-Za-z_][A-Za-z0-9_]*|\*)|\[(?:[0-9]+|\*)\])*\Z"
 )
 
 # A string JOIN condition: `column <operator> column`, joined by AND. Anything
