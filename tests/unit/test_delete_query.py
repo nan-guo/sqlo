@@ -61,7 +61,10 @@ def test_delete_join():
         .where("orders.status", "cancelled")
     )
     sql, params = query.build()
-    assert "DELETE FROM `users` INNER JOIN orders ON orders.user_id = users.id" in sql
+    assert (
+        "DELETE `users` FROM `users` INNER JOIN `orders` "
+        "ON orders.user_id = users.id" in sql
+    )
     assert "WHERE `orders`.`status` = %s" in sql
     assert params == ("cancelled",)
 
@@ -74,7 +77,10 @@ def test_delete_left_join():
         .where_null("orders.id")
     )
     sql, params = query.build()
-    assert "DELETE FROM `users` LEFT JOIN orders ON orders.user_id = users.id" in sql
+    assert (
+        "DELETE `users` FROM `users` LEFT JOIN `orders` "
+        "ON orders.user_id = users.id" in sql
+    )
     assert "WHERE `orders`.`id` IS NULL" in sql
 
 
@@ -94,5 +100,12 @@ def test_delete_multiple_joins():
         .allow_all_rows()
     )
     sql, _ = query.build()
-    assert "INNER JOIN t2" in sql
-    assert "LEFT JOIN t3" in sql
+    assert "INNER JOIN `t2`" in sql
+    assert "LEFT JOIN `t3`" in sql
+
+
+def test_delete_limit_zero_is_emitted():
+    """limit(0) must not be dropped, otherwise all matching rows are deleted"""
+    sql, params = Q.delete_from("users").where("id", 1).limit(0).build()
+    assert sql == "DELETE FROM `users` WHERE `id` = %s LIMIT 0"
+    assert params == (1,)

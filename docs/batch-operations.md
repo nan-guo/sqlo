@@ -13,7 +13,7 @@ Batch operations allow you to process large datasets efficiently by grouping mul
 The most efficient way to insert multiple rows is with a single `INSERT` statement.
 
 ```python
-from sqlo import Q
+from sqlo import Q, Raw, values_of
 
 # Insert multiple users at once
 users = [
@@ -78,15 +78,15 @@ query = (
         {"user_id": 2, "login_count": 1, "last_login": "2024-01-01"}
     ])
     .on_duplicate_key_update({
-        "login_count": "login_count + 1",
-        "last_login": "VALUES(last_login)"
+        "login_count": Raw("`login_count` + 1"),
+        "last_login": values_of("last_login")
     })
 )
 
 # INSERT INTO `user_stats` ...
 # ON DUPLICATE KEY UPDATE
-#   `login_count` = login_count + 1,
-#   `last_login` = VALUES(last_login)
+#   `login_count` = `login_count` + 1,
+#   `last_login` = VALUES(`last_login`)
 ```
 
 ## Batch UPDATE
@@ -101,7 +101,7 @@ user_ids = [1, 2, 3, 4, 5]
 
 query = (
     Q.update("users")
-    .set({"active": False, "updated_at": "NOW()"})
+    .set({"active": False, "updated_at": Raw("NOW()")})
     .where_in("id", user_ids)
 )
 
@@ -176,7 +176,7 @@ def incremental_update(batch_size: int = 1000):
     while True:
         query = (
             Q.update("users")
-            .set({"migrated": True, "migrated_at": "NOW()"})
+            .set({"migrated": True, "migrated_at": Raw("NOW()")})
             .where("migrated", False)
             .where("created_at <", "2024-01-01")
             .limit(batch_size)
@@ -344,7 +344,7 @@ def import_users_from_csv(csv_data: list[dict], batch_size: int = 500):
             query = (
                 Q.insert_into("users")
                 .values(chunk)
-                .on_duplicate_key_update({"updated_at": "NOW()"})
+                .on_duplicate_key_update({"updated_at": Raw("NOW()")})
             )
             sql, params = query.build()
             
@@ -372,7 +372,7 @@ def update_order_status(order_ids: list[int], new_status: str, batch_size: int =
             Q.update("orders")
             .set({
                 "status": new_status,
-                "updated_at": "NOW()"
+                "updated_at": Raw("NOW()")
             })
             .where_in("id", chunk)
         )
@@ -384,7 +384,7 @@ def update_order_status(order_ids: list[int], new_status: str, batch_size: int =
                 "order_id": order_id,
                 "old_status": "pending",  # Would come from SELECT
                 "new_status": new_status,
-                "changed_at": "NOW()"
+                "changed_at": Raw("NOW()")
             }
             for order_id in chunk
         ]

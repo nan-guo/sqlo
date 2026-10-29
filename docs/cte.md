@@ -11,7 +11,7 @@ Common Table Expressions (CTEs) are temporary named result sets that exist only 
 Use the `with_()` method to define CTEs before your main query.
 
 ```python
-from sqlo import Q, func
+from sqlo import Q, Raw, func
 
 # Define a CTE
 cte = Q.select("user_id", func.count("*").as_("order_count")) \
@@ -33,7 +33,7 @@ sql, params = query.build()
 # )
 # SELECT `u`.`name`, `uo`.`order_count`
 # FROM `users` AS `u`
-# INNER JOIN `user_orders` `uo` ON u.id = uo.user_id
+# INNER JOIN `user_orders` uo ON u.id = uo.user_id
 ```
 
 ## Naming CTEs
@@ -49,7 +49,7 @@ try:
     cte = Q.select("*").from_("users").where("active", True)
     query = Q.select("*").with_(cte).from_("active_users")
 except ValueError as e:
-    print(e)  # "CTE must have a name. Use .as_('name') method."
+    print(e)  # "CTE name must be provided"
 ```
 
 ## Multiple CTEs
@@ -78,7 +78,7 @@ query = (
     Q.select("r.name", "r.email", "h.total_spent")
     .with_(high_value_orders)
     .with_(recent_users)
-    .from_("recent r")
+    .from_("recent", alias="r")
     .left_join("high_value h", "h.user_id = r.id")
 )
 
@@ -99,7 +99,7 @@ recursive_cte = (
     .where("id", 1)  # Start with CEO
     .union_all(
         Q.select("e.id", "e.name", "e.manager_id", Raw("cte.level + 1"))
-        .from_("employees e")
+        .from_("employees", alias="e")
         .join("employee_hierarchy cte", "e.manager_id = cte.id")
     )
     .as_("employee_hierarchy")
@@ -118,7 +118,7 @@ query = (
 #   UNION ALL
 #   SELECT `e`.`id`, `e`.`name`, `e`.`manager_id`, cte.level + 1
 #   FROM `employees` `e`
-#   INNER JOIN `employee_hierarchy` `cte` ON e.manager_id = cte.id
+#   INNER JOIN `employee_hierarchy` cte ON e.manager_id = cte.id
 # )
 # SELECT * FROM `employee_hierarchy` ORDER BY `level` ASC, `name` ASC
 ```
@@ -136,7 +136,7 @@ top_sellers = (
     .from_("sales")
     .where("year", 2024)
     .group_by("salesperson_id")
-    .having("SUM(amount) >", 100000)
+    .having(Raw("SUM(amount) > %s", [100000]))
     .as_("top_sellers")
 )
 
@@ -148,7 +148,7 @@ query = (
         "reward_type": "top_performer",
         "year": 2024
     }])
-    .from_("top_sellers ts")
+    .from_("top_sellers", alias="ts")
 )
 ```
 
@@ -164,10 +164,10 @@ order_summary = (
 )
 
 query = (
-    Q.update("users u")
+    Q.update("users")
     .with_(order_summary)
-    .join("summary s", "s.user_id = u.id")
-    .set({"u.total_orders": Raw("s.order_count")})
+    .join("summary s", "s.user_id = users.id")
+    .set({"users.total_orders": Raw("s.order_count")})
     .where("s.order_count >", 0)
 )
 ```
@@ -178,8 +178,8 @@ query = (
 # Delete inactive users with no recent orders
 inactive_users = (
     Q.select("u.id")
-    .from_("users u")
-    .left_join("orders o", "o.user_id = u.id AND o.created_at > DATE_SUB(NOW(), INTERVAL 1 YEAR)")
+    .from_("users", alias="u")
+    .left_join("orders o", Raw("o.user_id = u.id AND o.created_at > DATE_SUB(NOW(), INTERVAL 1 YEAR)"))
     .where_null("o.id")
     .where("u.last_login <", "2023-01-01")
     .as_("to_delete")
@@ -205,7 +205,7 @@ monthly_sales = (
         func.sum("amount").as_("total")
     )
     .from_("sales")
-    .group_by(Raw("DATE_FORMAT(created_at, '%Y-%m')"), "product_id")
+    .group_by("month", "product_id")  # group by the alias; group_by() takes names, not Raw
     .as_("monthly")
 )
 
@@ -226,7 +226,7 @@ product_ranking = (
 query = (
     Q.select("r.month", "p.name", "r.total", "r.rank")
     .with_(product_ranking)
-    .from_("ranked r")
+    .from_("ranked", alias="r")
     .join("products p", "p.id = r.product_id")
     .where("r.rank <=", 10)
 )
@@ -277,8 +277,8 @@ query = (
         func.coalesce(func.sum("s.amount"), 0).as_("total")
     )
     .with_(date_range)
-    .from_("dates d")
-    .left_join("sales s", "DATE(s.created_at) = d.date")
+    .from_("dates", alias="d")
+    .left_join("sales s", Raw("DATE(s.created_at) = d.date"))
     .group_by("d.date")
 )
 ```
@@ -293,7 +293,7 @@ daily_sales = (
         func.sum("amount").as_("daily_total")
     )
     .from_("sales")
-    .group_by(Raw("DATE(created_at)"))
+    .group_by("date")  # group by the alias
     .as_("daily")
 )
 
@@ -377,7 +377,7 @@ query = (
     Q.select("*")
     .with_(user_stats)
     .with_(product_stats)
-    .from_("user_stats us")
+    .from_("user_stats", alias="us")
     .join("product_stats ps", "ps.user_id = us.user_id")
 )
 
@@ -413,7 +413,7 @@ def get_category_tree(root_id):
         .where("id", root_id)
         .union_all(
             Q.select("c.id", "c.name", "c.parent_id", Raw("tree.depth + 1"))
-            .from_("categories c")
+            .from_("categories", alias="c")
             .join("category_tree tree", "c.parent_id = tree.id")
         )
         .as_("category_tree")

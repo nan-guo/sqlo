@@ -20,7 +20,7 @@ A window function consists of:
 The `Window` class provides a fluent API for defining window specifications.
 
 ```python
-from sqlo import Q, Window, func
+from sqlo import Q, Raw, Window, func
 
 # Partition by department, order by salary
 window = Window.partition_by("department").and_order_by("-salary")

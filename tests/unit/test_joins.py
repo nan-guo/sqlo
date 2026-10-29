@@ -1,3 +1,5 @@
+import pytest
+
 from sqlo import Q
 
 
@@ -9,7 +11,7 @@ def test_inner_join():
         .inner_join("orders o", on="u.id = o.user_id")
     )
     sql, _ = query.build()
-    assert "INNER JOIN orders o ON u.id = o.user_id" in sql
+    assert "INNER JOIN `orders` o ON u.id = o.user_id" in sql
 
 
 def test_left_join():
@@ -20,7 +22,7 @@ def test_left_join():
         .left_join("orders o", on="u.id = o.user_id")
     )
     sql, _ = query.build()
-    assert "LEFT JOIN orders o ON u.id = o.user_id" in sql
+    assert "LEFT JOIN `orders` o ON u.id = o.user_id" in sql
 
 
 def test_right_join():
@@ -31,7 +33,7 @@ def test_right_join():
         .right_join("orders o", on="u.id = o.user_id")
     )
     sql, _ = query.build()
-    assert "RIGHT JOIN orders o ON u.id = o.user_id" in sql
+    assert "RIGHT JOIN `orders` o ON u.id = o.user_id" in sql
 
 
 def test_cross_join():
@@ -40,11 +42,11 @@ def test_cross_join():
         Q.select("u.id", "p.name").from_("users", alias="u").cross_join("products p")
     )
     sql, _ = query.build()
-    assert "CROSS JOIN products p" in sql
+    assert "CROSS JOIN `products` p" in sql
 
 
 def test_multiple_joins():
-    """Multiple different JOIN types in one query"""
+    """Multiple different JOIN `types` in one query"""
     query = (
         Q.select("u.id", "o.total", "p.name")
         .from_("users", alias="u")
@@ -55,18 +57,26 @@ def test_multiple_joins():
     )
     sql, params = query.build()
 
-    assert "INNER JOIN orders o ON u.id = o.user_id" in sql
-    assert "LEFT JOIN payments p ON o.id = p.order_id" in sql
-    assert "RIGHT JOIN addresses a ON u.id = a.user_id" in sql
+    assert "INNER JOIN `orders` o ON u.id = o.user_id" in sql
+    assert "LEFT JOIN `payments` p ON o.id = p.order_id" in sql
+    assert "RIGHT JOIN `addresses` a ON u.id = a.user_id" in sql
     assert params == (True,)
 
 
 def test_generic_join_method():
-    """Generic join() method with custom JOIN type"""
+    """Generic join() method with custom JOIN `type`"""
     query = (
         Q.select("*")
         .from_("users")
-        .join("orders", on="users.id = orders.user_id", join_type="FULL OUTER")
+        .join("orders", on="users.id = orders.user_id", join_type="LEFT OUTER")
     )
     sql, _ = query.build()
-    assert "FULL OUTER JOIN orders ON users.id = orders.user_id" in sql
+    assert "LEFT OUTER JOIN `orders` ON users.id = orders.user_id" in sql
+
+
+def test_full_join_is_not_supported_by_mysql():
+    """MySQL has no FULL JOIN, so asking for one is an error, not invalid SQL"""
+    from sqlo import UnsupportedFeatureError
+
+    with pytest.raises(UnsupportedFeatureError, match="FULL OUTER JOIN.*MySQL"):
+        Q.select("*").from_("users").join("orders", "a = b", join_type="FULL OUTER")

@@ -299,7 +299,7 @@ class TestComplexCombinations:
         sql, params = query.build()
         assert "EXISTS" in sql
         assert (
-            "`users.active` = %s" in sql
+            "`users`.`active` = %s" in sql
         )  # Without dot - it's quoted as one identifier
         assert params == (True,)
 
@@ -349,7 +349,7 @@ class TestUserExamples:
         assert "EXISTS (SELECT" in sql
         assert "FROM `orders`" in sql
         assert "OR" in sql
-        assert "`orders.status` IN (%s, %s)" in sql
+        assert "`orders`.`status` IN (%s, %s)" in sql
         assert params == ("canceled", "done")
 
     def test_in_statement(self):

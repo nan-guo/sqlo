@@ -209,7 +209,7 @@ class TestJoinInjection:
     """Test injection prevention in JOIN clauses."""
 
     def test_join_table_injection(self):
-        """Attempt injection via JOIN table name."""
+        """Attempt injection via JOIN `table` name."""
         with pytest.raises(ValueError, match="Invalid identifier"):
             (
                 Q.select("*")
@@ -219,7 +219,7 @@ class TestJoinInjection:
             )
 
     def test_join_on_column_safe(self):
-        """Verify JOIN ON condition uses column validation."""
+        """Verify JOIN `ON` condition uses column validation."""
         # ON clause is a string, so it's passed through Raw-like
         # Only table names should be validated
         sql, _ = (

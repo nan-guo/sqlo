@@ -24,19 +24,16 @@ def test_compact_condition_in_where_neq():
 
 def test_compact_condition_object():
     c = Condition("age>", 18)
-    # Condition object internals
-    assert len(c.parts) == 1
-    sql, params = c.parts[0]
+    sql, params = c.build()
     assert sql == "`age` > %s"
-    assert params == [18]
+    assert params == (18,)
 
 
 def test_compact_condition_object_gte():
     c = Condition("age>=", 18)
-    assert len(c.parts) == 1
-    sql, params = c.parts[0]
+    sql, params = c.build()
     assert sql == "`age` >= %s"
-    assert params == [18]
+    assert params == (18,)
 
 
 def test_spaced_condition_still_works():

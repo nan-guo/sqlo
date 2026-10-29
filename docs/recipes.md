@@ -7,7 +7,8 @@ Collection of common patterns and best practices for using sqlo effectively.
 ### User Management
 
 ```python
-from sqlo import Q
+from datetime import datetime
+from sqlo import Q, Raw
 from typing import Optional, List, Dict, Any
 
 class UserRepository:
@@ -21,7 +22,7 @@ class UserRepository:
         query = Q.insert_into("users").values([{
             "name": name,
             "email": email,
-            "created_at": "NOW()"
+            "created_at": datetime.now()
         }])
         cursor = self.db.cursor()
         cursor.execute(*query.build())
@@ -254,7 +255,7 @@ def get_orders_with_details():
             "o.quantity",
             "o.total"
         )
-        .from_("orders o")
+        .from_("orders", alias="o")
         .join("users u", "u.id = o.user_id")
         .join("products p", "p.id = o.product_id")
         .join("categories c", "c.id = p.category_id")
@@ -277,7 +278,7 @@ def get_employee_hierarchy():
             "m.name as manager_name",
             "m.title as manager_title"
         )
-        .from_("employees e")
+        .from_("employees", alias="e")
         .left_join("employees m", "m.id = e.manager_id")
         .order_by("m.name", "e.name")
     )
@@ -377,7 +378,7 @@ def upsert_user(email: str, name: str):
     query = (
         Q.insert_into("users")
         .values([{"email": email, "name": name}])
-        .on_duplicate_key_update({"name": name, "updated_at": "NOW()"})
+        .on_duplicate_key_update({"name": name, "updated_at": Raw("NOW()")})
     )
     return query
 ```
@@ -414,6 +415,7 @@ def delete_user_cascade(user_id: int):
 ### Automatic Audit Trail
 
 ```python
+from datetime import datetime
 def create_audit_trigger(table: str, action: str, user_id: int, record_id: int):
     """Create audit log entry."""
     query = Q.insert_into("audit_log").values([{
@@ -421,7 +423,7 @@ def create_audit_trigger(table: str, action: str, user_id: int, record_id: int):
         "action": action,
         "user_id": user_id,
         "record_id": record_id,
-        "timestamp": "NOW()"
+        "timestamp": datetime.now()
     }])
     return query
 

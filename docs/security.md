@@ -51,11 +51,15 @@ Valid identifiers must:
 
 ### Table Aliases
 
-Table aliases with spaces are supported:
+`from_()` takes the alias as a separate argument, and a name with a space is rejected. `join()`
+accepts `"name alias"` and `"name AS alias"`:
 
 ```python
-# ✅ Allowed - validates "orders" part
-Q.select("*").from_("users u").join("orders o", "u.id = o.user_id").build()
+# ✅ Allowed - the table and the alias are each validated
+Q.select("*").from_("users", alias="u").join("orders o", "u.id = o.user_id").build()
+
+# ❌ Rejected - "users u" is not an identifier
+Q.select("*").from_("users u")
 ```
 
 ---
@@ -130,6 +134,23 @@ Raw(123)  # TypeError: Raw SQL must be a string
 ```
 
 ---
+
+### Where Trusted SQL Is Accepted
+
+Everything sqlo writes into a statement is either validated, bound as a parameter, or
+SQL you marked as trusted. These are the places that accept trusted SQL, and what each
+one checks:
+
+| Input | What it accepts | Checked |
+| --- | --- | --- |
+| `Raw(...)` | Any SQL | Nothing: only pass trusted text |
+| `join(on="...")` | `column <op> column`, several joined by `AND` | Identifiers and comparison operators; anything else raises `ValueError` and points to `Raw` or `Condition` |
+| `join(on=Raw(...))` | Any SQL, with parameters | Nothing: only pass trusted text |
+| `join(on=Condition(...))` | Column comparisons with bound values | Columns and operators are validated, values are parameters |
+| `optimizer_hint("...")` | Hint text for `/*+ ... */` | Comment delimiters (`/*`, `*/`) are rejected |
+| `with_(query, name)` | A query builder or `Raw(...)` | Plain strings raise `TypeError` |
+
+Never build any of these from user input.
 
 ## UPDATE/DELETE Safety
 
@@ -225,6 +246,17 @@ Q.update("users").set({"email": None}).where("id", 123)
 ```
 
 ---
+
+## Debug Output and Sensitive Data
+
+Debug mode (`Q.set_debug(True)`) and the `sqlo` and `sqlo.params` loggers record the
+parameters of every query, which can include passwords or tokens. Use
+`Q.set_debug(True, hide_params=True)`, or set the `sqlo.params` logger to a level above
+`DEBUG`, wherever the output is stored or shipped. Nothing is formatted or logged while
+debug logging is off, which is the default. Note that the loggers log at `DEBUG` level, so an
+application that turns on `DEBUG` for the root logger (for example
+`logging.basicConfig(level=logging.DEBUG)`) also receives every query and its parameters; set
+`logging.getLogger("sqlo.params").setLevel(logging.WARNING)` to keep the parameters out.
 
 ## Best Practices
 

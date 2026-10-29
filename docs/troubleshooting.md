@@ -64,7 +64,7 @@ query = Q.delete_from("users").allow_all_rows()
 
 ### CTE Without Name
 
-**Problem**: `ValueError: CTE must have a name. Use .as_('name') method.`
+**Problem**: `ValueError: CTE name must be provided`
 
 **Solution**:
 ```python
@@ -178,7 +178,8 @@ sql, params = query.build()
 query = Q.select("order").from_("users")  # OK
 
 # 2. Check dialect
-Q.set_dialect("mysql")  # Default
+from sqlo import MySQLDialect
+Q.set_dialect(MySQLDialect())  # Default; pass an instance, not a string
 
 # 3. Verify Raw expressions
 from sqlo import Raw
@@ -394,11 +395,12 @@ inactive_users = base_query.where("active", False)
 
 **Solution**:
 ```python
-# Set dialect globally
-Q.set_dialect("mysql")
+# Set the default dialect globally (pass an instance, not a string)
+from sqlo import PostgreSQLDialect
+Q.set_dialect(PostgreSQLDialect())
 
-# Or per query (if supported in future versions)
-# Currently sqlo only supports MySQL
+# Or per factory, leaving the global default alone
+pg = Q.using(PostgreSQLDialect())
 ```
 
 ## Getting Help

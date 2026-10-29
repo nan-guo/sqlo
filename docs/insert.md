@@ -7,7 +7,7 @@ Complete guide to INSERT query building with sqlo.
 ### Single Row Insert
 
 ```python
-from sqlo import Q
+from sqlo import Q, Raw, values_of
 
 # Insert a single row
 query = Q.insert_into("users").values([
@@ -96,12 +96,12 @@ Update existing rows when a duplicate key is encountered:
 query = (
     Q.insert_into("users")
     .values([{"email": "alice@example.com", "name": "Alice", "login_count": 1}])
-    .on_duplicate_key_update({"login_count": "login_count + 1"})
+    .on_duplicate_key_update({"login_count": Raw("`login_count` + 1")})
 )
 
 sql, params = query.build()
 # INSERT INTO `users` (`email`, `name`, `login_count`) VALUES (%s, %s, %s)
-# ON DUPLICATE KEY UPDATE `login_count` = login_count + 1
+# ON DUPLICATE KEY UPDATE `login_count` = `login_count` + 1
 ```
 
 ### Update Multiple Columns
@@ -113,12 +113,15 @@ query = (
     .on_duplicate_key_update({
         "name": "Alice Updated",
         "last_login": "2023-11-23",
-        "updated_at": "NOW()"
+        "updated_at": Raw("NOW()")
     })
 )
 
 # ON DUPLICATE KEY UPDATE `name` = %s, `last_login` = %s, `updated_at` = NOW()
 ```
+
+> **Strings are always bound as parameters.** To use SQL in an `ON DUPLICATE KEY UPDATE`
+> value, wrap it in `Raw()` (trusted input only), or use `values_of("col")` for `VALUES(col)`.
 
 ### Using VALUES() Reference
 
@@ -128,13 +131,50 @@ query = (
     Q.insert_into("users")
     .values([{"email": "alice@example.com", "name": "Alice", "login_count": 1}])
     .on_duplicate_key_update({
-        "name": "VALUES(name)",  # Use the name from INSERT
-        "login_count": "login_count + VALUES(login_count)"
+        "name": values_of("name"),  # Use the name from INSERT
+        "login_count": Raw("`login_count` + VALUES(`login_count`)")
     })
 )
 
-# ON DUPLICATE KEY UPDATE `name` = VALUES(name), `login_count` = login_count + VALUES(login_count)
+# ON DUPLICATE KEY UPDATE `name` = VALUES(`name`), `login_count` = `login_count` + VALUES(`login_count`)
 ```
+
+## Portable Upsert: `on_conflict()`
+
+`on_duplicate_key_update` and `INSERT IGNORE` exist only in MySQL. `on_conflict()` expresses
+the same thing for MySQL and PostgreSQL, and each dialect renders its own syntax:
+
+```python
+from sqlo import Q, values_of
+
+query = (
+    Q.insert_into("users")
+    .values({"id": 1, "name": "Alice"})
+    .on_conflict("id")                           # the unique column(s) that conflict
+    .do_update({"name": values_of("name")})      # take the value we tried to insert
+)
+# MySQL:      INSERT INTO `users` (`id`, `name`) VALUES (%s, %s)
+#             ON DUPLICATE KEY UPDATE `name` = VALUES(`name`)
+# PostgreSQL: INSERT INTO "users" ("id", "name") VALUES (%s, %s)
+#             ON CONFLICT ("id") DO UPDATE SET "name" = EXCLUDED."name"
+
+# Leave the existing row alone
+Q.insert_into("users").values({"id": 1}).on_conflict("id").do_nothing()
+# MySQL:      ... ON DUPLICATE KEY UPDATE `users`.`id` = `users`.`id`
+# PostgreSQL: ... ON CONFLICT ("id") DO NOTHING
+```
+
+- Values in `do_update` are bound as parameters; use `Raw` for an expression and
+  `values_of("col")` for the value that was being inserted.
+- **PostgreSQL needs the conflict columns for `do_update`** (`ValueError` otherwise). MySQL works
+  out the unique key itself and ignores them, so passing them keeps the code portable.
+- `do_nothing()` on MySQL is a no-op update, not `INSERT IGNORE`: `INSERT IGNORE` also
+  swallows other errors, such as a value that is too long for its column.
+- In PostgreSQL, a column name inside a `Raw` expression of `do_update` must be qualified with
+  the table, as in `Raw('"users"."visits" + %s', [1])`; an unqualified name is ambiguous
+  with the `excluded` row.
+- `on_conflict()` cannot be combined with `on_duplicate_key_update()`, and PostgreSQL rejects
+  `.ignore()` and `on_duplicate_key_update()` with an `UnsupportedFeatureError`.
 
 ## Combining INSERT IGNORE and ON DUPLICATE KEY UPDATE
 
@@ -237,6 +277,7 @@ def batch_insert_users(users: list[dict]):
 ### Upsert Pattern
 
 ```python
+from datetime import datetime
 # Insert or update user profile
 def upsert_user_profile(user_id: int, profile_data: dict):
     query = (
@@ -244,11 +285,11 @@ def upsert_user_profile(user_id: int, profile_data: dict):
         .values([{
             "user_id": user_id,
             **profile_data,
-            "created_at": "NOW()"
+            "created_at": datetime.now()
         }])
         .on_duplicate_key_update({
             **profile_data,
-            "updated_at": "NOW()"
+            "updated_at": Raw("NOW()")
         })
     )
     return query
@@ -284,6 +325,7 @@ queries = bulk_insert_chunked("users", large_dataset, chunk_size=500)
 ### Insert with Default Values
 
 ```python
+from datetime import datetime
 # Add default values to all rows
 def insert_with_defaults(table: str, data: list[dict], defaults: dict):
     """Add default values to all rows before inserting"""
@@ -300,7 +342,7 @@ query = insert_with_defaults(
     defaults={
         "active": True,
         "role": "user",
-        "created_at": "NOW()"
+        "created_at": datetime.now()
     }
 )
 # Each row will have active, role, and created_at fields
@@ -386,12 +428,13 @@ query = Q.insert_into("posts").values([{
 ### Insert with JSON Data
 
 ```python
+from datetime import datetime
 import json
 
 query = Q.insert_into("settings").values([{
     "user_id": 123,
     "preferences": json.dumps({"theme": "dark", "language": "en"}),
-    "created_at": "NOW()"
+    "created_at": datetime.now()
 }])
 ```
 

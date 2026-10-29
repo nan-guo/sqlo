@@ -14,6 +14,7 @@ A **lightweight** and **powerful** SQL query builder for Python. Build SQL queri
 - 🛡️ **Secure by Default**: Built-in SQL injection protection
 - 🐍 **Pythonic**: Fluent API design that feels natural to Python developers
 - 🧩 **Composable**: Build complex queries from reusable parts
+- 🗄️ **MySQL and PostgreSQL**: one API, each dialect renders its own syntax and rejects what it lacks
 - 🚀 **Extensible**: Support for custom dialects and functions
 - 🔍 **Type-Safe**: Designed with type hints for better IDE support
 - ✅ **Well-Tested**: 99% code coverage with comprehensive security tests
@@ -45,6 +46,29 @@ query = Q.insert_into("users").values([
 sql, params = query.build()
 ```
 
+## Dialects
+
+MySQL is the default. `Q.using(dialect)` builds queries for another database, and several dialects can be used side by side:
+
+```python
+from sqlo import PostgreSQLDialect, Q, values_of
+
+pg = Q.using(PostgreSQLDialect())
+
+query = (
+    pg.insert_into("users")
+    .values({"id": 1, "name": "Alice"})
+    .on_conflict("id")
+    .do_update({"name": values_of("name")})
+)
+sql, params = query.build()
+# INSERT INTO "users" ("id", "name") VALUES (%s, %s)
+# ON CONFLICT ("id") DO UPDATE SET "name" = EXCLUDED."name"
+```
+
+A feature a dialect does not have (for example `force_index` on PostgreSQL) raises `UnsupportedFeatureError`
+instead of producing SQL that fails on that database. See [Dialects](docs/dialects.md) for what each one supports.
+
 ## Debug Mode
 ### Global Debug Mode
 Enable debug mode to automatically print all queries:
@@ -59,6 +83,26 @@ sql, params = query.build()
 # [sqlo DEBUG] Params: (1,)
 # Disable debug mode
 Q.set_debug(False)
+```
+
+Debug mode logs every built query on the `sqlo` logger at DEBUG level: the SQL on `sqlo`
+and the parameters on `sqlo.params`. `Q.set_debug(True)` is a shortcut that prints both to
+stdout, and it applies to queries created before and after the call.
+
+> Parameters can contain sensitive values such as passwords. Use
+> `Q.set_debug(True, hide_params=True)` to print only the SQL.
+
+### Using the `logging` Module
+
+The loggers work like any other, so you can route them through your own logging setup
+instead of using `set_debug`:
+
+```python
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logging.getLogger("sqlo").setLevel(logging.DEBUG)           # log the SQL
+logging.getLogger("sqlo.params").setLevel(logging.WARNING)  # but not the values
 ```
 
 ### Query Debug Mode

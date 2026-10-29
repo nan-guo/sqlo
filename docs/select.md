@@ -7,7 +7,7 @@ Complete guide to SELECT query building with sqlo.
 ### Simple SELECT
 
 ```python
-from sqlo import Q
+from sqlo import Q, Raw, func
 
 # Select all columns
 query = Q.select("*").from_("users")
@@ -29,9 +29,9 @@ sql, params = query.build()
 ### Table Aliases
 
 ```python
-query = Q.select("u.id", "u.name").from_("users AS u")
+query = Q.select("u.id", "u.name").from_("users", alias="u")
 sql, params = query.build()
-# SELECT `u`.`id`, `u`.`name` FROM `users` AS `u`
+# SELECT `u`.`id`, `u`.`name` FROM `users` u
 ```
 
 ## WHERE Clauses
@@ -83,6 +83,22 @@ query = (
 )
 # WHERE `role` = %s OR `role` = %s
 ```
+
+> **AND binds tighter than OR.** `where()` and `or_where()` are joined in call order with
+> no automatic grouping, so `.where("a", 1).or_where("b", 2).where("c", 3)` means
+> `a = 1 OR (b = 2 AND c = 3)`. To group conditions, use a [`Condition`](conditions.md):
+>
+> ```python
+> from sqlo import Condition
+>
+> query = (
+>     Q.select("*")
+>     .from_("t")
+>     .where(Condition("a", 1) | Condition("b", 2))
+>     .where("c", 3)
+> )
+> # WHERE ((`a` = %s OR `b` = %s)) AND `c` = %s
+> ```
 
 ### IN and NOT IN
 
@@ -169,10 +185,10 @@ from sqlo import Condition
 
 # Create complex conditions
 condition = Condition.and_(
-    Condition("age", ">=", 18),
+    Condition("age", 18, ">="),
     Condition.or_(
-        Condition("country", "=", "US"),
-        Condition("country", "=", "CA")
+        Condition("country", "US"),
+        Condition("country", "CA")
     )
 )
 
@@ -227,13 +243,17 @@ query = Q.select("*").from_("users").paginate(page=3, per_page=20)
 # LIMIT 20 OFFSET 40
 ```
 
+`offset()` needs a `limit()`: `build()` raises `ValueError` for an `offset` greater than 0
+without a `limit`, because SQL would ignore it. With a `UNION`, `limit()`, `offset()` and
+`order_by()` apply to the combined result.
+
 ## GROUP BY and HAVING
 
 ### Grouping
 
 ```python
 query = (
-    Q.select("country", "COUNT(*) as user_count")
+    Q.select("country", func.count("*").as_("user_count"))
     .from_("users")
     .group_by("country")
 )
@@ -241,7 +261,7 @@ query = (
 
 # Multiple columns
 query = (
-    Q.select("country", "city", "COUNT(*) as count")
+    Q.select("country", "city", func.count("*").as_("count"))
     .from_("users")
     .group_by("country", "city")
 )
@@ -252,20 +272,20 @@ query = (
 
 ```python
 query = (
-    Q.select("country", "COUNT(*) as user_count")
+    Q.select("country", func.count("*").as_("user_count"))
     .from_("users")
     .group_by("country")
-    .having("COUNT(*) >", 100)
+    .having(Raw("COUNT(*) > %s", [100]))
 )
 # HAVING COUNT(*) > %s
 
 # Multiple HAVING conditions
 query = (
-    Q.select("country", "AVG(age) as avg_age")
+    Q.select("country", func.avg("age").as_("avg_age"))
     .from_("users")
     .group_by("country")
-    .having("AVG(age) >=", 18)
-    .having("COUNT(*) >", 50)
+    .having(Raw("AVG(age) >= %s", [18]))
+    .having(Raw("COUNT(*) > %s", [50]))
 )
 # HAVING AVG(age) >= %s AND COUNT(*) > %s
 ```
@@ -336,7 +356,7 @@ query = (
 
 ```python
 subquery = (
-    Q.select("user_id", "COUNT(*) as order_count")
+    Q.select("user_id", func.count("*").as_("order_count"))
     .from_("orders")
     .group_by("user_id")
 )
@@ -351,13 +371,26 @@ query = (
 # INNER JOIN `users` AS `u` ON u.id = o.user_id
 ```
 
+`as_()` names a query for the query that embeds it (a subquery in `FROM` or `JOIN`, a
+scalar subquery, a CTE). It does not change the query's own `FROM` clause. To alias the
+table in a query's own `FROM`, pass the alias to `from_()`; the two are independent:
+
+```python
+orders = (
+    Q.select("o.user_id")
+    .from_("orders", "o")       # FROM `orders` o
+    .where("o.total >", 100)
+    .as_("big_orders")          # (...) AS big_orders when used in another query
+)
+```
+
 ### Scalar Subquery in SELECT
 
 ```python
 subquery = (
-    Q.select("COUNT(*)")
+    Q.select(func.count("*"))
     .from_("orders")
-    .where("orders.user_id = users.id")
+    .where(Raw("orders.user_id = users.id"))
 )
 
 query = (
@@ -388,6 +421,10 @@ query = (
 )
 # SELECT /*+ INDEX(users idx_email) MAX_EXECUTION_TIME(1000) */ * FROM `users`
 ```
+
+A hint is written as-is inside `/*+ ... */`, so only pass trusted text. A hint containing
+a comment delimiter (`/*` or `*/`) is rejected with `ValueError`, because it could end the
+comment and let the rest of the string run as SQL.
 
 ## Dynamic Query Building
 
@@ -435,6 +472,28 @@ def search_products(name=None, min_price=None, max_price=None, categories=None):
     return query
 ```
 
+## Reusing a Base Query
+
+Queries are mutable: every method changes the query and returns the same object. Two
+queries derived from one base would therefore share their conditions. Use `clone()` to
+branch from a base query:
+
+```python
+base = Q.select("*").from_("users").where("active", True)
+
+adults = base.clone().where("age >", 18)
+french = base.clone().where("country", "FR")
+
+base.build()    # WHERE `active` = %s
+adults.build()  # WHERE `active` = %s AND `age` > %s
+french.build()  # WHERE `active` = %s AND `country` = %s
+```
+
+`clone()` works on SELECT, INSERT, UPDATE and DELETE queries. Lists and dicts are copied
+and nested queries (a subquery in `FROM` or `JOIN`, `UNION` operands, CTEs) are cloned
+too. It is much cheaper than `copy.deepcopy`, especially for queries with large `IN`
+lists.
+
 ## Advanced Examples
 
 ### Complex Query with Multiple Features
@@ -445,15 +504,15 @@ query = (
         "u.id",
         "u.name",
         "u.email",
-        "COUNT(o.id) as order_count",
-        "SUM(o.total) as total_spent"
+        func.count("o.id").as_("order_count"),
+        func.sum("o.total").as_("total_spent")
     )
-    .from_("users AS u")
-    .left_join("orders AS o", "o.user_id = u.id")
+    .from_("users", alias="u")
+    .left_join("orders", "o.user_id = u.id", alias="o")
     .where("u.active", True)
     .where("u.created_at >=", "2023-01-01")
     .group_by("u.id", "u.name", "u.email")
-    .having("COUNT(o.id) >", 0)
+    .having(Raw("COUNT(o.id) > %s", [0]))
     .order_by("-total_spent", "u.name")
     .limit(100)
 )
@@ -473,7 +532,7 @@ query = (
 
 # Get total count (without LIMIT)
 count_query = (
-    Q.select("COUNT(*) as total")
+    Q.select(func.count("*").as_("total"))
     .from_("users")
     .where("active", True)
 )

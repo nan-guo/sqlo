@@ -1,8 +1,28 @@
 from abc import ABC, abstractmethod
-from typing import Any, Optional
+from typing import Any, Optional, TypeVar
 
+from .._debug import log_query
+from ..context import build_nested
 from ..dialects.base import Dialect
 from ..dialects.mysql import MySQLDialect
+from ..expressions import Raw
+
+_T = TypeVar("_T", bound="Query")
+
+
+def _clone_element(element: Any) -> Any:
+    """Clone a nested query, or the queries held in a clause tuple.
+
+    Clause tuples such as ``(type, table, on)``, ``(type, query)`` and
+    ``(query, name, recursive)`` are rebuilt one level deep. Anything else,
+    including the rendered parameters of a WHERE clause, is shared: nothing
+    modifies it after it is created.
+    """
+    if isinstance(element, Query):
+        return element.clone()
+    if isinstance(element, tuple):
+        return tuple(e.clone() if isinstance(e, Query) else e for e in element)
+    return element
 
 
 class Query(ABC):
@@ -14,13 +34,51 @@ class Query(ABC):
         self._ph = self._dialect.parameter_placeholder()
         self._ctes: list[tuple[Any, str, bool]] = []  # (query, name, recursive)
 
+    def clone(self: _T) -> _T:
+        """Return an independent copy of this query.
+
+        Queries are mutable: every method changes the query and returns it, so
+        two queries derived from the same base would share their conditions.
+        Clone the base first to branch from it::
+
+            base = Q.select("*").from_("users").where("active", True)
+            adults = base.clone().where("age >", 18)
+            french = base.clone().where("country", "FR")
+
+        Lists and dicts are copied and nested queries (a subquery in FROM or
+        JOIN, UNION operands, CTEs, ...) are cloned too. The dialect and the
+        expression objects (``Raw``, ``Condition``, ...) are shared.
+        """
+        clone = object.__new__(type(self))
+        for name, value in self.__dict__.items():
+            if isinstance(value, list):
+                value = [_clone_element(e) for e in value]
+            elif isinstance(value, dict):
+                value = {k: _clone_element(e) for k, e in value.items()}
+            else:
+                value = _clone_element(value)
+            setattr(clone, name, value)
+        return clone
+
     def with_(
         self, query: Any, name: Optional[str] = None, recursive: bool = False
     ) -> Any:
-        """Add a Common Table Expression (CTE)."""
+        """Add a Common Table Expression (CTE).
+
+        Args:
+            query: A query builder, or ``Raw`` for SQL written by hand. Plain
+                strings are rejected: use ``Raw`` to mark SQL as trusted.
+            name: The CTE name. Defaults to the alias of ``query``.
+            recursive: Whether this is a recursive CTE.
+        """
+        if not isinstance(query, (Query, Raw)):
+            raise TypeError(
+                f"A CTE must be a query builder or Raw(), got {type(query).__name__}"
+            )
         if name is None:
-            if hasattr(query, "_alias") and query._alias:
-                name = query._alias
+            alias = getattr(query, "_alias", None)
+            if alias:
+                name = alias
             else:
                 raise ValueError("CTE name must be provided")
         self._ctes.append((query, name, recursive))
@@ -42,19 +100,23 @@ class Query(ABC):
             first = False
 
             parts.append(f"{self._dialect.quote(name)} AS (")
-            if hasattr(query, "build"):
-                sql, p = query.build()
+            if isinstance(query, Raw):
+                parts.append(query.sql)
+                params.extend(query.params)
+            else:
+                sql, p = build_nested(self._dialect, query)
                 parts.append(sql)
                 params.extend(p)
-            else:
-                parts.append(str(query))
             parts.append(")")
 
         parts.append(" ")
 
     def _print_debug(self, sql: str, params: tuple[Any, ...]) -> None:
-        """Print debug output if debug mode is enabled."""
-        if self._debug:
+        """Output a built query: printed if this query was created with
+        ``debug=True``, otherwise logged on the ``sqlo`` logger at DEBUG level."""
+        if not self._debug:
+            log_query(sql, params)
+        else:
             print(f"[sqlo DEBUG] {sql}")
             print(f"[sqlo DEBUG] Params: {params}")
 

@@ -1,6 +1,6 @@
 import pytest
 
-from sqlo import Q, Raw
+from sqlo import Q, Raw, values_of
 
 
 def test_insert_single_row():
@@ -87,23 +87,70 @@ def test_insert_from_select_no_columns():
 
 
 def test_insert_on_duplicate_complex():
-    """INSERT ... ON DUPLICATE KEY UPDATE with complex expressions"""
+    """INSERT ... ON DUPLICATE KEY UPDATE with Raw expressions"""
     query = (
         Q.insert_into("stats")
         .values({"id": 1, "count": 1})
         .on_duplicate_key_update(
             {
-                "count": "count + 1",
+                "count": Raw("`count` + 1"),
                 "updated_at": Raw("NOW()"),
-                "name": "VALUES(name)",
+                "name": values_of("name"),
                 "status": "active",
             }
         )
     )
     sql, params = query.build()
     assert "ON DUPLICATE KEY UPDATE" in sql
-    assert "`count` = count + 1" in sql
+    assert "`count` = `count` + 1" in sql
     assert "`updated_at` = NOW()" in sql
-    assert "`name` = VALUES(name)" in sql
+    assert "`name` = VALUES(`name`)" in sql
     assert "`status` = %s" in sql
-    assert params[-1] == "active"
+    assert params == (1, 1, "active")
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        "count + 1",
+        "VALUES(name)",
+        "NOW()",
+        "2024-01-01",
+        "a-b@c.com",
+        "x * 2",
+        "10 / 2",
+        "1; DROP TABLE users; --",
+    ],
+)
+def test_on_duplicate_plain_strings_are_always_parameters(value):
+    """Strings are data, never SQL, regardless of the characters they contain"""
+    sql, params = (
+        Q.insert_into("u")
+        .values({"a": 1})
+        .on_duplicate_key_update({"n": value})
+        .build()
+    )
+    assert sql.endswith("ON DUPLICATE KEY UPDATE `n` = %s")
+    assert params == (1, value)
+
+
+def test_values_of_quotes_column():
+    sql, _ = (
+        Q.insert_into("t")
+        .values({"id": 1})
+        .on_duplicate_key_update({"name": values_of("name")})
+        .build()
+    )
+    assert sql.endswith("ON DUPLICATE KEY UPDATE `name` = VALUES(`name`)")
+
+
+def test_values_of_takes_a_plain_column_name():
+    """A qualified name makes no sense for the inserted value."""
+    with pytest.raises(ValueError, match="qualified"):
+        values_of("t.name")
+
+
+@pytest.mark.parametrize("bad", ["name); DROP TABLE x;--", "a b", "", "1a"])
+def test_values_of_rejects_invalid_column(bad):
+    with pytest.raises(ValueError):
+        values_of(bad)

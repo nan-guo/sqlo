@@ -2,21 +2,201 @@
 Mixin classes for query builders to share common functionality.
 """
 
-from typing import TYPE_CHECKING, Any, Optional, Union
+import re
+from typing import TYPE_CHECKING, Any, Optional, TypeVar, Union
 
-from ..constants import COMPACT_PATTERN
-from ..expressions import JSONPath, Raw
+from ..constants import (
+    COMPACT_PATTERN,
+    FULL_JOIN_TYPES,
+    ON_PATTERN,
+    PORTABLE_JOIN_TYPES,
+)
+from ..context import CompileContext, build_nested
+from ..expressions import ComplexCondition, Condition, JSONPath, Raw
+from ..security import validate_alias, validate_operator
 
 if TYPE_CHECKING:
-    from ..expressions import ComplexCondition, Condition
     from .select import SelectQuery
 
 
+def validate_join(
+    dialect: Any, table: Any, join_type: str
+) -> tuple[Union[str, "SelectQuery"], str]:
+    """Validate and normalize the table and type of a JOIN.
+
+    ``table`` is either ``"name"``, ``"name alias"``, ``"name AS alias"`` or a
+    subquery that already has an alias. The ``ON`` condition is not handled
+    here: it is raw SQL and must come from trusted input.
+
+    :return: ``(table, join_type)``; the type is upper-cased with single spaces
+    :raises ValueError: if the table reference or the join type is invalid
+    """
+    normalized_type = " ".join(str(join_type).upper().split())
+    if normalized_type not in dialect.join_types:
+        if normalized_type in PORTABLE_JOIN_TYPES | FULL_JOIN_TYPES:
+            raise dialect.unsupported(f"{normalized_type} JOIN")
+        raise ValueError(
+            f"Invalid join type {join_type!r}. "
+            f"Allowed: {', '.join(sorted(dialect.join_types))}."
+        )
+
+    if hasattr(table, "build"):  # Subquery
+        if not getattr(table, "_alias", None):
+            raise ValueError("A subquery used in a JOIN requires an alias (.as_())")
+        return table, normalized_type
+
+    tokens = table.split() if isinstance(table, str) else []
+    if not tokens:
+        raise ValueError(f"Invalid join table {table!r}")
+    quoted_name = dialect.quote(tokens[0])  # Raises ValueError if the name is invalid
+    alias = None
+    if len(tokens) == 2 and tokens[1].upper() != "AS":
+        alias = tokens[1]
+    elif len(tokens) == 3 and tokens[1].upper() == "AS":
+        alias = tokens[2]
+    elif len(tokens) != 1:
+        raise ValueError(
+            f"Invalid join table {table!r}. "
+            "Use 'name', 'name alias' or 'name AS alias'."
+        )
+    if alias is not None:
+        validate_alias(alias)
+    return " ".join([quoted_name, *tokens[1:]]), normalized_type
+
+
+_ON_OPERATOR = re.compile(r"<=>|<=|>=|<>|!=|=|<|>")
+
+_NEEDS_A_HELPER = {
+    "IN": "where_in()",
+    "NOT IN": "where_not_in()",
+    "IS": "where_null() or where_not_null()",
+    "IS NOT": "where_null() or where_not_null()",
+    "IS NULL": "where_null()",
+    "IS NOT NULL": "where_not_null()",
+}
+
+_Q = TypeVar("_Q", bound="WhereClauseMixin")
+
+
+def render_join_on(dialect: Any, on: Any) -> tuple[str, tuple[Any, ...]]:
+    """Validate a JOIN condition and render it as ``(sql, params)``.
+
+    ``on`` may be:
+
+    * ``None``: no ON clause;
+    * a string of the form ``"a.x = b.y"``, optionally several joined by
+      ``AND``. It is written as-is, which is safe because only identifiers and
+      comparison operators are accepted;
+    * ``Raw``: written as-is and may carry parameters, so use trusted SQL only;
+    * ``Condition`` / ``ComplexCondition``: columns are validated, values are
+      bound as parameters and the query's dialect is used.
+
+    :raises ValueError: for a string that is not a column comparison, or an
+        empty condition
+    :raises TypeError: for any other type
+    """
+    if on is None:
+        return "", ()
+    if isinstance(on, Raw):
+        return on.sql, tuple(on.params)
+    if isinstance(on, (Condition, ComplexCondition)):
+        ctx = CompileContext(dialect)
+        sql = on.render(ctx)
+        if not sql:
+            raise ValueError(
+                "Empty condition: it has no terms, so there is nothing to join on"
+            )
+        return sql, tuple(ctx.params)
+    if isinstance(on, str):
+        text = on.strip()
+        if ON_PATTERN.fullmatch(text):
+            # Columns hold no operator characters, so every match is an operator
+            for operator in _ON_OPERATOR.findall(text):
+                validate_operator(operator, dialect)
+            return text, ()
+        raise ValueError(
+            f"Invalid join condition {on!r}. A string must be 'column <op> column' "
+            "(several can be joined by AND); use Raw() or a Condition for anything "
+            "else, for example functions or literal values."
+        )
+    raise TypeError(f"on must be a str, Raw or Condition, got {type(on).__name__}")
+
+
+_J = TypeVar("_J", bound="JoinClauseMixin")
+
+
+class JoinClauseMixin:
+    """Mixin for queries that support JOIN clauses (SELECT, UPDATE, DELETE).
+
+    The query class provides ``_dialect`` and the ``_joins`` list of
+    ``(join_type, table, on_sql, on_params)`` tuples.
+    """
+
+    _dialect: Any
+    _joins: list[tuple[str, Any, str, tuple[Any, ...]]]
+    #: Set by UPDATE and DELETE, where a JOIN is a dialect capability.
+    _join_feature: Optional[str] = None
+
+    def join(
+        self: _J,
+        table: Union[str, "SelectQuery"],
+        on: Union[str, Raw, "Condition", "ComplexCondition", None] = None,
+        join_type: str = "INNER",
+    ) -> _J:
+        """Add a JOIN clause.
+
+        Args:
+            table: ``"name"``, ``"name alias"``, ``"name AS alias"`` or a
+                subquery that has an alias.
+            on: The join condition, see :func:`render_join_on`.
+            join_type: ``INNER``, ``LEFT``, ``RIGHT``, ``CROSS`` or ``FULL``
+                (``LEFT``, ``RIGHT`` and ``FULL`` may add ``OUTER``).
+        """
+        if self._join_feature and not self._dialect.supports_dml_join:
+            raise self._dialect.unsupported(self._join_feature)
+        table, join_type = validate_join(self._dialect, table, join_type)
+        if join_type == "CROSS" and on is not None:
+            raise ValueError(
+                "A CROSS JOIN has no ON condition (PostgreSQL rejects it): "
+                "use an INNER JOIN, or put the condition in where()"
+            )
+        on_sql, on_params = render_join_on(self._dialect, on)
+        self._joins.append((join_type, table, on_sql, on_params))
+        return self
+
+    def left_join(
+        self: _J,
+        table: Union[str, "SelectQuery"],
+        on: Union[str, Raw, "Condition", "ComplexCondition", None] = None,
+    ) -> _J:
+        """Add a LEFT JOIN clause."""
+        return self.join(table, on, join_type="LEFT")
+
+    def _build_joins(self, parts: list[str], params: list[Any]) -> None:
+        """Append the JOIN clauses and their parameters, in SQL order."""
+        for type_, table, on_sql, on_params in self._joins:
+            if hasattr(table, "build"):  # Subquery
+                sub_sql, sub_params = build_nested(self._dialect, table)
+                parts.append(f" {type_} JOIN ({sub_sql}) AS {table._alias}")
+                params.extend(sub_params)
+            else:
+                parts.append(f" {type_} JOIN {table}")
+            if on_sql:
+                parts.append(f" ON {on_sql}")
+                params.extend(on_params)
+
+
 class WhereClauseMixin:
-    """Mixin for queries that support WHERE clauses."""
+    """Mixin for queries that support WHERE clauses.
+
+    The query class provides ``_dialect``, ``_ph`` and the ``_wheres`` list of
+    ``(connector, sql, params)`` tuples. Every helper returns the query itself
+    and is typed so that chaining keeps the concrete query type.
+    """
 
     _dialect: Any  # Type hint for mixin - actual type defined in Query subclass
     _ph: str
+    _wheres: list[tuple[str, str, Any]]
 
     @staticmethod
     def _parse_column_operator(column: str) -> Optional[tuple[str, str]]:
@@ -32,6 +212,20 @@ class WhereClauseMixin:
             return match.group(1), match.group(2)
 
         return None
+
+    def _value_operator(self, operator: str) -> str:
+        """Validate an operator that is followed by exactly one bound value.
+
+        ``IN`` needs a list and ``IS [NOT] NULL`` takes no value, so with a single
+        placeholder they would render SQL the database rejects.
+        """
+        normalized = validate_operator(operator, self._dialect)
+        helper = _NEEDS_A_HELPER.get(normalized)
+        if helper:
+            raise ValueError(
+                f"The {normalized} operator does not take a single value: use {helper}"
+            )
+        return normalized
 
     def _build_where_clause(
         self,
@@ -50,16 +244,23 @@ class WhereClauseMixin:
             return ("AND", column.sql, column.params)
 
         # Handle Condition/ComplexCondition
-        if hasattr(column, "parts") or hasattr(column, "left"):
-            sql, params = self._build_condition(column)
-            return ("AND", f"({sql})", params)
+        if isinstance(column, (Condition, ComplexCondition)):
+            ctx = CompileContext(self._dialect)
+            sql = column.render(ctx)
+            if not sql:
+                raise ValueError(
+                    "Empty condition: it has no terms, so there is nothing to filter on"
+                )
+            return ("AND", f"({sql})", ctx.params)
 
         # Handle JSONPath
         if isinstance(column, JSONPath):
-            col_sql = f"{self._dialect.quote(column.column)}->>'$.{column.path}'"
+            col_sql = self._dialect.json_extract(
+                self._dialect.quote(column.column), column.path
+            )
             return (
                 "AND",
-                f"{col_sql} {operator} {self._ph}",
+                f"{col_sql} {self._value_operator(operator)} {self._ph}",
                 [value],
             )
 
@@ -70,7 +271,9 @@ class WhereClauseMixin:
                 col_name, op = parsed
                 return (
                     "AND",
-                    f"{self._dialect.quote(col_name)} {op} {self._ph}",
+                    f"{self._dialect.quote(col_name)} "
+                    f"{self._value_operator(op)} "
+                    f"{self._ph}",
                     [value],
                 )
 
@@ -78,215 +281,180 @@ class WhereClauseMixin:
         if value is not None:
             return (
                 "AND",
-                f"{self._dialect.quote(column)} {operator} {self._ph}",
+                f"{self._dialect.quote(column)} "
+                f"{self._value_operator(operator)} "
+                f"{self._ph}",
                 [value],
             )
 
         raise ValueError("Invalid where clause")
 
-    def or_where(
-        self,
+    def where(
+        self: _Q,
         column: Union[str, Raw, "Condition", "ComplexCondition"],
         value: Any = None,
         operator: str = "=",
-    ):
-        """Add an OR WHERE condition."""
+    ) -> _Q:
+        """Add a WHERE condition (joined with AND)."""
         connector, sql, params = self._build_where_clause(column, value, operator)
-        if hasattr(self, "_wheres"):
-            self._wheres.append(("OR", sql, params))
+        self._wheres.append((connector, sql, params))
+        return self
+
+    def or_where(
+        self: _Q,
+        column: Union[str, Raw, "Condition", "ComplexCondition"],
+        value: Any = None,
+        operator: str = "=",
+    ) -> _Q:
+        """Add an OR WHERE condition."""
+        _, sql, params = self._build_where_clause(column, value, operator)
+        self._wheres.append(("OR", sql, params))
         return self
 
     def _where_in_internal(
-        self,
+        self: _Q,
         column: str,
         values: Union[list[Any], "SelectQuery"],
         connector: str = "AND",
         not_in: bool = False,
-    ):
+    ) -> _Q:
         operator = "NOT IN" if not_in else "IN"
+        quoted = self._dialect.quote(column)  # validates, even for an empty list
 
         # Handle subquery
         if hasattr(values, "build"):  # Subquery
-            sub_sql, sub_params = values.build()
-            if hasattr(self, "_wheres"):
-                self._wheres.append(
-                    (
-                        connector,
-                        f"{self._dialect.quote(column)} {operator} ({sub_sql})",
-                        sub_params,
-                    )
-                )
+            sub_sql, sub_params = build_nested(self._dialect, values)
+            self._wheres.append(
+                (connector, f"{quoted} {operator} ({sub_sql})", sub_params)
+            )
         # Handle empty list edge case
         # IN () is always false, NOT IN () is always true
         elif len(values) == 0:
-            bool_value = "TRUE" if not_in else "FALSE"
-            if hasattr(self, "_wheres"):
-                self._wheres.append((connector, bool_value, []))
+            self._wheres.append((connector, "TRUE" if not_in else "FALSE", []))
         else:
-            count = len(values)
-            placeholders = ", ".join([self._ph] * count)
-            if hasattr(self, "_wheres"):
-                self._wheres.append(
-                    (
-                        connector,
-                        f"{self._dialect.quote(column)} {operator} ({placeholders})",
-                        tuple(values),
-                    )
-                )
+            placeholders = ", ".join([self._ph] * len(values))
+            self._wheres.append(
+                (connector, f"{quoted} {operator} ({placeholders})", tuple(values))
+            )
         return self
 
-    def where_in(self, column: str, values: Union[list[Any], "SelectQuery"]):
+    def where_in(self: _Q, column: str, values: Union[list[Any], "SelectQuery"]) -> _Q:
         """Add an IN WHERE condition."""
         return self._where_in_internal(column, values, connector="AND", not_in=False)
 
-    def or_where_in(self, column: str, values: Union[list[Any], "SelectQuery"]):
+    def or_where_in(
+        self: _Q, column: str, values: Union[list[Any], "SelectQuery"]
+    ) -> _Q:
         """Add an OR IN WHERE condition."""
         return self._where_in_internal(column, values, connector="OR", not_in=False)
 
-    def where_not_in(self, column: str, values: Union[list[Any], "SelectQuery"]):
+    def where_not_in(
+        self: _Q, column: str, values: Union[list[Any], "SelectQuery"]
+    ) -> _Q:
         """Add a NOT IN WHERE condition."""
         return self._where_in_internal(column, values, connector="AND", not_in=True)
 
-    def or_where_not_in(self, column: str, values: Union[list[Any], "SelectQuery"]):
+    def or_where_not_in(
+        self: _Q, column: str, values: Union[list[Any], "SelectQuery"]
+    ) -> _Q:
         """Add an OR NOT IN WHERE condition."""
         return self._where_in_internal(column, values, connector="OR", not_in=True)
 
     def _where_null_internal(
-        self, column: str, connector: str = "AND", not_null: bool = False
-    ):
+        self: _Q, column: str, connector: str = "AND", not_null: bool = False
+    ) -> _Q:
         operator = "IS NOT NULL" if not_null else "IS NULL"
-        if hasattr(self, "_wheres"):
-            self._wheres.append(
-                (connector, f"{self._dialect.quote(column)} {operator}", [])
-            )
+        self._wheres.append(
+            (connector, f"{self._dialect.quote(column)} {operator}", [])
+        )
         return self
 
-    def where_null(self, column: str):
+    def where_null(self: _Q, column: str) -> _Q:
         """Add an IS NULL WHERE condition."""
         return self._where_null_internal(column, connector="AND", not_null=False)
 
-    def or_where_null(self, column: str):
+    def or_where_null(self: _Q, column: str) -> _Q:
         """Add an OR IS NULL WHERE condition."""
         return self._where_null_internal(column, connector="OR", not_null=False)
 
-    def where_not_null(self, column: str):
+    def where_not_null(self: _Q, column: str) -> _Q:
         """Add an IS NOT NULL WHERE condition."""
         return self._where_null_internal(column, connector="AND", not_null=True)
 
-    def or_where_not_null(self, column: str):
+    def or_where_not_null(self: _Q, column: str) -> _Q:
         """Add an OR IS NOT NULL WHERE condition."""
         return self._where_null_internal(column, connector="OR", not_null=True)
 
     def _where_between_internal(
-        self,
+        self: _Q,
         column: str,
         value1: Any,
         value2: Any,
         connector: str = "AND",
         not_between: bool = False,
-    ):
+    ) -> _Q:
         operator = "NOT BETWEEN" if not_between else "BETWEEN"
         ph = self._ph
-        if hasattr(self, "_wheres"):
-            self._wheres.append(
-                (
-                    connector,
-                    f"{self._dialect.quote(column)} {operator} {ph} AND {ph}",
-                    [value1, value2],
-                )
+        self._wheres.append(
+            (
+                connector,
+                f"{self._dialect.quote(column)} {operator} {ph} AND {ph}",
+                [value1, value2],
             )
+        )
         return self
 
-    def where_between(self, column: str, value1: Any, value2: Any):
+    def where_between(self: _Q, column: str, value1: Any, value2: Any) -> _Q:
         """Add a BETWEEN WHERE condition."""
         return self._where_between_internal(
             column, value1, value2, connector="AND", not_between=False
         )
 
-    def or_where_between(self, column: str, value1: Any, value2: Any):
+    def or_where_between(self: _Q, column: str, value1: Any, value2: Any) -> _Q:
         """Add an OR BETWEEN WHERE condition."""
         return self._where_between_internal(
             column, value1, value2, connector="OR", not_between=False
         )
 
-    def where_not_between(self, column: str, value1: Any, value2: Any):
+    def where_not_between(self: _Q, column: str, value1: Any, value2: Any) -> _Q:
         """Add a NOT BETWEEN WHERE condition."""
         return self._where_between_internal(
             column, value1, value2, connector="AND", not_between=True
         )
 
-    def or_where_not_between(self, column: str, value1: Any, value2: Any):
+    def or_where_not_between(self: _Q, column: str, value1: Any, value2: Any) -> _Q:
         """Add an OR NOT BETWEEN WHERE condition."""
         return self._where_between_internal(
             column, value1, value2, connector="OR", not_between=True
         )
 
-    def where_like(self, column: str, pattern: str):
+    def _where_like_internal(
+        self: _Q, column: str, pattern: str, connector: str, negate: bool
+    ) -> _Q:
+        operator = "NOT LIKE" if negate else "LIKE"
+        if pattern is None:
+            raise ValueError(f"{operator} needs a pattern, got None")
+        self._wheres.append(
+            (
+                connector,
+                f"{self._dialect.quote(column)} {operator} {self._ph}",
+                [pattern],
+            )
+        )
+        return self
+
+    def where_like(self: _Q, column: str, pattern: str) -> _Q:
         """Add a LIKE WHERE condition."""
-        if hasattr(self, "_wheres"):
-            self._wheres.append(
-                ("AND", f"{self._dialect.quote(column)} LIKE {self._ph}", [pattern])
-            )
-        return self
+        return self._where_like_internal(column, pattern, "AND", negate=False)
 
-    def or_where_like(self, column: str, pattern: str):
+    def or_where_like(self: _Q, column: str, pattern: str) -> _Q:
         """Add an OR LIKE WHERE condition."""
-        if hasattr(self, "_wheres"):
-            self._wheres.append(
-                ("OR", f"{self._dialect.quote(column)} LIKE {self._ph}", [pattern])
-            )
-        return self
+        return self._where_like_internal(column, pattern, "OR", negate=False)
 
-    def where_not_like(self, column: str, pattern: str):
+    def where_not_like(self: _Q, column: str, pattern: str) -> _Q:
         """Add a NOT LIKE WHERE condition."""
-        if hasattr(self, "_wheres"):
-            self._wheres.append(
-                ("AND", f"{self._dialect.quote(column)} NOT LIKE {self._ph}", [pattern])
-            )
-        return self
+        return self._where_like_internal(column, pattern, "AND", negate=True)
 
-    def or_where_not_like(self, column: str, pattern: str):
+    def or_where_not_like(self: _Q, column: str, pattern: str) -> _Q:
         """Add an OR NOT LIKE WHERE condition."""
-        if hasattr(self, "_wheres"):
-            self._wheres.append(
-                ("OR", f"{self._dialect.quote(column)} NOT LIKE {self._ph}", [pattern])
-            )
-        return self
-
-    @staticmethod
-    def _build_condition(condition) -> tuple[str, list[Any]]:
-        """
-        Recursively build SQL from Condition or ComplexCondition objects.
-
-        Args:
-            condition: Condition or ComplexCondition object
-
-        Returns:
-            Tuple of (sql, params)
-        """
-        # Handle Condition (has parts)
-        if hasattr(condition, "parts"):
-            parts_sql = []
-            params = []
-            for sql, p in condition.parts:
-                if sql in ("AND", "OR"):
-                    parts_sql.append(sql)
-                else:
-                    parts_sql.append(sql)
-                    if p:
-                        params.extend(p)
-            sql = " ".join(parts_sql)
-            if len(condition.parts) > 1:
-                return f"({sql})", params
-            return sql, params
-
-        # Handle ComplexCondition (has left/right)
-        if hasattr(condition, "left"):
-            left_sql, left_params = WhereClauseMixin._build_condition(condition.left)
-            right_sql, right_params = WhereClauseMixin._build_condition(condition.right)
-            return (
-                f"({left_sql} {condition.operator} {right_sql})",
-                left_params + right_params,
-            )
-
-        return "", []
+        return self._where_like_internal(column, pattern, "OR", negate=True)

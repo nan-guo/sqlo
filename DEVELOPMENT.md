@@ -53,6 +53,11 @@ make typecheck
 # Run all checks (format + lint + typecheck)
 make check
 
+# Run the generated SQL on real MySQL and PostgreSQL (needs Docker)
+make db-up
+make test-integration
+make db-down
+
 # Install pre-commit hooks
 make pre-commit-install
 
@@ -74,3 +79,22 @@ Example CI/CD workflow:
 - run: uv run mypy src/
 - run: uv run pytest --cov=sqlo
 ```
+
+## Integration tests
+
+`tests/integration/` runs the SQL sqlo generates on real MySQL 8.4 and PostgreSQL 17
+servers and checks the rows that come back. The tests that are not tied to one dialect run
+on both databases and must give the same result.
+
+They are skipped unless the servers are configured, so a plain `pytest` needs no database:
+
+```bash
+export SQLO_TEST_MYSQL_URL=mysql://user:password@127.0.0.1:3306/dbname
+export SQLO_TEST_POSTGRES_URL=postgresql://user:password@127.0.0.1:5432/dbname
+uv run pytest tests/integration
+```
+
+`make db-up` starts both servers in Docker with matching settings, `make test-integration`
+runs the tests against them and `make db-down` removes them. The tests create the tables `u`,
+`v`, `o` and `w` in the given database, so point them at a scratch database, and every test runs
+in a transaction that is rolled back. CI runs them in the `integration` job.

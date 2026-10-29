@@ -36,7 +36,7 @@ def test_select_complex():
     )
     sql, params = query.build()
     assert "SELECT `u`.`id`, COUNT(o.id)" in sql
-    assert "LEFT JOIN orders o ON u.id = o.user_id" in sql
+    assert "LEFT JOIN `orders` o ON u.id = o.user_id" in sql
     assert "WHERE `u`.`age` > %s" in sql
     assert "GROUP BY `u`.`id`" in sql
     assert "ORDER BY `count` DESC" in sql
@@ -231,11 +231,15 @@ def test_select_no_table_error():
 
 
 def test_select_from_subquery_alias():
-    """SELECT from subquery using subquery's alias"""
+    """SELECT from subquery using subquery's alias.
+
+    The alias names the derived table outside: it is not an alias of the
+    subquery's own FROM table.
+    """
     subquery = Q.select("id").from_("users").as_("u")
     query = Q.select("*").from_(subquery)
     sql, _ = query.build()
-    assert "(SELECT `id` FROM `users` u) AS u" in sql
+    assert "(SELECT `id` FROM `users`) AS u" in sql
 
 
 def test_select_overrides():

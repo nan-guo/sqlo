@@ -1,6 +1,29 @@
 """Window function support for sqlo."""
 
+import re
 from typing import Any, Optional
+
+from .expressions import render_func
+
+_FRAME_BOUND = re.compile(
+    r"^(?:UNBOUNDED (?:PRECEDING|FOLLOWING)"
+    r"|CURRENT ROW"
+    r"|[0-9]+ (?:PRECEDING|FOLLOWING)"
+    r"|INTERVAL [0-9]+ (?:MICROSECOND|SECOND|MINUTE|HOUR|DAY|WEEK|MONTH|QUARTER|YEAR)"
+    r" (?:PRECEDING|FOLLOWING))$"
+)
+
+
+def _frame_bound(bound: str) -> str:
+    """Validate a window frame bound and return it normalized."""
+    normalized = " ".join(str(bound).upper().split())
+    if not _FRAME_BOUND.match(normalized):
+        raise ValueError(
+            f"Invalid window frame bound {bound!r}. Use UNBOUNDED PRECEDING|FOLLOWING, "
+            "CURRENT ROW, '<n> PRECEDING|FOLLOWING' or "
+            "'INTERVAL <n> <unit> PRECEDING|FOLLOWING'."
+        )
+    return normalized
 
 
 class Window:
@@ -15,7 +38,8 @@ class Window:
     def __init__(self) -> None:
         self._partition_by_cols: list[str] = []
         self._order_by_cols: list[str] = []
-        self._frame_clause: Optional[str] = None
+        # (ROWS | RANGE, start, end); rendered per dialect in build()
+        self._frame: Optional[tuple[str, str, str]] = None
 
     @classmethod
     def partition_by(cls, *columns: str) -> "Window":
@@ -49,7 +73,12 @@ class Window:
             start: Start of the frame (e.g., "UNBOUNDED PRECEDING", "1 PRECEDING", "CURRENT ROW")
             end: End of the frame (e.g., "CURRENT ROW", "1 FOLLOWING", "UNBOUNDED FOLLOWING")
         """
-        self._frame_clause = f"ROWS BETWEEN {start} AND {end}"
+        bounds = _frame_bound(start), _frame_bound(end)
+        if any(bound.startswith("INTERVAL") for bound in bounds):
+            raise ValueError(
+                "An INTERVAL frame bound needs a RANGE frame: use range_between()"
+            )
+        self._frame = ("ROWS", *bounds)
         return self
 
     def range_between(self, start: str, end: str) -> "Window":
@@ -60,7 +89,7 @@ class Window:
             start: Start of the frame
             end: End of the frame
         """
-        self._frame_clause = f"RANGE BETWEEN {start} AND {end}"
+        self._frame = ("RANGE", _frame_bound(start), _frame_bound(end))
         return self
 
     def build(self, dialect: Any) -> str:
@@ -83,8 +112,11 @@ class Window:
             parts.append(f"ORDER BY {', '.join(order_parts)}")
 
         # Frame clause
-        if self._frame_clause:
-            parts.append(self._frame_clause)
+        if self._frame:
+            kind, start, end = self._frame
+            start = dialect.window_frame_bound(start)
+            end = dialect.window_frame_bound(end)
+            parts.append(f"{kind} BETWEEN {start} AND {end}")
 
         return " ".join(parts)
 
@@ -112,11 +144,7 @@ class WindowFunc:
     def build(self, dialect: Any) -> str:
         """Build the window function SQL."""
         # Build function call
-        if self.func_args:
-            args_str = ", ".join(str(arg) for arg in self.func_args)
-            func_sql = f"{self.func_name}({args_str})"
-        else:
-            func_sql = f"{self.func_name}()"
+        func_sql = render_func(self.func_name, self.func_args)
 
         # Build OVER clause
         if self.window:

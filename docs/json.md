@@ -90,11 +90,12 @@ query = (
 ### NULL Checks
 
 ```python
-# Check if JSON field is NULL or missing
+# Check if JSON field is NULL or missing.
+# where_null() takes column names, so a JSON path needs Raw (MySQL syntax)
 query = (
     Q.select("*")
     .from_("users")
-    .where_null(JSON("data").extract("phone"))
+    .where(Raw("`data`->>'$.phone' IS NULL"))
 )
 # WHERE `data`->>'$.phone' IS NULL
 
@@ -102,18 +103,18 @@ query = (
 query = (
     Q.select("*")
     .from_("users")
-    .where_not_null(JSON("profile").extract("verified_at"))
+    .where(Raw("`profile`->>'$.verified_at' IS NOT NULL"))
 )
 ```
 
 ### Pattern Matching
 
 ```python
-# LIKE with JSON values
+# LIKE with JSON values: where() accepts a JSON path with the operator
 query = (
     Q.select("*")
     .from_("users")
-    .where_like(JSON("data").extract("email"), "%@example.com")
+    .where(JSON("data").extract("email"), "%@example.com", "LIKE")
 )
 # WHERE `data`->>'$.email' LIKE %s
 ```
@@ -211,7 +212,7 @@ query = (
     .set({
         "data": Raw("JSON_INSERT(data, '$.created_at', NOW())")
     })
-    .where_null(JSON("data").extract("created_at"))
+    .where(Raw("JSON_EXTRACT(data, '$.created_at') IS NULL"))
 )
 ```
 
@@ -224,7 +225,7 @@ query = (
     .set({
         "data": Raw("JSON_REMOVE(data, '$.temporary_field')")
     })
-    .where_not_null(JSON("data").extract("temporary_field"))
+    .where(Raw("JSON_EXTRACT(data, '$.temporary_field') IS NOT NULL"))
 )
 ```
 
@@ -277,7 +278,7 @@ query = Q.insert_into("users").values([{
 # Join tables using JSON field
 query = (
     Q.select("u.id", "u.name", "o.total")
-    .from_("users u")
+    .from_("users", alias="u")
     .join(
         "orders o",
         Raw("o.customer_id = u.data->>'$.customer_id'")
@@ -295,7 +296,7 @@ query = (
         func.count("*").as_("user_count")
     )
     .from_("users")
-    .group_by(JSON("preferences").extract("theme"))
+    .group_by("theme")  # group by the alias; group_by() takes names, not JSON paths
 )
 ```
 
@@ -411,7 +412,7 @@ query = Q.select("*").from_("users").where(
 )
 
 # ✅ Better: Normalize frequently queried data
-query = Q.select("u.*").from_("users u") \
+query = Q.select("u.*").from_("users", alias="u") \
     .join("orders o", "o.user_id = u.id") \
     .join("order_items oi", "oi.order_id = o.id") \
     .where("oi.category", "electronics")

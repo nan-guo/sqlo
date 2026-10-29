@@ -80,7 +80,7 @@ def test_update_join():
         .where("profiles.status", "pending")
     )
     sql, params = query.build()
-    assert "UPDATE `users` INNER JOIN profiles ON users.id = profiles.user_id" in sql
+    assert "UPDATE `users` INNER JOIN `profiles` ON users.id = profiles.user_id" in sql
     assert "SET `users`.`active` = %s, `profiles`.`updated` = %s" in sql
     assert params == (True, True, "pending")
 
@@ -94,7 +94,7 @@ def test_update_left_join():
         .where_null("profiles.id")
     )
     sql, params = query.build()
-    assert "UPDATE `users` LEFT JOIN profiles" in sql
+    assert "UPDATE `users` LEFT JOIN `profiles`" in sql
     assert "WHERE `profiles`.`id` IS NULL" in sql
 
 
@@ -112,4 +112,11 @@ def test_update_set_subquery():
     query = Q.update("users").set({"count": sub}).where("id", 1)
     sql, params = query.build()
     assert "SET `count` = (SELECT `count` FROM `stats` WHERE `id` = %s)" in sql
+    assert params == (1, 1)
+
+
+def test_update_limit_zero_is_emitted():
+    """limit(0) must not be dropped, otherwise all matching rows are updated"""
+    sql, params = Q.update("users").set({"a": 1}).where("id", 1).limit(0).build()
+    assert sql == "UPDATE `users` SET `a` = %s WHERE `id` = %s LIMIT 0"
     assert params == (1, 1)

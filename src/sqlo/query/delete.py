@@ -1,20 +1,12 @@
-from typing import Any, Optional, Union
+from typing import Any, Optional
 
-from ..expressions import ComplexCondition, Condition, Raw
+from ..security import validate_non_negative_int
 from .base import Query
-from .mixins import WhereClauseMixin
+from .mixins import JoinClauseMixin, WhereClauseMixin
 
 
-class DeleteQuery(WhereClauseMixin, Query):
-    __slots__ = (
-        "_table",
-        "_wheres",
-        "_limit",
-        "_order_bys",
-        "_joins",
-        "_dialect",
-        "_allow_all_rows",
-    )
+class DeleteQuery(WhereClauseMixin, JoinClauseMixin, Query):
+    _join_feature = "DELETE with JOIN"
 
     def __init__(self, table: str, dialect=None, debug=False):
         super().__init__(dialect, debug)
@@ -22,35 +14,18 @@ class DeleteQuery(WhereClauseMixin, Query):
         self._wheres: list[tuple[str, str, Any]] = []
         self._limit: Optional[int] = None
         self._order_bys: list[str] = []
-        self._joins: list[tuple[str, str, Optional[str]]] = []  # (type, table, on)
+        self._joins: list[tuple[str, Any, str, tuple[Any, ...]]] = []
         self._allow_all_rows: bool = False
 
-    def join(
-        self, table: str, on: Optional[str] = None, join_type: str = "INNER"
-    ) -> "DeleteQuery":
-        """Add a JOIN clause (MySQL multi-table DELETE)."""
-        self._joins.append((join_type, table, on))
-        return self
-
-    def left_join(self, table: str, on: Optional[str] = None) -> "DeleteQuery":
-        """Add a LEFT JOIN clause."""
-        return self.join(table, on, join_type="LEFT")
-
-    def where(
-        self,
-        column: Union[str, Raw, Condition, ComplexCondition],
-        value: Any = None,
-        operator: str = "=",
-    ) -> "DeleteQuery":
-        connector, sql, params = self._build_where_clause(column, value, operator)
-        self._wheres.append((connector, sql, params))
-        return self
-
     def limit(self, limit: int) -> "DeleteQuery":
-        self._limit = limit
+        if not self._dialect.supports_dml_order_limit:
+            raise self._dialect.unsupported("LIMIT in DELETE")
+        self._limit = validate_non_negative_int(limit, "limit")
         return self
 
     def order_by(self, *columns: str) -> "DeleteQuery":
+        if not self._dialect.supports_dml_order_limit:
+            raise self._dialect.unsupported("ORDER BY in DELETE")
         for col in columns:
             direction = "ASC"
             if col.startswith("-"):
@@ -78,6 +53,12 @@ class DeleteQuery(WhereClauseMixin, Query):
         if not self._table:
             raise ValueError("No table specified")
 
+        # MySQL's multi-table DELETE has no ORDER BY or LIMIT
+        if self._joins and (self._order_bys or self._limit is not None):
+            raise ValueError(
+                "ORDER BY and LIMIT cannot be used in a DELETE with a JOIN"
+            )
+
         # Safety check: DELETE without WHERE
         if not self._wheres and not self._allow_all_rows:
             raise ValueError(
@@ -91,16 +72,16 @@ class DeleteQuery(WhereClauseMixin, Query):
         # CTEs
         self._build_ctes(parts, params)
 
-        # DELETE FROM
-        parts.append("DELETE FROM ")
-        parts.append(self._dialect.quote(self._table))
+        # DELETE FROM. With a JOIN the table to delete from is named first:
+        # DELETE t FROM t JOIN ... (DELETE FROM t JOIN ... is a syntax error)
+        table = self._dialect.quote(self._table)
+        if self._joins:
+            parts.extend(("DELETE ", table, " FROM ", table))
+        else:
+            parts.extend(("DELETE FROM ", table))
 
         # JOINs (for multi-table DELETE)
-        if self._joins:
-            for type_, table, on in self._joins:
-                parts.append(f" {type_} JOIN {table}")
-                if on:
-                    parts.append(f" ON {on}")
+        self._build_joins(parts, params)
 
         # WHERE
         if self._wheres:
@@ -117,7 +98,7 @@ class DeleteQuery(WhereClauseMixin, Query):
             parts.append(", ".join(self._order_bys))
 
         # LIMIT
-        if self._limit:
+        if self._limit is not None:
             parts.append(f" LIMIT {self._limit}")
 
         sql = "".join(parts)

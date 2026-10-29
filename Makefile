@@ -1,4 +1,4 @@
-.PHONY: install format lint check test coverage clean docs docs-serve
+.PHONY: install format lint check test coverage clean docs docs-serve db-up db-down test-integration
 
 # Install dependencies
 install:
@@ -29,6 +29,28 @@ check: style
 # Run tests
 test:
 	uv run pytest --cov=sqlo --cov-report=term-missing
+
+# Throwaway MySQL and PostgreSQL servers for the integration tests (needs Docker)
+SQLO_MYSQL_PORT ?= 53306
+SQLO_POSTGRES_PORT ?= 55432
+SQLO_TEST_MYSQL_URL ?= mysql://root:sqlo@127.0.0.1:$(SQLO_MYSQL_PORT)/sqlo
+SQLO_TEST_POSTGRES_URL ?= postgresql://postgres:sqlo@127.0.0.1:$(SQLO_POSTGRES_PORT)/postgres
+
+db-up:
+	docker run -d --name sqlo-test-mysql -e MYSQL_ROOT_PASSWORD=sqlo -e MYSQL_DATABASE=sqlo \
+		-p 127.0.0.1:$(SQLO_MYSQL_PORT):3306 mysql:8.4
+	docker run -d --name sqlo-test-postgres -e POSTGRES_PASSWORD=sqlo \
+		-p 127.0.0.1:$(SQLO_POSTGRES_PORT):5432 postgres:17-alpine
+	@echo "Started MySQL on port $(SQLO_MYSQL_PORT) and PostgreSQL on port $(SQLO_POSTGRES_PORT)."
+	@echo "They need a few seconds to accept connections before 'make test-integration'."
+
+db-down:
+	-docker rm -f sqlo-test-mysql sqlo-test-postgres
+
+# Run the SQL sqlo generates on real MySQL and PostgreSQL (after 'make db-up')
+test-integration:
+	SQLO_TEST_MYSQL_URL=$(SQLO_TEST_MYSQL_URL) SQLO_TEST_POSTGRES_URL=$(SQLO_TEST_POSTGRES_URL) \
+		uv run pytest tests/integration
 
 # Run tests with coverage
 coverage:
