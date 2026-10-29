@@ -80,7 +80,7 @@ def test_update_join():
         .where("profiles.status", "pending")
     )
     sql, params = query.build()
-    assert "UPDATE `users` INNER JOIN profiles ON users.id = profiles.user_id" in sql
+    assert "UPDATE `users` INNER JOIN `profiles` ON users.id = profiles.user_id" in sql
     assert "SET `users`.`active` = %s, `profiles`.`updated` = %s" in sql
     assert params == (True, True, "pending")
 
@@ -94,7 +94,7 @@ def test_update_left_join():
         .where_null("profiles.id")
     )
     sql, params = query.build()
-    assert "UPDATE `users` LEFT JOIN profiles" in sql
+    assert "UPDATE `users` LEFT JOIN `profiles`" in sql
     assert "WHERE `profiles`.`id` IS NULL" in sql
 
 

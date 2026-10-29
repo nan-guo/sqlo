@@ -33,7 +33,7 @@ sql, params = query.build()
 # )
 # SELECT `u`.`name`, `uo`.`order_count`
 # FROM `users` AS `u`
-# INNER JOIN `user_orders` `uo` ON u.id = uo.user_id
+# INNER JOIN `user_orders` uo ON u.id = uo.user_id
 ```
 
 ## Naming CTEs
@@ -118,7 +118,7 @@ query = (
 #   UNION ALL
 #   SELECT `e`.`id`, `e`.`name`, `e`.`manager_id`, cte.level + 1
 #   FROM `employees` `e`
-#   INNER JOIN `employee_hierarchy` `cte` ON e.manager_id = cte.id
+#   INNER JOIN `employee_hierarchy` cte ON e.manager_id = cte.id
 # )
 # SELECT * FROM `employee_hierarchy` ORDER BY `level` ASC, `name` ASC
 ```

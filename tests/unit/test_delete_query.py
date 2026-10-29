@@ -62,7 +62,7 @@ def test_delete_join():
     )
     sql, params = query.build()
     assert (
-        "DELETE `users` FROM `users` INNER JOIN orders "
+        "DELETE `users` FROM `users` INNER JOIN `orders` "
         "ON orders.user_id = users.id" in sql
     )
     assert "WHERE `orders`.`status` = %s" in sql
@@ -78,7 +78,7 @@ def test_delete_left_join():
     )
     sql, params = query.build()
     assert (
-        "DELETE `users` FROM `users` LEFT JOIN orders "
+        "DELETE `users` FROM `users` LEFT JOIN `orders` "
         "ON orders.user_id = users.id" in sql
     )
     assert "WHERE `orders`.`id` IS NULL" in sql
@@ -100,8 +100,8 @@ def test_delete_multiple_joins():
         .allow_all_rows()
     )
     sql, _ = query.build()
-    assert "INNER JOIN t2" in sql
-    assert "LEFT JOIN t3" in sql
+    assert "INNER JOIN `t2`" in sql
+    assert "LEFT JOIN `t3`" in sql
 
 
 def test_delete_limit_zero_is_emitted():

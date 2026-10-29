@@ -95,7 +95,7 @@ def test_conditions_render_with_postgresql_quoting():
 @pytest.mark.parametrize("join_type", ["FULL", "FULL OUTER", "full outer"])
 def test_full_join_is_supported(join_type):
     sql, _ = _s("*").from_("u").join("v", "u.id = v.id", join_type=join_type).build()
-    assert f"{join_type.upper()} JOIN v ON u.id = v.id" in sql
+    assert f'{join_type.upper()} JOIN "v" ON u.id = v.id' in sql
 
 
 def test_portable_joins_still_work():

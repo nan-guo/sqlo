@@ -45,7 +45,7 @@ def test_update_delete_join_type_rejected(join_type):
 @pytest.mark.parametrize("join_type", ["inner", "Left", "RIGHT", "cross", "left outer"])
 def test_valid_join_types_accepted(join_type):
     sql, _ = _select().join("v", "u.id = v.id", join_type=join_type).build()
-    assert f"{join_type.upper()} JOIN v" in sql
+    assert f"{join_type.upper()} JOIN `v`" in sql
 
 
 @pytest.mark.parametrize("table", BAD_TABLE_REFS)
@@ -62,19 +62,27 @@ def test_update_delete_join_table_rejected(table):
         Q.delete_from("u").join(table, "u.id = v.id")
 
 
-@pytest.mark.parametrize("table", ["orders", "orders o", "orders AS o", "db.orders o"])
-def test_valid_join_tables_accepted(table):
+@pytest.mark.parametrize(
+    "table, rendered",
+    [
+        ("orders", "`orders`"),
+        ("orders o", "`orders` o"),
+        ("orders AS o", "`orders` AS o"),
+        ("db.orders o", "`db`.`orders` o"),
+    ],
+)
+def test_valid_join_tables_accepted(table, rendered):
     sql, _ = _select().left_join(table, "u.id = o.uid").build()
-    assert f"LEFT JOIN {table} ON" in sql
+    assert f"LEFT JOIN {rendered} ON" in sql
 
 
 def test_update_delete_valid_join_still_works():
     sql, _ = (
         Q.update("u").set({"a": 1}).join("v x", "u.id = x.id").where("u.id", 1).build()
     )
-    assert "INNER JOIN v x ON u.id = x.id" in sql
+    assert "INNER JOIN `v` x ON u.id = x.id" in sql
     sql, _ = Q.delete_from("u").join("v x", "u.id = x.id").where("u.id", 1).build()
-    assert "INNER JOIN v x ON u.id = x.id" in sql
+    assert "INNER JOIN `v` x ON u.id = x.id" in sql
 
 
 @pytest.mark.parametrize("alias", BAD_ALIASES)

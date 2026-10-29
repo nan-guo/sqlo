@@ -47,7 +47,7 @@ def validate_join(
     tokens = table.split() if isinstance(table, str) else []
     if not tokens:
         raise ValueError(f"Invalid join table {table!r}")
-    dialect.quote(tokens[0])  # Raises ValueError if the name is invalid
+    quoted_name = dialect.quote(tokens[0])  # Raises ValueError if the name is invalid
     alias = None
     if len(tokens) == 2 and tokens[1].upper() != "AS":
         alias = tokens[1]
@@ -60,7 +60,7 @@ def validate_join(
         )
     if alias is not None:
         validate_alias(alias)
-    return " ".join(tokens), normalized_type
+    return " ".join([quoted_name, *tokens[1:]]), normalized_type
 
 
 _Q = TypeVar("_Q", bound="WhereClauseMixin")

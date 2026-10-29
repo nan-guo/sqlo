@@ -38,7 +38,7 @@ def _select():
 )
 def test_simple_column_comparisons_are_accepted_unchanged(on):
     sql, params = _select().join("o", on).build()
-    assert sql == f"SELECT * FROM `u` INNER JOIN o ON {on.strip()}"
+    assert sql == f"SELECT * FROM `u` INNER JOIN `o` ON {on.strip()}"
     assert params == ()
 
 
@@ -105,9 +105,9 @@ def test_a_rejected_join_leaves_the_query_unchanged():
 
 def test_no_on_is_still_allowed():
     sql, _ = _select().cross_join("o").build()
-    assert sql == "SELECT * FROM `u` CROSS JOIN o"
+    assert sql == "SELECT * FROM `u` CROSS JOIN `o`"
     sql, _ = _select().join("o").build()
-    assert sql == "SELECT * FROM `u` INNER JOIN o"
+    assert sql == "SELECT * FROM `u` INNER JOIN `o`"
 
 
 # --- Raw and Condition ON -----------------------------------------------
@@ -115,7 +115,7 @@ def test_no_on_is_still_allowed():
 
 def test_raw_on_without_params():
     sql, params = _select().join("d", Raw("DATE(s.created_at) = d.date")).build()
-    assert sql == "SELECT * FROM `u` INNER JOIN d ON DATE(s.created_at) = d.date"
+    assert sql == "SELECT * FROM `u` INNER JOIN `d` ON DATE(s.created_at) = d.date"
     assert params == ()
 
 
@@ -127,7 +127,7 @@ def test_raw_on_with_params_come_before_where_params():
         .build()
     )
     assert sql == (
-        "SELECT * FROM `u` INNER JOIN s ON s.status = %s AND s.uid = u.id "
+        "SELECT * FROM `u` INNER JOIN `s` ON s.status = %s AND s.uid = u.id "
         "WHERE `u`.`age` > %s"
     )
     assert params == ("active", 18)
@@ -137,7 +137,7 @@ def test_condition_on_validates_columns_and_binds_values():
     on = Condition("s.user_id", Raw("u.id")) & Condition("s.status", "active")
     sql, params = _select().left_join("s", on).build()
     assert sql == (
-        "SELECT * FROM `u` LEFT JOIN s ON (`s`.`user_id` = u.id AND `s`.`status` = %s)"
+        "SELECT * FROM `u` LEFT JOIN `s` ON (`s`.`user_id` = u.id AND `s`.`status` = %s)"
     )
     assert params == ("active",)
 
@@ -145,7 +145,7 @@ def test_condition_on_validates_columns_and_binds_values():
 def test_complex_condition_on():
     on = Condition("a.x", Raw("b.x")) | Condition("a.y", Raw("b.y"))
     sql, _ = _select().join("b", on).build()
-    assert sql.endswith("INNER JOIN b ON (`a`.`x` = b.x OR `a`.`y` = b.y)")
+    assert sql.endswith("INNER JOIN `b` ON (`a`.`x` = b.x OR `a`.`y` = b.y)")
 
 
 def test_condition_on_rejects_bad_columns_at_construction():
@@ -175,7 +175,7 @@ def test_condition_on_uses_the_dialect_of_the_query():
     sql, params = q.build()
     assert (
         sql
-        == 'SELECT * FROM "u" LEFT JOIN s ON ("s"."user_id" = u.id AND "s"."status" = ?)'
+        == 'SELECT * FROM "u" LEFT JOIN "s" ON ("s"."user_id" = u.id AND "s"."status" = ?)'
     )
     assert params == ("active",)
 
@@ -191,7 +191,7 @@ def test_update_join_params_come_before_set_and_where_params():
         .where("id", 5)
         .build()
     )
-    assert sql == ("UPDATE `u` INNER JOIN v ON v.k = %s SET `a` = %s WHERE `id` = %s")
+    assert sql == ("UPDATE `u` INNER JOIN `v` ON v.k = %s SET `a` = %s WHERE `id` = %s")
     assert params == ("k", 1, 5)
 
 
@@ -199,7 +199,7 @@ def test_update_join_with_a_condition():
     on = Condition("v.uid", Raw("u.id")) & Condition("v.flag", True)
     sql, params = Q.update("u").set({"a": 1}).left_join("v", on).where("id", 5).build()
     assert sql == (
-        "UPDATE `u` LEFT JOIN v ON (`v`.`uid` = u.id AND `v`.`flag` = %s) "
+        "UPDATE `u` LEFT JOIN `v` ON (`v`.`uid` = u.id AND `v`.`flag` = %s) "
         "SET `a` = %s WHERE `id` = %s"
     )
     assert params == (True, 1, 5)
@@ -209,7 +209,7 @@ def test_delete_join_params_come_before_where_params():
     sql, params = (
         Q.delete_from("u").join("v", Raw("v.k = %s", ["k"])).where("u.id", 5).build()
     )
-    assert sql == ("DELETE `u` FROM `u` INNER JOIN v ON v.k = %s WHERE `u`.`id` = %s")
+    assert sql == ("DELETE `u` FROM `u` INNER JOIN `v` ON v.k = %s WHERE `u`.`id` = %s")
     assert params == ("k", 5)
 
 

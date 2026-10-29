@@ -123,17 +123,17 @@ query = (
     .from_("users", "u")
     .join("subscriptions AS s", "s.user_id = u.id AND s.start_date <= u.end_date")
 )
-# INNER JOIN subscriptions AS s ON s.user_id = u.id AND s.start_date <= u.end_date
+# INNER JOIN `subscriptions` AS s ON s.user_id = u.id AND s.start_date <= u.end_date
 
 # A literal value: use a Condition, the value is bound as a parameter
 on = Condition("s.user_id", Raw("u.id")) & Condition("s.status", "active")
 query = Q.select("*").from_("users", "u").join("subscriptions AS s", on)
-# INNER JOIN subscriptions AS s ON (`s`.`user_id` = u.id AND `s`.`status` = %s)
+# INNER JOIN `subscriptions` AS s ON (`s`.`user_id` = u.id AND `s`.`status` = %s)
 # params: ("active",)
 
 # A function: use Raw
 query = Q.select("*").from_("dates", "d").left_join("sales s", Raw("DATE(s.created_at) = d.date"))
-# LEFT JOIN sales s ON DATE(s.created_at) = d.date
+# LEFT JOIN `sales` s ON DATE(s.created_at) = d.date
 ```
 
 Parameters in the `ON` clause come before the parameters of `WHERE`, matching the order

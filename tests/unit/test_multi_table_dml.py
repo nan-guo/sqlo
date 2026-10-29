@@ -2,7 +2,7 @@ import pytest
 
 from sqlo import Condition, Q, Raw
 
-# --- DELETE with JOIN uses the multi-table syntax MySQL accepts -------------
+# --- DELETE with JOIN `uses` the multi-table syntax MySQL accepts -------------
 
 
 def test_delete_with_join_names_the_target_before_from():
@@ -13,7 +13,7 @@ def test_delete_with_join_names_the_target_before_from():
         .build()
     )
     assert sql == (
-        "DELETE `users` FROM `users` INNER JOIN orders ON orders.user_id = users.id "
+        "DELETE `users` FROM `users` INNER JOIN `orders` ON orders.user_id = users.id "
         "WHERE `users`.`id` = %s"
     )
     assert params == (1,)
@@ -27,7 +27,7 @@ def test_delete_with_left_join():
         .build()
     )
     assert sql == (
-        "DELETE `users` FROM `users` LEFT JOIN orders ON orders.user_id = users.id "
+        "DELETE `users` FROM `users` LEFT JOIN `orders` ON orders.user_id = users.id "
         "WHERE `orders`.`id` IS NULL"
     )
 
@@ -41,8 +41,8 @@ def test_delete_with_several_joins():
         .build()
     )
     assert sql == (
-        "DELETE `t1` FROM `t1` INNER JOIN t2 ON t1.id = t2.id "
-        "LEFT JOIN t3 ON t2.id = t3.id WHERE `t1`.`a` = %s"
+        "DELETE `t1` FROM `t1` INNER JOIN `t2` ON t1.id = t2.id "
+        "LEFT JOIN `t3` ON t2.id = t3.id WHERE `t1`.`a` = %s"
     )
 
 
@@ -50,7 +50,7 @@ def test_delete_join_params_come_before_where_params():
     sql, params = (
         Q.delete_from("u").join("v", Raw("v.k = %s", ["k"])).where("u.id", 5).build()
     )
-    assert sql == ("DELETE `u` FROM `u` INNER JOIN v ON v.k = %s WHERE `u`.`id` = %s")
+    assert sql == ("DELETE `u` FROM `u` INNER JOIN `v` ON v.k = %s WHERE `u`.`id` = %s")
     assert params == ("k", 5)
 
 
@@ -65,7 +65,7 @@ def test_delete_join_with_a_condition_and_a_cte():
     )
     assert sql == (
         "WITH `c` AS (SELECT %s AS n) DELETE `u` FROM `u` "
-        "INNER JOIN v ON (`v`.`uid` = u.id AND `v`.`flag` = %s) WHERE `u`.`id` = %s"
+        "INNER JOIN `v` ON (`v`.`uid` = u.id AND `v`.`flag` = %s) WHERE `u`.`id` = %s"
     )
     assert params == (7, True, 5)
 
@@ -91,7 +91,7 @@ def test_delete_join_still_needs_a_where_or_allow_all_rows():
     with pytest.raises(ValueError, match="without WHERE"):
         q.build()
     sql, _ = q.allow_all_rows().build()
-    assert sql == "DELETE `u` FROM `u` INNER JOIN v ON u.id = v.id"
+    assert sql == "DELETE `u` FROM `u` INNER JOIN `v` ON u.id = v.id"
 
 
 # --- ORDER BY and LIMIT are not allowed together with JOIN -------------------
@@ -134,7 +134,7 @@ def test_update_with_join_alone_is_unchanged():
         Q.update("u").set({"a": 1}).join("v", "u.id = v.id").where("u.id", 2).build()
     )
     assert sql == (
-        "UPDATE `u` INNER JOIN v ON u.id = v.id SET `a` = %s WHERE `u`.`id` = %s"
+        "UPDATE `u` INNER JOIN `v` ON u.id = v.id SET `a` = %s WHERE `u`.`id` = %s"
     )
     assert params == (1, 2)
 

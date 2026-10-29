@@ -36,7 +36,7 @@ def test_select_complex():
     )
     sql, params = query.build()
     assert "SELECT `u`.`id`, COUNT(o.id)" in sql
-    assert "LEFT JOIN orders o ON u.id = o.user_id" in sql
+    assert "LEFT JOIN `orders` o ON u.id = o.user_id" in sql
     assert "WHERE `u`.`age` > %s" in sql
     assert "GROUP BY `u`.`id`" in sql
     assert "ORDER BY `count` DESC" in sql

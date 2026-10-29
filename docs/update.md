@@ -324,7 +324,7 @@ query = (
     })
     .where_null("p.bio")
 )
-# UPDATE `users` INNER JOIN user_profiles p ON p.user_id = users.id
+# UPDATE `users` INNER JOIN `user_profiles` p ON p.user_id = users.id
 # SET `users`.`last_profile_update` = NOW(), `p`.`updated_at` = NOW()
 # WHERE `p`.`bio` IS NULL
 ```
