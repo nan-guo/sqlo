@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
-## [1.0.0] - Unreleased
+## [1.0.0] - 2026-10-29
 
 1.0.0 adds PostgreSQL next to MySQL, closes a number of SQL injection and silent-data-loss
 problems, and runs the SQL it generates against real MySQL and PostgreSQL servers in its tests.
@@ -38,6 +38,9 @@ These do **not** raise an error. The code keeps running and does something diffe
   `FROM users a` inside the subquery, which broke `users.id` references. `as_()` now names the query for the query
   that embeds it; use `from_("users", "a")` for the table alias. An explicit `from_(subquery, alias="z")` now wins
   over the subquery's own alias, and the outer query no longer inherits it.
+- **The table of a `join()` is quoted.** `join("orders o", ...)` used to write `JOIN orders o`; it now writes
+  `` JOIN `orders` o `` (`"orders"` on PostgreSQL), like `from_()`. Aliases are still written as given. A table
+  named like a reserved word now works, and on PostgreSQL the name keeps its case.
 - **`Condition` renders qualified columns correctly.** `Condition("u.age>", 1)` wrote `` `u.age` `` (one identifier,
   wrong in MySQL); it now writes `` `u`.`age` ``, like `where()` always did.
 - **`Condition` and `values_of` changed shape.** `Condition.parts` is gone, `Condition.build(dialect)` now uses the
@@ -58,6 +61,7 @@ Each of these used to produce SQL that was injectable, invalid, wrong, or that l
 | You wrote | Now | Use instead |
 | --- | --- | --- |
 | `where("age MY_OP", 10)`, any operator outside the known set | `ValueError` | `where(Raw("age MY_OP %s", [10]))` |
+| `Q.set_dialect("mysql")`, a string or class instead of an instance | `TypeError` | `Q.set_dialect(MySQLDialect())` |
 | `func.count("DISTINCT id")`, any function argument that is not a column or `*` | `ValueError` | `func.count(Raw("DISTINCT id"))` |
 | `join(t, "s.user_id = u.id AND s.status = 'active'")`: a string `ON` with a literal, function, `OR` or parentheses | `ValueError` | `join(t, Condition("s.user_id", Raw("u.id")) & Condition("s.status", "active"))` or `Raw(...)` |
 | `join(t, on=<anything but str, Raw, Condition>)` | `TypeError` | (it used to write the object's repr into the SQL) |
