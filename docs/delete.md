@@ -7,7 +7,7 @@ Complete guide to DELETE query building with sqlo.
 ### Simple Delete
 
 ```python
-from sqlo import Q
+from sqlo import Q, Raw
 
 # ❌ ERROR: DELETE requires WHERE clause or explicit confirmation
 try:
@@ -150,7 +150,7 @@ Consider using "Soft Deletes" (updating a `deleted_at` timestamp) instead of act
 # Use UPDATE:
 query = (
     Q.update("users")
-    .set({"deleted_at": "NOW()"})
+    .set({"deleted_at": Raw("NOW()")})
     .where("id", 123)
 )
 ```

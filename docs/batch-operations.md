@@ -101,7 +101,7 @@ user_ids = [1, 2, 3, 4, 5]
 
 query = (
     Q.update("users")
-    .set({"active": False, "updated_at": "NOW()"})
+    .set({"active": False, "updated_at": Raw("NOW()")})
     .where_in("id", user_ids)
 )
 
@@ -176,7 +176,7 @@ def incremental_update(batch_size: int = 1000):
     while True:
         query = (
             Q.update("users")
-            .set({"migrated": True, "migrated_at": "NOW()"})
+            .set({"migrated": True, "migrated_at": Raw("NOW()")})
             .where("migrated", False)
             .where("created_at <", "2024-01-01")
             .limit(batch_size)
@@ -372,7 +372,7 @@ def update_order_status(order_ids: list[int], new_status: str, batch_size: int =
             Q.update("orders")
             .set({
                 "status": new_status,
-                "updated_at": "NOW()"
+                "updated_at": Raw("NOW()")
             })
             .where_in("id", chunk)
         )
@@ -384,7 +384,7 @@ def update_order_status(order_ids: list[int], new_status: str, batch_size: int =
                 "order_id": order_id,
                 "old_status": "pending",  # Would come from SELECT
                 "new_status": new_status,
-                "changed_at": "NOW()"
+                "changed_at": Raw("NOW()")
             }
             for order_id in chunk
         ]

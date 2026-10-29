@@ -9,7 +9,7 @@ Complete guide to JOIN operations with sqlo.
 The default `join()` method creates an INNER JOIN.
 
 ```python
-from sqlo import Q
+from sqlo import Q, func
 
 query = (
     Q.select("users.name", "orders.total")
@@ -75,7 +75,7 @@ It is highly recommended to use aliases for readability and to avoid ambiguity.
 ```python
 query = (
     Q.select("u.name", "o.total")
-    .from_("users AS u")
+    .from_("users", alias="u")
     .join("orders AS o", "o.user_id = u.id")
 )
 # SELECT `u`.`name`, `o`.`total` 
@@ -90,7 +90,7 @@ You can chain multiple JOINs to connect several tables.
 ```python
 query = (
     Q.select("u.name", "p.title", "c.name as category")
-    .from_("users AS u")
+    .from_("users", alias="u")
     .join("posts AS p", "p.user_id = u.id")
     .left_join("categories AS c", "c.id = p.category_id")
 )
@@ -146,7 +146,7 @@ You can join a subquery by treating it as a derived table.
 ```python
 # Create a subquery
 latest_orders = (
-    Q.select("user_id", "MAX(created_at) as last_order_date")
+    Q.select("user_id", func.max("created_at").as_("last_order_date"))
     .from_("orders")
     .group_by("user_id")
 )
@@ -154,7 +154,7 @@ latest_orders = (
 # Join the subquery
 query = (
     Q.select("u.name", "lo.last_order_date")
-    .from_("users AS u")
+    .from_("users", alias="u")
     .join(latest_orders.as_("lo"), "lo.user_id = u.id")
 )
 # SELECT `u`.`name`, `lo`.`last_order_date`
@@ -171,7 +171,7 @@ You can join a table to itself using aliases.
 # Find employees and their managers
 query = (
     Q.select("e.name as employee", "m.name as manager")
-    .from_("employees AS e")
+    .from_("employees", alias="e")
     .left_join("employees AS m", "m.id = e.manager_id")
 )
 # SELECT `e`.`name` as employee, `m`.`name` as manager
@@ -200,7 +200,7 @@ Find users who have at least one order (INNER JOIN):
 ```python
 query = (
     Q.select("DISTINCT u.*")
-    .from_("users AS u")
+    .from_("users", alias="u")
     .join("orders AS o", "o.user_id = u.id")
 )
 ```
@@ -210,7 +210,7 @@ Find users who have NO orders (LEFT JOIN + WHERE NULL):
 ```python
 query = (
     Q.select("u.*")
-    .from_("users AS u")
+    .from_("users", alias="u")
     .left_join("orders AS o", "o.user_id = u.id")
     .where_null("o.id")
 )
@@ -222,8 +222,8 @@ Get user details with their order count:
 
 ```python
 query = (
-    Q.select("u.id", "u.name", "COUNT(o.id) as order_count")
-    .from_("users AS u")
+    Q.select("u.id", "u.name", func.count("o.id").as_("order_count"))
+    .from_("users", alias="u")
     .left_join("orders AS o", "o.user_id = u.id")
     .group_by("u.id", "u.name")
 )

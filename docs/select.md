@@ -7,7 +7,7 @@ Complete guide to SELECT query building with sqlo.
 ### Simple SELECT
 
 ```python
-from sqlo import Q
+from sqlo import Q, Raw, func
 
 # Select all columns
 query = Q.select("*").from_("users")
@@ -29,9 +29,9 @@ sql, params = query.build()
 ### Table Aliases
 
 ```python
-query = Q.select("u.id", "u.name").from_("users AS u")
+query = Q.select("u.id", "u.name").from_("users", alias="u")
 sql, params = query.build()
-# SELECT `u`.`id`, `u`.`name` FROM `users` AS `u`
+# SELECT `u`.`id`, `u`.`name` FROM `users` u
 ```
 
 ## WHERE Clauses
@@ -253,7 +253,7 @@ without a `limit`, because SQL would ignore it. With a `UNION`, `limit()`, `offs
 
 ```python
 query = (
-    Q.select("country", "COUNT(*) as user_count")
+    Q.select("country", func.count("*").as_("user_count"))
     .from_("users")
     .group_by("country")
 )
@@ -261,7 +261,7 @@ query = (
 
 # Multiple columns
 query = (
-    Q.select("country", "city", "COUNT(*) as count")
+    Q.select("country", "city", func.count("*").as_("count"))
     .from_("users")
     .group_by("country", "city")
 )
@@ -272,20 +272,20 @@ query = (
 
 ```python
 query = (
-    Q.select("country", "COUNT(*) as user_count")
+    Q.select("country", func.count("*").as_("user_count"))
     .from_("users")
     .group_by("country")
-    .having("COUNT(*) >", 100)
+    .having(Raw("COUNT(*) > %s", [100]))
 )
 # HAVING COUNT(*) > %s
 
 # Multiple HAVING conditions
 query = (
-    Q.select("country", "AVG(age) as avg_age")
+    Q.select("country", func.avg("age").as_("avg_age"))
     .from_("users")
     .group_by("country")
-    .having("AVG(age) >=", 18)
-    .having("COUNT(*) >", 50)
+    .having(Raw("AVG(age) >= %s", [18]))
+    .having(Raw("COUNT(*) > %s", [50]))
 )
 # HAVING AVG(age) >= %s AND COUNT(*) > %s
 ```
@@ -356,7 +356,7 @@ query = (
 
 ```python
 subquery = (
-    Q.select("user_id", "COUNT(*) as order_count")
+    Q.select("user_id", func.count("*").as_("order_count"))
     .from_("orders")
     .group_by("user_id")
 )
@@ -388,9 +388,9 @@ orders = (
 
 ```python
 subquery = (
-    Q.select("COUNT(*)")
+    Q.select(func.count("*"))
     .from_("orders")
-    .where("orders.user_id = users.id")
+    .where(Raw("orders.user_id = users.id"))
 )
 
 query = (
@@ -504,15 +504,15 @@ query = (
         "u.id",
         "u.name",
         "u.email",
-        "COUNT(o.id) as order_count",
-        "SUM(o.total) as total_spent"
+        func.count("o.id").as_("order_count"),
+        func.sum("o.total").as_("total_spent")
     )
-    .from_("users AS u")
-    .left_join("orders AS o", "o.user_id = u.id")
+    .from_("users", alias="u")
+    .left_join("orders", "o.user_id = u.id", alias="o")
     .where("u.active", True)
     .where("u.created_at >=", "2023-01-01")
     .group_by("u.id", "u.name", "u.email")
-    .having("COUNT(o.id) >", 0)
+    .having(Raw("COUNT(o.id) > %s", [0]))
     .order_by("-total_spent", "u.name")
     .limit(100)
 )
@@ -532,7 +532,7 @@ query = (
 
 # Get total count (without LIMIT)
 count_query = (
-    Q.select("COUNT(*) as total")
+    Q.select(func.count("*").as_("total"))
     .from_("users")
     .where("active", True)
 )

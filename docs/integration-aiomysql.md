@@ -22,7 +22,7 @@ uv add sqlo aiomysql
 ```python
 import aiomysql
 import asyncio
-from sqlo import Q
+from sqlo import Q, Raw, func
 
 async def create_pool():
     """Create aiomysql connection pool."""
@@ -73,7 +73,7 @@ async def create_user(pool, name: str, email: str):
     query = Q.insert_into("users").values([{
         "name": name,
         "email": email,
-        "created_at": "NOW()"
+        "created_at": Raw("NOW()")
     }])
     sql, params = query.build()
     
@@ -288,7 +288,7 @@ async def paginate(
     Returns: (results, total_count)
     """
     # Get total count
-    count_query = Q.select("COUNT(*) as total").from_(
+    count_query = Q.select(func.count("*").as_("total")).from_(
         base_query.as_("subquery")
     )
     

@@ -8,31 +8,46 @@ While simple `where()` calls are sufficient for most queries, `Condition` object
 
 ## The Condition Class
 
-The `Condition` class represents a single SQL condition.
+The `Condition` class represents a single SQL condition. The arguments are the column, the value and
+the operator, in that order: `Condition(column, value, operator="=")`.
 
 ```python
 from sqlo import Condition
 
-# Create a condition (Standard)
-c = Condition("age", ">=", 18)
+# Equality is the default operator
+c = Condition("country", "US")
+# Represents: `country` = %s
+
+# Another operator goes in the third argument
+c = Condition("age", 18, ">=")
 # Represents: `age` >= %s
 
-# Create a condition (Compact)
+# Or put the operator in the column string
 c = Condition("age>=", 18)
 # Represents: `age` >= %s
 ```
 
+The column is validated when the condition is created, so an invalid name raises `ValueError` there.
+
 ### Supported Operators
 
-- Standard: `=`, `!=`, `>`, `<`, `>=`, `<=`
+- Standard: `=`, `!=`, `<>`, `<`, `<=`, `>`, `>=`
 - SQL specific: `LIKE`, `NOT LIKE`, `IN`, `NOT IN`, `IS`, `IS NOT`
-- Custom: Any string operator
+- Only MySQL: `<=>`, `REGEXP`, `NOT REGEXP`
+- Only PostgreSQL: `~`, `~*`, `!~`, `!~*`, `ILIKE`, `NOT ILIKE`, `IS DISTINCT FROM`, `IS NOT DISTINCT FROM`
 
 ```python
-Condition("name", "LIKE", "A%")
-Condition("status", "IN", ["active", "pending"])
-Condition("deleted_at", "IS", None)
+Condition("name", "A%", "LIKE")
+Condition("status", ["active", "pending"], "IN")
+Condition("deleted_at", None, "IS")
 ```
+
+Any other operator raises `ValueError`, because it would be written into the SQL as it is: use `Raw`
+for other expressions, see [Raw SQL Conditions](#raw-sql-conditions). An operator that exists only in
+the other database raises `UnsupportedFeatureError` when the query is built, see [Dialects](dialects.md).
+
+A value of `None` is only accepted with `IS` and `IS NOT`; to test for NULL use the factory methods below.
+An empty list gives `FALSE` for `IN` and `TRUE` for `NOT IN`.
 
 ### NULL Handling Factory Methods
 
@@ -70,14 +85,14 @@ You can combine conditions using `and_()` and `or_()` static methods or bitwise 
 ```python
 # (age >= 18 AND country = 'US')
 c = Condition.and_(
-    Condition("age", ">=", 18),
-    Condition("country", "=", "US")
+    Condition("age", 18, ">="),
+    Condition("country", "US")
 )
 
 # (status = 'active' OR status = 'pending')
 c = Condition.or_(
-    Condition("status", "=", "active"),
-    Condition("status", "=", "pending")
+    Condition("status", "active"),
+    Condition("status", "pending")
 )
 ```
 
@@ -88,12 +103,12 @@ You can nest `and_` and `or_` to create arbitrarily complex logic.
 ```python
 # (active = 1 AND (role = 'admin' OR (role = 'user' AND points > 100)))
 c = Condition.and_(
-    Condition("active", "=", True),
+    Condition("active", True),
     Condition.or_(
-        Condition("role", "=", "admin"),
+        Condition("role", "admin"),
         Condition.and_(
-            Condition("role", "=", "user"),
-            Condition("points", ">", 100)
+            Condition("role", "user"),
+            Condition("points", 100, ">")
         )
     )
 )
@@ -104,8 +119,8 @@ c = Condition.and_(
 You can also use `&` (AND) and `|` (OR) operators, but be careful with operator precedence (always use parentheses).
 
 ```python
-c1 = Condition("age", ">=", 18)
-c2 = Condition("country", "=", "US")
+c1 = Condition("age", 18, ">=")
+c2 = Condition("country", "US")
 
 # AND combination
 combined = c1 & c2
@@ -114,7 +129,7 @@ combined = c1 & c2
 combined = c1 | c2
 
 # Complex combination
-combined = c1 & (c2 | Condition("country", "=", "CA"))
+combined = c1 & (c2 | Condition("country", "CA"))
 ```
 
 ## Using Conditions in Queries
@@ -126,10 +141,10 @@ from sqlo import Q, Condition
 
 # Define complex logic
 is_eligible = Condition.or_(
-    Condition("age", ">=", 21),
+    Condition("age", 21, ">="),
     Condition.and_(
-        Condition("age", ">=", 18),
-        Condition("has_consent", "=", True)
+        Condition("age", 18, ">="),
+        Condition("has_consent", True)
     )
 )
 
@@ -147,16 +162,16 @@ def build_filter(filters: dict):
     conditions = []
     
     if "status" in filters:
-        conditions.append(Condition("status", "=", filters["status"]))
+        conditions.append(Condition("status", filters["status"]))
         
     if "min_price" in filters:
-        conditions.append(Condition("price", ">=", filters["min_price"]))
+        conditions.append(Condition("price", filters["min_price"], ">="))
         
     if "search" in filters:
         term = f"%{filters['search']}%"
         conditions.append(Condition.or_(
-            Condition("title", "LIKE", term),
-            Condition("description", "LIKE", term)
+            Condition("title", term, "LIKE"),
+            Condition("description", term, "LIKE")
         ))
     
     if not conditions:

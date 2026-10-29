@@ -284,7 +284,7 @@ def upsert_user_profile(user_id: int, profile_data: dict):
         .values([{
             "user_id": user_id,
             **profile_data,
-            "created_at": "NOW()"
+            "created_at": Raw("NOW()")
         }])
         .on_duplicate_key_update({
             **profile_data,
@@ -340,7 +340,7 @@ query = insert_with_defaults(
     defaults={
         "active": True,
         "role": "user",
-        "created_at": "NOW()"
+        "created_at": Raw("NOW()")
     }
 )
 # Each row will have active, role, and created_at fields
@@ -431,7 +431,7 @@ import json
 query = Q.insert_into("settings").values([{
     "user_id": 123,
     "preferences": json.dumps({"theme": "dark", "language": "en"}),
-    "created_at": "NOW()"
+    "created_at": Raw("NOW()")
 }])
 ```
 

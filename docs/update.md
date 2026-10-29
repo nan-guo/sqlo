@@ -7,7 +7,7 @@ Complete guide to UPDATE query building with sqlo.
 ### Simple Update
 
 ```python
-from sqlo import Q
+from sqlo import Q, Raw, func
 
 # ❌ ERROR: UPDATE requires WHERE clause or explicit confirmation
 try:
@@ -55,7 +55,7 @@ query = (
     .set({
         "name": "Alice Smith",
         "email": "alice.smith@example.com",
-        "updated_at": "NOW()"
+        "updated_at": Raw("NOW()")
     })
     .where("id", 123)
 )
@@ -150,7 +150,7 @@ query = (
 # Update rows where column is NULL
 query = (
     Q.update("users")
-    .set({"email_verified_at": "NOW()"})
+    .set({"email_verified_at": Raw("NOW()")})
     .where_null("email_verified_at")
     .where("email_sent", True)
 )
@@ -164,10 +164,10 @@ from sqlo import Condition
 
 # Complex condition with AND/OR
 condition = Condition.and_(
-    Condition("active", "=", True),
+    Condition("active", True),
     Condition.or_(
-        Condition("role", "=", "admin"),
-        Condition("role", "=", "moderator")
+        Condition("role", "admin"),
+        Condition("role", "moderator")
     )
 )
 
@@ -282,9 +282,9 @@ query = partial_update("users", 123, {
 ```python
 # Update based on aggregated data from another table
 subquery = (
-    Q.select("AVG(rating)")
+    Q.select(func.avg("rating"))
     .from_("reviews")
-    .where("reviews.product_id = products.id")
+    .where(Raw("reviews.product_id = products.id"))
 )
 
 query = (
@@ -316,16 +316,16 @@ query = (
 ```python
 # Update with JOIN
 query = (
-    Q.update("users u")
-    .join("user_profiles p", "p.user_id = u.id")
+    Q.update("users")
+    .join("user_profiles p", "p.user_id = users.id")
     .set({
-        "u.last_profile_update": "NOW()",
-        "p.updated_at": "NOW()"
+        "users.last_profile_update": Raw("NOW()"),
+        "p.updated_at": Raw("NOW()")
     })
-    .where("p.bio", None)
+    .where_null("p.bio")
 )
-# UPDATE `users` `u` INNER JOIN `user_profiles` `p` ON p.user_id = u.id
-# SET `u`.`last_profile_update` = NOW(), `p`.`updated_at` = NOW()
+# UPDATE `users` INNER JOIN user_profiles p ON p.user_id = users.id
+# SET `users`.`last_profile_update` = NOW(), `p`.`updated_at` = NOW()
 # WHERE `p`.`bio` IS NULL
 ```
 
@@ -338,7 +338,7 @@ def update_user_status(user_ids: list[int], new_status: str):
         Q.update("users")
         .set({
             "status": new_status,
-            "updated_at": "NOW()"
+            "updated_at": Raw("NOW()")
         })
         .where_in("id", user_ids)
     )
@@ -445,7 +445,7 @@ query = safe_update(
 # Ensure WHERE clause columns are indexed
 query = (
     Q.update("users")
-    .set({"last_seen": "NOW()"})
+    .set({"last_seen": Raw("NOW()")})
     .where("email", "alice@example.com")  # Make sure 'email' is indexed
 )
 ```
@@ -501,7 +501,7 @@ query = (
     Q.update("users")
     .set({
         "name": "Alice",
-        "updated_at": "NOW()"
+        "updated_at": Raw("NOW()")
     })
     .where("id", 123)
 )
@@ -542,7 +542,7 @@ def soft_delete(table: str, id_value: int):
     return (
         Q.update(table)
         .set({
-            "deleted_at": "NOW()",
+            "deleted_at": Raw("NOW()"),
             "active": False
         })
         .where("id", id_value)

@@ -51,11 +51,15 @@ Valid identifiers must:
 
 ### Table Aliases
 
-Table aliases with spaces are supported:
+`from_()` takes the alias as a separate argument, and a name with a space is rejected. `join()`
+accepts `"name alias"` and `"name AS alias"`:
 
 ```python
-# ✅ Allowed - validates "orders" part
-Q.select("*").from_("users u").join("orders o", "u.id = o.user_id").build()
+# ✅ Allowed - the table and the alias are each validated
+Q.select("*").from_("users", alias="u").join("orders o", "u.id = o.user_id").build()
+
+# ❌ Rejected - "users u" is not an identifier
+Q.select("*").from_("users u")
 ```
 
 ---
