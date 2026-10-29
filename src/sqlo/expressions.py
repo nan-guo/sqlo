@@ -103,7 +103,8 @@ def _render_func_arg(arg: Any) -> str:
     if isinstance(arg, (int, float)):
         if isinstance(arg, float) and not math.isfinite(arg):
             raise ValueError(f"Invalid function argument {arg!r}")
-        return repr(arg)
+        # The base class repr: a subclass (IntEnum, numpy) may repr as something else
+        return int.__repr__(arg) if isinstance(arg, int) else float.__repr__(arg)
     if isinstance(arg, str):
         if arg == "*" or validate_identifier(arg):
             return arg
