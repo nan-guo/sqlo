@@ -16,7 +16,9 @@ def build_nested(dialect: Dialect, query: Any) -> tuple[str, tuple[Any, ...]]:
     syntax into the statement, so it is rejected.
     """
     nested = getattr(query, "_dialect", None)
-    if nested is not None and type(nested) is not type(dialect):
+    if nested is not None and not (
+        isinstance(nested, type(dialect)) or isinstance(dialect, type(nested))
+    ):
         raise ValueError(
             f"A subquery built for the {_name(nested)} dialect cannot be used in "
             f"a query built for the {_name(dialect)} dialect"
