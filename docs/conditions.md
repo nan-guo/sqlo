@@ -49,6 +49,11 @@ the other database raises `UnsupportedFeatureError` when the query is built, see
 A value of `None` is only accepted with `IS` and `IS NOT`; to test for NULL use the factory methods below.
 An empty list gives `FALSE` for `IN` and `TRUE` for `NOT IN`.
 
+An empty `Condition()` (no terms) is ignored when it is combined with `&` or `|`, so
+`Condition() | Condition("a", 1)` is the same as `Condition("a", 1)`. Passing an empty condition
+on its own to `where()` raises `ValueError`. This lets you build a filter in a loop, but note that
+an `OR` with an empty side narrows the result instead of matching everything.
+
 ### NULL Handling Factory Methods
 
 For NULL checks, use the dedicated factory methods:

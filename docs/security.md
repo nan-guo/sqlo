@@ -253,7 +253,10 @@ Debug mode (`Q.set_debug(True)`) and the `sqlo` and `sqlo.params` loggers record
 parameters of every query, which can include passwords or tokens. Use
 `Q.set_debug(True, hide_params=True)`, or set the `sqlo.params` logger to a level above
 `DEBUG`, wherever the output is stored or shipped. Nothing is formatted or logged while
-debug logging is off, which is the default.
+debug logging is off, which is the default. Note that the loggers log at `DEBUG` level, so an
+application that turns on `DEBUG` for the root logger (for example
+`logging.basicConfig(level=logging.DEBUG)`) also receives every query and its parameters; set
+`logging.getLogger("sqlo.params").setLevel(logging.WARNING)` to keep the parameters out.
 
 ## Best Practices
 
