@@ -50,3 +50,6 @@ reports/
 
 # MacOS
 .DS_Store
+
+# Sphinx build output
+docs/_build/
