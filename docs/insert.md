@@ -277,6 +277,7 @@ def batch_insert_users(users: list[dict]):
 ### Upsert Pattern
 
 ```python
+from datetime import datetime
 # Insert or update user profile
 def upsert_user_profile(user_id: int, profile_data: dict):
     query = (
@@ -284,7 +285,7 @@ def upsert_user_profile(user_id: int, profile_data: dict):
         .values([{
             "user_id": user_id,
             **profile_data,
-            "created_at": Raw("NOW()")
+            "created_at": datetime.now()
         }])
         .on_duplicate_key_update({
             **profile_data,
@@ -324,6 +325,7 @@ queries = bulk_insert_chunked("users", large_dataset, chunk_size=500)
 ### Insert with Default Values
 
 ```python
+from datetime import datetime
 # Add default values to all rows
 def insert_with_defaults(table: str, data: list[dict], defaults: dict):
     """Add default values to all rows before inserting"""
@@ -340,7 +342,7 @@ query = insert_with_defaults(
     defaults={
         "active": True,
         "role": "user",
-        "created_at": Raw("NOW()")
+        "created_at": datetime.now()
     }
 )
 # Each row will have active, role, and created_at fields
@@ -426,12 +428,13 @@ query = Q.insert_into("posts").values([{
 ### Insert with JSON Data
 
 ```python
+from datetime import datetime
 import json
 
 query = Q.insert_into("settings").values([{
     "user_id": 123,
     "preferences": json.dumps({"theme": "dark", "language": "en"}),
-    "created_at": Raw("NOW()")
+    "created_at": datetime.now()
 }])
 ```
 

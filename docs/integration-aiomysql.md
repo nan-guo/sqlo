@@ -68,12 +68,13 @@ async def get_user(pool, user_id: int):
 ### INSERT Query
 
 ```python
+from datetime import datetime
 async def create_user(pool, name: str, email: str):
     """Create a new user."""
     query = Q.insert_into("users").values([{
         "name": name,
         "email": email,
-        "created_at": Raw("NOW()")
+        "created_at": datetime.now()
     }])
     sql, params = query.build()
     

@@ -7,6 +7,7 @@ Collection of common patterns and best practices for using sqlo effectively.
 ### User Management
 
 ```python
+from datetime import datetime
 from sqlo import Q, Raw
 from typing import Optional, List, Dict, Any
 
@@ -21,7 +22,7 @@ class UserRepository:
         query = Q.insert_into("users").values([{
             "name": name,
             "email": email,
-            "created_at": Raw("NOW()")
+            "created_at": datetime.now()
         }])
         cursor = self.db.cursor()
         cursor.execute(*query.build())
@@ -414,6 +415,7 @@ def delete_user_cascade(user_id: int):
 ### Automatic Audit Trail
 
 ```python
+from datetime import datetime
 def create_audit_trigger(table: str, action: str, user_id: int, record_id: int):
     """Create audit log entry."""
     query = Q.insert_into("audit_log").values([{
@@ -421,7 +423,7 @@ def create_audit_trigger(table: str, action: str, user_id: int, record_id: int):
         "action": action,
         "user_id": user_id,
         "record_id": record_id,
-        "timestamp": Raw("NOW()")
+        "timestamp": datetime.now()
     }])
     return query
 
