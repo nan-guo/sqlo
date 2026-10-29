@@ -106,7 +106,8 @@ The `on` argument accepts three kinds of value:
 
 - **A string** such as `"s.user_id = u.id"`: one column compared with another, with
   several comparisons optionally joined by `AND`. Only column names and the operators
-  `=`, `!=`, `<>`, `<=>`, `<`, `<=`, `>`, `>=` are accepted.
+  `=`, `!=`, `<>`, `<=>`, `<`, `<=`, `>`, `>=` are accepted. `<=>` is MySQL-only: on PostgreSQL it
+  raises `UnsupportedFeatureError`. A `CROSS JOIN` takes no `ON` condition.
 - **A `Condition`**: use it for literal values, which are bound as parameters, and for `OR`.
 - **A `Raw`**: use it for functions and any other SQL. It is written as-is, so only pass
   trusted text; it can carry parameters too.
